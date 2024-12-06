@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false, // Desactiva la verificación estricta para propiedades no inicializadas
+    "strictPropertyInitialization": false,
     "target": "es6",
     "module": "commonjs",
     "esModuleInterop": true,
