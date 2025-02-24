@@ -9,10 +9,10 @@ import { AttributeValue } from '../entities/AttributeValue';
 
 const testDataSource = new DataSource({
   type: 'sqlite',
-  database: ':memory:', 
-  synchronize: true,    
+  database: ':memory:',
+  synchronize: true,
   entities: [TestEntity, User, Product, ProductType, ProductVariant, Attribute, AttributeValue],
-  logging: false,       
+  logging: false,
 });
 
 export default testDataSource;

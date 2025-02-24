@@ -60,6 +60,41 @@ export class ProductVariantService {
   }
 
   /**
+   * Updates the stock level of a ProductVariant after a purchase.
+   *
+   * @param id - ID of the ProductVariant to update.
+   * @param amount - The number of units purchased.
+   * @returns The updated ProductVariant or null if not found or stock is insufficient.
+   */
+  async updateStockAfterPurchase(id: number, amount: number): Promise<ProductVariant | null> {
+    const productVariant = await this.getById(id);
+    if (!productVariant) return null;
+
+    if (productVariant.stock < amount) {
+      throw new Error('Insufficient stock to complete the purchase');
+    }
+
+    productVariant.stock -= amount;
+    return await this.repository.save(productVariant);
+  }
+
+  /**
+   * Restores the stock level of a ProductVariant after an order is canceled.
+   *
+   * @param id - ID of the ProductVariant to update.
+   * @param amount - The number of units to restore.
+   * @returns True if the stock was successfully restored, false if the ProductVariant was not found.
+   */
+  async restoreAfterOrderCanceled(id: number, amount: number): Promise<boolean> {
+    const productVariant = await this.getById(id);
+    if (!productVariant) return false;
+
+    productVariant.stock += amount;
+    await this.repository.save(productVariant);
+    return true;
+  }
+
+  /**
    * Delete a ProductVariant by its ID
    * @param id ID of the ProductVariant to delete
    * @returns True if deleted, otherwise false

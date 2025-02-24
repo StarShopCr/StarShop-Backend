@@ -1,8 +1,8 @@
-import { Repository } from "typeorm";
-import { ProductVariantAttribute } from "../entities/ProductVariantAttribute";
-import { ProductVariant } from "../entities/ProductVariant";
-import { AttributeValue } from "../entities/AttributeValue";
-import AppDataSource from "../config/ormconfig";
+import { Repository } from 'typeorm';
+import { ProductVariantAttribute } from '../entities/ProductVariantAttribute';
+import { ProductVariant } from '../entities/ProductVariant';
+import { AttributeValue } from '../entities/AttributeValue';
+import AppDataSource from '../config/ormconfig';
 
 export class ProductVariantAttributeService {
   private repository: Repository<ProductVariantAttribute>;
@@ -39,7 +39,7 @@ export class ProductVariantAttributeService {
   //get all product variant attributes
   async getAll(): Promise<ProductVariantAttribute[]> {
     return await this.repository.find({
-      relations: ["productVariant", "attributeValue"],
+      relations: ['productVariant', 'attributeValue'],
     });
   }
 
@@ -47,7 +47,7 @@ export class ProductVariantAttributeService {
   async getById(id: number): Promise<ProductVariantAttribute | null> {
     return await this.repository.findOne({
       where: { id },
-      relations: ["productVariant", "attributeValue"],
+      relations: ['productVariant', 'attributeValue'],
     });
   }
 

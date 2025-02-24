@@ -1,7 +1,7 @@
-import { Repository } from "typeorm";
-import { AttributeValue } from "../entities/AttributeValue";
-import { Attribute } from "../entities/Attribute";
-import AppDataSource from "../config/ormconfig";
+import { Repository } from 'typeorm';
+import { AttributeValue } from '../entities/AttributeValue';
+import { Attribute } from '../entities/Attribute';
+import AppDataSource from '../config/ormconfig';
 
 export class AttributeValueService {
   private repository: Repository<AttributeValue>;
@@ -11,10 +11,7 @@ export class AttributeValueService {
   }
 
   //create new attribute value
-  async create(data: {
-    value: string;
-    attributeId: number;
-  }): Promise<AttributeValue | null> {
+  async create(data: { value: string; attributeId: number }): Promise<AttributeValue | null> {
     const attributeRepo = AppDataSource.getRepository(Attribute);
     const attribute = await attributeRepo.findOne({
       where: { id: data.attributeId },
@@ -31,14 +28,14 @@ export class AttributeValueService {
 
   //get all attribute values
   async getAll(): Promise<AttributeValue[]> {
-    return await this.repository.find({ relations: ["attribute"] });
+    return await this.repository.find({ relations: ['attribute'] });
   }
 
   //get attribute value by id
   async getById(id: number): Promise<AttributeValue | null> {
     return await this.repository.findOne({
       where: { id },
-      relations: ["attribute"],
+      relations: ['attribute'],
     });
   }
 

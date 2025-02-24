@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsEnum, Matches, MinLength, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  Matches,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -20,17 +28,16 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto {
-    @IsOptional()
-    @MinLength(2, { message: 'Name is too short' })
-    @MaxLength(50, { message: 'Name is too long' })
-    name?: string;
+  @IsOptional()
+  @MinLength(2, { message: 'Name is too short' })
+  @MaxLength(50, { message: 'Name is too long' })
+  name?: string;
 
-    @IsOptional()
-    @IsEmail({}, { message: 'Invalid email format' })
-    email?: string;
+  @IsOptional()
+  @IsEmail({}, { message: 'Invalid email format' })
+  email?: string;
 
-    @IsOptional()
-    @IsEnum(['buyer', 'seller', 'admin'], { message: 'Role must be buyer, seller, or admin' })
-    role?: 'buyer' | 'seller' | 'admin';
+  @IsOptional()
+  @IsEnum(['buyer', 'seller', 'admin'], { message: 'Role must be buyer, seller, or admin' })
+  role?: 'buyer' | 'seller' | 'admin';
 }
-  
