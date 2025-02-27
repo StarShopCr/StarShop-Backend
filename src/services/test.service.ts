@@ -1,6 +1,6 @@
-import { Repository } from "typeorm";
-import { TestEntity } from "../entities/testEntity";
-import AppDataSource from "../config/ormconfig";
+import { Repository } from 'typeorm';
+import { TestEntity } from '../entities/testEntity';
+import AppDataSource from '../config/ormconfig';
 
 export class TestService {
   private repo: Repository<TestEntity>;

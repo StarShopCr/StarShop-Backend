@@ -1,5 +1,5 @@
-import AppDataSource from "../config/ormconfig";
-import dotenv from "dotenv";
+import AppDataSource from '../config/ormconfig';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ beforeAll(async () => {
     }
   }
 
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.NODE_ENV === 'test') {
     console.log(`[${new Date().toISOString()}] Synchronizing database...`);
     try {
       await AppDataSource.synchronize(true); // Drop and recreate the schema

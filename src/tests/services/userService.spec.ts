@@ -1,13 +1,13 @@
-import { Repository } from "typeorm";
-import AppDataSource from "../../config/ormconfig";
-import { UserService } from "../../services/User.service";
-import { User } from "../../entities/User";
+import { Repository } from 'typeorm';
+import AppDataSource from '../../config/ormconfig';
+import { UserService } from '../../services/User.service';
+import { User } from '../../entities/User';
 
-jest.mock("../../config/ormconfig", () => ({
+jest.mock('../../config/ormconfig', () => ({
   getRepository: jest.fn(),
 }));
 
-describe("UserService", () => {
+describe('UserService', () => {
   let service: UserService;
   let mockRepo: jest.Mocked<Repository<User>>;
 
@@ -28,12 +28,12 @@ describe("UserService", () => {
     service = new UserService(AppDataSource); // Pass the mocked AppDataSource
   });
 
-  it("should create a new user", async () => {
+  it('should create a new user', async () => {
     const newUser: Partial<User> = {
-      name: "New User",
-      email: "newuser@example.com",
-      walletAddress: "0x07D97198756295A96C2158a23963306f507b2f70",
-      role: "buyer",
+      name: 'New User',
+      email: 'newuser@example.com',
+      walletAddress: '0x07D97198756295A96C2158a23963306f507b2f70',
+      role: 'buyer',
     };
 
     const createdUser = { id: 1, ...newUser } as User;
@@ -46,30 +46,30 @@ describe("UserService", () => {
     expect(mockRepo.save).toHaveBeenCalledWith(createdUser);
   });
 
-  it("should not create a user with a duplicate wallet address", async () => {
+  it('should not create a user with a duplicate wallet address', async () => {
     const duplicateUser: Partial<User> = {
-      name: "Duplicate User",
-      email: "duplicate@example.com",
-      walletAddress: "0x06D97198756295A96C2158a23963306f507b2f69",
-      role: "buyer",
+      name: 'Duplicate User',
+      email: 'duplicate@example.com',
+      walletAddress: '0x06D97198756295A96C2158a23963306f507b2f69',
+      role: 'buyer',
     };
 
     const error = new Error(
-      "The wallet address is already in use. Please use a unique wallet address."
+      'The wallet address is already in use. Please use a unique wallet address.'
     ) as any;
-    error.code = "SQLITE_CONSTRAINT";
+    error.code = 'SQLITE_CONSTRAINT';
     mockRepo.save.mockRejectedValue(error);
 
     await expect(service.createUser(duplicateUser)).rejects.toThrowError(
-      "The wallet address is already in use. Please use a unique wallet address."
+      'The wallet address is already in use. Please use a unique wallet address.'
     );
   });
 
-  it("should retrieve an existing user by ID", async () => {
+  it('should retrieve an existing user by ID', async () => {
     const user = {
       id: 1,
-      name: "Existing User",
-      email: "existing@example.com",
+      name: 'Existing User',
+      email: 'existing@example.com',
     } as User;
     mockRepo.findOneBy.mockResolvedValue(user);
 
@@ -78,7 +78,7 @@ describe("UserService", () => {
     expect(mockRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
   });
 
-  it("should return null if the user does not exist", async () => {
+  it('should return null if the user does not exist', async () => {
     mockRepo.findOneBy.mockResolvedValue(null);
 
     const result = await service.getUserById(9999);
@@ -89,10 +89,10 @@ describe("UserService", () => {
   it("should update a user's information", async () => {
     const user = {
       id: 1,
-      name: "Existing User",
-      email: "existing@example.com",
+      name: 'Existing User',
+      email: 'existing@example.com',
     } as User;
-    const updatedData = { name: "Updated User" };
+    const updatedData = { name: 'Updated User' };
     const updatedUser = { ...user, ...updatedData } as User;
 
     mockRepo.findOneBy.mockResolvedValue(user);
@@ -103,7 +103,7 @@ describe("UserService", () => {
     expect(mockRepo.save).toHaveBeenCalledWith({ ...user, ...updatedData });
   });
 
-  it("should delete a user", async () => {
+  it('should delete a user', async () => {
     mockRepo.delete.mockResolvedValue({ affected: 1 } as any);
 
     const result = await service.deleteUser(1);
@@ -111,10 +111,10 @@ describe("UserService", () => {
     expect(mockRepo.delete).toHaveBeenCalledWith(1);
   });
 
-  it("should retrieve all users", async () => {
+  it('should retrieve all users', async () => {
     const users = [
-      { id: 1, name: "User 1", email: "user1@example.com" },
-      { id: 2, name: "User 2", email: "user2@example.com" },
+      { id: 1, name: 'User 1', email: 'user1@example.com' },
+      { id: 2, name: 'User 2', email: 'user2@example.com' },
     ] as User[];
 
     mockRepo.find.mockResolvedValue(users);
