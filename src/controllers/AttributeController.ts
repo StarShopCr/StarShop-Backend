@@ -23,12 +23,34 @@ export const createAttribute = async (req: Request, res: Response): Promise<void
 };
 
 // Get all attributes
+/**
+ * Handles the request to retrieve a list of attributes with optional pagination.
+ *
+ * @param {Request} req - The request object containing optional query parameters:
+ *  - `limit` (number): The maximum number of attributes to retrieve.
+ *  - `offset` (number): The number of attributes to skip before starting to collect results.
+ * @param {Response} res - The response object used to return the retrieved attributes or an error message.
+ * @returns {Promise<void>} A promise that resolves when the response is sent.
+ *
+ * @throws {500} Internal Server Error if an unexpected error occurs.
+ */
 export const getAllAttributes = async (req: Request, res: Response): Promise<void> => {
     try {
-        const attributes = await attributeService.getAll();
-        res.status(200).json({ success: true, message: "Attributes Retrieved Successfully", data: attributes });
+        const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+        const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;        
+        const attributes = await attributeService.getAll(limit, offset);
+        
+        res.status(200).json({ 
+            success: true, 
+            message: "Attributes Retrieved Successfully", 
+            data: attributes 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error", 
+            error: error.message 
+        });
     }
 };
 

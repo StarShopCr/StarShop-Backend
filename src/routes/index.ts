@@ -1,5 +1,7 @@
 import { Router } from "express";
 import userRoutes from "./UserRoutes";
+import attributeRoutes from "./AttributeRouter";
+import attributeValuesRoutes from "./AttributeValueRoute";
 // import productRoutes from './product.routes';
 // import storeRoutes from './store.routes';
 
@@ -12,6 +14,8 @@ router.get("/health", (req, res) => {
 
 // Mount route modules
 router.use("/users", userRoutes);
+router.use("/attributes", attributeRoutes);
+router.use("/attribute-values", attributeValuesRoutes);
 // router.use("/products", productRoutes);
 // router.use("/stores", storeRoutes);
 

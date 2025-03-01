@@ -30,8 +30,20 @@ export class AttributeValueService {
   }
 
   //get all attribute values
-  async getAll(): Promise<AttributeValue[]> {
-    return await this.repository.find({ relations: ["attribute"] });
+  /**
+   * Retrieves a list of attribute values with optional pagination.
+   * Includes related attribute data in the result.
+   *
+   * @param {number} [limit] - The maximum number of attribute values to retrieve.
+   * @param {number} [offset] - The number of attribute values to skip before starting to collect results.
+   * @returns {Promise<AttributeValue[]>} A promise that resolves to an array of attribute values with their related attributes.
+   */
+  async getAll(limit?: number, offset?: number): Promise<AttributeValue[]> {
+    return await this.repository.find({ 
+        skip: offset, 
+        take: limit, 
+        relations: ["attribute"] 
+    });
   }
 
   //get attribute value by id
