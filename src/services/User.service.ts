@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { User } from '../entities/User';
 import AppDataSource from '../config/ormconfig';
+import { NotFoundError, BadRequestError } from '../utils/errors';
 
 export class UserService {
   private userRepository: Repository<User>;
@@ -16,47 +17,56 @@ export class UserService {
     } catch (error: any) {
       if (error.code === '23505' || error.code === 'SQLITE_CONSTRAINT') {
         if (error.message.includes('UQ_fc71cd6fb73f95244b23e2ef113')) {
-          throw new Error(
-            'The wallet address is already in use. Please use a unique wallet address.'
-          );
+          throw new BadRequestError('The wallet address is already in use. Please use a unique wallet address.');
         }
       }
-      throw error;
+      throw new BadRequestError(`Database Error: ${error.message}`);
     }
   }
 
-  async getUserById(id: number): Promise<User | null> {
-    return await this.userRepository.findOneBy({ id });
+  async getUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundError(`User with ID ${id} not found.`);
+    }
+    return user;
   }
 
-  async updateUser(id: number, data: Partial<User>): Promise<User | null> {
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
     try {
       const user = await this.userRepository.findOneBy({ id });
       if (!user) {
-        return null;
+        throw new NotFoundError(`User with ID ${id} not found.`);
       }
-
       Object.assign(user, data);
-
       return await this.userRepository.save(user);
     } catch (error: any) {
       if (error.code === '23505' || error.code === 'SQLITE_CONSTRAINT') {
         if (error.message.includes('UQ_fc71cd6fb73f95244b23e2ef113')) {
-          throw new Error(
-            'The wallet address is already in use. Please use a unique wallet address.'
-          );
+          throw new BadRequestError('The wallet address is already in use. Please use a unique wallet address.');
         }
       }
-      throw error;
+      throw new BadRequestError(`Database Error: ${error.message}`);
     }
   }
 
   async deleteUser(id: number): Promise<boolean> {
-    const result = await this.userRepository.delete(id);
-    return result.affected === 1;
+    try {
+      const result = await this.userRepository.delete(id);
+      if (result.affected !== 1) {
+        throw new NotFoundError(`User with ID ${id} not found or could not be deleted.`);
+      }
+      return true;
+    } catch (error: any) {
+      throw new BadRequestError(`Database Error: ${error.message}`);
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userRepository.find();
+    try {
+      return await this.userRepository.find();
+    } catch (error: any) {
+      throw new BadRequestError(`Database Error: ${error.message}`);
+    }
   }
 }

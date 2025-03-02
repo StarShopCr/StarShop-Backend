@@ -2,6 +2,7 @@ import { Repository } from "typeorm";
 import AppDataSource from "../../config/ormconfig";
 import { UserService } from "../../services/User.service";
 import { User } from "../../entities/User";
+import { NotFoundError } from "../../utils/errors";
 
 jest.mock("../../config/ormconfig", () => ({
   getRepository: jest.fn(),
@@ -78,12 +79,11 @@ describe("UserService", () => {
     expect(mockRepo.findOneBy).toHaveBeenCalledWith({ id: 1 });
   });
 
-  it("should return null if the user does not exist", async () => {
+  it("should throw NotFoundError if the user does not exist", async () => {
     mockRepo.findOneBy.mockResolvedValue(null);
 
-    const result = await service.getUserById(9999);
-    expect(result).toBeNull();
-    expect(mockRepo.findOneBy).toHaveBeenCalledWith({ id: 9999 });
+    await expect(service.getUserById(9999)).rejects.toThrow(NotFoundError);
+    await expect(service.getUserById(9999)).rejects.toThrow("User with ID 9999 not found.");
   });
 
   it("should update a user's information", async () => {
