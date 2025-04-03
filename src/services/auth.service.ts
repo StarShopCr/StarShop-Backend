@@ -1,16 +1,26 @@
 // auth.service.ts - Authentication Service
 
 // Import necessary packages and modules
-import jwt from 'jsonwebtoken'; // Used for creating and verifying JWT tokens
-import AppDataSource from '../config/ormconfig'; // Database connection
-import { User } from '../entities/User'; // User model/entity
+import jwt from 'jsonwebtoken';
+import AppDataSource from '../config/ormconfig';
+import { User } from '../entities/User';
+
+export interface TokenPayload {
+  userId: string;
+  walletAddress: string;
+  role: string;
+  iss: string; // Issuer
+  aud: string; // Audience
+  iat: number; // Issued at timestamp
+  exp: number; // Expiration timestamp
+}
 
 export class AuthService {
   // Define constants for JWT configuration
-  // JWT_SECRET is used to sign and verify tokens - loaded from environment variables
-  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-  // JWT_EXPIRES_IN sets how long the token is valid
+  private static readonly JWT_SECRET = process.env.JWT_SECRET;
   private static readonly JWT_EXPIRES_IN = '24h';
+  private static readonly JWT_ISSUER = 'your-app-name';
+  private static readonly JWT_AUDIENCE = 'your-app-clients';
 
   /**
    * Authenticates a user based on their wallet address
@@ -18,6 +28,11 @@ export class AuthService {
    * Returns a JWT token containing user information
    */
   static async authenticateUser(walletAddress: string): Promise<string> {
+    // Validate JWT_SECRET existence
+    if (!this.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
+
     // Get access to the User table in the database
     const userRepository = AppDataSource.getRepository(User);
 
@@ -30,15 +45,24 @@ export class AuthService {
       await userRepository.save(user);
     }
 
+    // Current timestamp in seconds
+    const issuedAt = Math.floor(Date.now() / 1000);
+
     // Create a JWT token containing user information
     const token = jwt.sign(
       {
-        userId: user.id, // Include user ID in token
-        walletAddress: user.walletAddress, // Include wallet address
-        role: user.role, // Include user role
+        userId: user.id,
+        walletAddress: user.walletAddress,
+        role: user.role,
+        iss: this.JWT_ISSUER,
+        aud: this.JWT_AUDIENCE,
+        iat: issuedAt,
       },
-      this.JWT_SECRET, // Sign with secret key
-      { expiresIn: this.JWT_EXPIRES_IN } // Set token expiration
+      this.JWT_SECRET,
+      {
+        expiresIn: this.JWT_EXPIRES_IN,
+        algorithm: 'HS256',
+      }
     );
 
     return token;
@@ -49,13 +73,29 @@ export class AuthService {
    * Returns the decoded token information if valid
    * Throws an error if the token is invalid
    */
-  static verifyToken(token: string): any {
+  static verifyToken(token: string): TokenPayload {
+    // Validate JWT_SECRET existence
+    if (!this.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
+
     try {
-      // Attempt to verify the token
-      return jwt.verify(token, this.JWT_SECRET);
+      // Verify with explicit options
+      const decoded = jwt.verify(token, this.JWT_SECRET, {
+        issuer: this.JWT_ISSUER,
+        audience: this.JWT_AUDIENCE,
+        algorithms: ['HS256'],
+      }) as TokenPayload;
+
+      return decoded;
     } catch (error) {
-      // If verification fails, throw an error
-      throw new ReferenceError('Invalid token');
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new Error('Token expired');
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        throw new Error('Invalid token');
+      } else {
+        throw new Error('Authentication failed');
+      }
     }
   }
 }
