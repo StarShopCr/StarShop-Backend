@@ -35,10 +35,12 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^7.5.0",
     "express-validator": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.20",
+    "winston": "^3.17.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
