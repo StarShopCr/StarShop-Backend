@@ -9,4 +9,4 @@ import { NotificationController } from './controllers/notification.controller';
   controllers: [NotificationController],
   exports: [NotificationService],
 })
-export class NotificationsModule {} 
+export class NotificationsModule {}

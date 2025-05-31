@@ -22,7 +22,7 @@ export class User {
   @Column({ nullable: true })
   email: string;
 
-  @OneToMany(() => UserRole, userRole => userRole.user)
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
 
   @CreateDateColumn()

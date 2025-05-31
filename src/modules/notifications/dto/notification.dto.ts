@@ -18,4 +18,4 @@ export class UserNotificationDto extends NotificationDto {
   @IsString()
   @IsNotEmpty()
   userId: string;
-} 
+}

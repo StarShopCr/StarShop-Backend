@@ -1,5 +1,5 @@
-import { ProductTypeService } from '../../services/productType.service';
-import { ProductType } from '../../entities/ProductType';
+import { ProductTypeService } from '../../modules/productTypes/services/productTypes.service';
+import { ProductType } from '../../modules/productTypes/entities/productTypes.entity';
 import { Repository } from 'typeorm';
 import AppDataSource from '../../config/ormconfig';
 

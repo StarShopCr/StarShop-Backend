@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SharedModule } from './modules/shared/shared.module';
 import { CouponModule } from './modules/coupons/coupon.module';
+import { ProductsModule } from './modules/products/products.module';
+import { ProductTypesModule } from './modules/productTypes/productTypes.module';
+import { ProductVariantsModule } from './modules/productVariants/productVariants.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { CouponModule } from './modules/coupons/coupon.module';
     }),
     SharedModule,
     CouponModule,
+    ProductsModule,
+    ProductTypesModule,
+    ProductVariantsModule,
   ],
 })
 export class AppModule {}

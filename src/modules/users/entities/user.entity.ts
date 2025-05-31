@@ -15,6 +15,6 @@ export class User {
   @Column()
   name: string;
 
-  @OneToMany(() => Order, order => order.user)
+  @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
-} 
+}

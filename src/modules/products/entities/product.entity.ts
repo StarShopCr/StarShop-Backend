@@ -1,20 +1,33 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { OrderItem } from '../../orders/entities/order-item.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
+import { ProductType } from '../../productTypes/entities/productTypes.entity';
+import { ProductVariant } from '../../productVariants/entities/productVariants.entity';
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
-
-  @Column()
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @OneToMany(() => OrderItem, orderItem => orderItem.product)
-  order_items: OrderItem[];
-} 
+  @ManyToOne(() => ProductType, (productType) => productType.products, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'productTypeId' })
+  productType: ProductType;
+
+  @OneToMany(() => ProductVariant, (variant) => variant.product)
+  variants: ProductVariant[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

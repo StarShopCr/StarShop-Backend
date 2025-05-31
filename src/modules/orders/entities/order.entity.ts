@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { OrderItem } from './order-item.entity';
 
@@ -6,7 +14,7 @@ export enum OrderStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
   SHIPPED = 'SHIPPED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 @Entity('orders')
@@ -20,7 +28,7 @@ export class Order {
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.PENDING
+    default: OrderStatus.PENDING,
   })
   status: OrderStatus;
 
@@ -30,10 +38,10 @@ export class Order {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => User, user => user.orders)
+  @ManyToOne(() => User, (user) => user.orders)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => OrderItem, orderItem => orderItem.order)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   order_items: OrderItem[];
-} 
+}

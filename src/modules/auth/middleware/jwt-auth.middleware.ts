@@ -4,11 +4,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { User } from '../../../entities/User';
 import AppDataSource from '../../../config/ormconfig';
 
-export const jwtAuthMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -41,7 +37,7 @@ export const jwtAuthMiddleware = async (
     req.user = {
       id: user.id,
       walletAddress: user.walletAddress,
-      role: user.userRoles[0].role.name
+      role: user.userRoles[0].role.name,
     };
 
     next();
@@ -49,13 +45,13 @@ export const jwtAuthMiddleware = async (
     if (error instanceof UnauthorizedException) {
       res.status(401).json({
         success: false,
-        message: error.message
+        message: error.message,
       });
     } else {
       res.status(500).json({
         success: false,
-        message: 'Internal server error'
+        message: 'Internal server error',
       });
     }
   }
-}; 
+};

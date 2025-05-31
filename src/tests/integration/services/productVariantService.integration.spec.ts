@@ -1,8 +1,8 @@
 import AppDataSource from '../../../config/ormconfig';
-import { Product } from '../../../entities/Product';
-import { ProductType } from '../../../entities/ProductType';
-import { ProductVariant } from '../../../entities/ProductVariant';
-import { ProductVariantService } from '../../../services/productVariant.service';
+import { Product } from '../../../modules/products/entities/product.entity';
+import { ProductType } from '../../../modules/productTypes/entities/productTypes.entity';
+import { ProductVariant } from '../../../modules/productVariants/entities/productVariants.entity';
+import { ProductVariantService } from '../../../modules/productVariants/services/productVariants.service';
 
 describe('ProductVariantService Integration Tests', () => {
   let service: ProductVariantService;
@@ -13,7 +13,10 @@ describe('ProductVariantService Integration Tests', () => {
     }
     await AppDataSource.synchronize(true);
 
-    service = new ProductVariantService();
+    const productVariantRepository = AppDataSource.getRepository(ProductVariant);
+    const productRepository = AppDataSource.getRepository(Product);
+
+    service = new ProductVariantService(productVariantRepository, productRepository);
   });
 
   afterAll(async () => {

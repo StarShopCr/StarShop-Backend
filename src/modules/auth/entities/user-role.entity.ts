@@ -13,11 +13,11 @@ export class UserRole {
   @Column()
   roleId: number;
 
-  @ManyToOne(() => User, user => user.userRoles)
+  @ManyToOne(() => User, (user) => user.userRoles)
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => Role, role => role.userRoles)
+  @ManyToOne(() => Role, (role) => role.userRoles)
   @JoinColumn({ name: 'roleId' })
   role: Role;
-} 
+}

@@ -17,7 +17,9 @@ export class UserService {
     } catch (error: any) {
       if (error.code === '23505' || error.code === 'SQLITE_CONSTRAINT') {
         if (error.message.includes('UQ_fc71cd6fb73f95244b23e2ef113')) {
-          throw new BadRequestError('The wallet address is already in use. Please use a unique wallet address.');
+          throw new BadRequestError(
+            'The wallet address is already in use. Please use a unique wallet address.'
+          );
         }
       }
       throw new BadRequestError(`Database Error: ${error.message}`);
@@ -43,7 +45,9 @@ export class UserService {
     } catch (error: any) {
       if (error.code === '23505' || error.code === 'SQLITE_CONSTRAINT') {
         if (error.message.includes('UQ_fc71cd6fb73f95244b23e2ef113')) {
-          throw new BadRequestError('The wallet address is already in use. Please use a unique wallet address.');
+          throw new BadRequestError(
+            'The wallet address is already in use. Please use a unique wallet address.'
+          );
         }
       }
       throw new BadRequestError(`Database Error: ${error.message}`);

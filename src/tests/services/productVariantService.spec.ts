@@ -1,9 +1,9 @@
-import { ProductVariantService } from '../../services/productVariant.service';
-import { ProductVariant } from '../../entities/ProductVariant';
+import { ProductVariantService } from '../../modules/productVariants/services/productVariants.service';
+import { ProductVariant } from '../../modules/productVariants/entities/productVariants.entity';
 import { Repository } from 'typeorm';
 import AppDataSource from '../../config/ormconfig';
-import { ProductType } from '../../entities/ProductType';
-import { Product } from '../../entities/Product';
+import { ProductType } from '../../modules/productTypes/entities/productTypes.entity';
+import { Product } from '../../modules/products/entities/product.entity';
 
 jest.mock('../../config/ormconfig', () => ({
   getRepository: jest.fn(),
@@ -30,7 +30,10 @@ describe('ProductVariantService', () => {
 
     (AppDataSource.getRepository as jest.Mock).mockReturnValue(mockRepo);
 
-    service = new ProductVariantService();
+    const productVariantRepository = AppDataSource.getRepository(ProductVariant);
+    const productRepository = AppDataSource.getRepository(Product);
+
+    service = new ProductVariantService(productVariantRepository, productRepository);
     (service as any).repository = mockRepo;
   });
 
@@ -184,79 +187,125 @@ describe('ProductVariantService', () => {
     mockRepo.delete.mockResolvedValue({ affected: 1 } as any);
 
     const result = await service.delete(1);
-        expect(mockRepo.delete).toHaveBeenCalledWith(1);
-        expect(result).toBe(true);
-    });
+    expect(mockRepo.delete).toHaveBeenCalledWith(1);
+    expect(result).toBe(true);
+  });
 
-    // Added Tests
-    it('should throw an error when creating a variant with missing SKU', async () => {
-        const variantData = { price: 999.99, stock: 10 }; // No SKU
-        const productData = { id: 1, name: 'Laptop', description: 'A high-end gaming laptop', productType: { id: 1, name: 'Electronics', description: 'Category for electronics', createdAt: new Date(), products: [] }, variants: [], createdAt: new Date() };
+  // Added Tests
+  it('should throw an error when creating a variant with missing SKU', async () => {
+    const variantData = { price: 999.99, stock: 10 }; // No SKU
+    const productData = {
+      id: 1,
+      name: 'Laptop',
+      description: 'A high-end gaming laptop',
+      productType: {
+        id: 1,
+        name: 'Electronics',
+        description: 'Category for electronics',
+        createdAt: new Date(),
+        products: [],
+      },
+      variants: [],
+      createdAt: new Date(),
+    };
 
-        const productRepo = { findOne: jest.fn().mockResolvedValue(productData) };
-        (AppDataSource.getRepository as jest.Mock)
-            .mockReturnValueOnce(productRepo)
-            .mockReturnValueOnce(mockRepo);
+    const productRepo = { findOne: jest.fn().mockResolvedValue(productData) };
+    (AppDataSource.getRepository as jest.Mock)
+      .mockReturnValueOnce(productRepo)
+      .mockReturnValueOnce(mockRepo);
 
-        await expect(service.create(variantData, 1)).rejects.toThrow('SKU is required');
-        expect(mockRepo.create).not.toHaveBeenCalled();
-    });
+    await expect(service.create(variantData, 1)).rejects.toThrow('SKU is required');
+    expect(mockRepo.create).not.toHaveBeenCalled();
+  });
 
-    it('should throw an error when product does not exist', async () => {
-        const variantData = { sku: 'LAP123', price: 999.99, stock: 10 };
+  it('should throw an error when product does not exist', async () => {
+    const variantData = { sku: 'LAP123', price: 999.99, stock: 10 };
 
-        const productRepo = { findOne: jest.fn().mockResolvedValue(null) }; // No product found
-        (AppDataSource.getRepository as jest.Mock)
-            .mockReturnValueOnce(productRepo)
-            .mockReturnValueOnce(mockRepo);
+    const productRepo = { findOne: jest.fn().mockResolvedValue(null) }; // No product found
+    (AppDataSource.getRepository as jest.Mock)
+      .mockReturnValueOnce(productRepo)
+      .mockReturnValueOnce(mockRepo);
 
-        await expect(service.create(variantData, 1)).rejects.toThrow('Product with ID 1 not found');
-        expect(mockRepo.save).not.toHaveBeenCalled();
-    });
+    await expect(service.create(variantData, 1)).rejects.toThrow('Product with ID 1 not found');
+    expect(mockRepo.save).not.toHaveBeenCalled();
+  });
 
-    it('should throw an error for negative price', async () => {
-        const variantData = { sku: 'LAP123', price: -999.99, stock: 10 };
-        const productData = { id: 1, name: 'Laptop', description: 'A high-end gaming laptop', productType: { id: 1, name: 'Electronics', description: 'Category for electronics', createdAt: new Date(), products: [] }, variants: [], createdAt: new Date() };
+  it('should throw an error for negative price', async () => {
+    const variantData = { sku: 'LAP123', price: -999.99, stock: 10 };
+    const productData = {
+      id: 1,
+      name: 'Laptop',
+      description: 'A high-end gaming laptop',
+      productType: {
+        id: 1,
+        name: 'Electronics',
+        description: 'Category for electronics',
+        createdAt: new Date(),
+        products: [],
+      },
+      variants: [],
+      createdAt: new Date(),
+    };
 
-        const productRepo = { findOne: jest.fn().mockResolvedValue(productData) };
-        (AppDataSource.getRepository as jest.Mock)
-            .mockReturnValueOnce(productRepo)
-            .mockReturnValueOnce(mockRepo);
+    const productRepo = { findOne: jest.fn().mockResolvedValue(productData) };
+    (AppDataSource.getRepository as jest.Mock)
+      .mockReturnValueOnce(productRepo)
+      .mockReturnValueOnce(mockRepo);
 
-        await expect(service.create(variantData, 1)).rejects.toThrow('Price cannot be negative');
-        expect(mockRepo.save).not.toHaveBeenCalled();
-    });
+    await expect(service.create(variantData, 1)).rejects.toThrow('Price cannot be negative');
+    expect(mockRepo.save).not.toHaveBeenCalled();
+  });
 
-    it('should return null when updating a non-existent variant', async () => {
-        const updatedData = { price: 899.99 };
+  it('should return null when updating a non-existent variant', async () => {
+    const updatedData = { price: 899.99 };
 
-        mockRepo.findOne.mockResolvedValue(null); // Variant not found
+    mockRepo.findOne.mockResolvedValue(null); // Variant not found
 
-        const result = await service.update(1, updatedData);
+    const result = await service.update(1, updatedData);
 
-        expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: ['product'] });
-        expect(mockRepo.save).not.toHaveBeenCalled();
-        expect(result).toBeNull();
-    });
+    expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 }, relations: ['product'] });
+    expect(mockRepo.save).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+  });
 
-    it('should handle repository save failure during update', async () => {
-        const productData = { id: 1, name: 'Laptop', description: 'A high-end gaming laptop', productType: { id: 1, name: 'Electronics', description: 'Category for electronics', createdAt: new Date(), products: [] }, variants: [], createdAt: new Date() };
-        const variant = { id: 1, sku: 'LAP123', price: 999.99, stock: 10, product: productData, createdAt: new Date() };
-        const updatedData = { price: 899.99 };
+  it('should handle repository save failure during update', async () => {
+    const productData = {
+      id: 1,
+      name: 'Laptop',
+      description: 'A high-end gaming laptop',
+      productType: {
+        id: 1,
+        name: 'Electronics',
+        description: 'Category for electronics',
+        createdAt: new Date(),
+        products: [],
+      },
+      variants: [],
+      createdAt: new Date(),
+    };
+    const variant = {
+      id: 1,
+      sku: 'LAP123',
+      price: 999.99,
+      stock: 10,
+      product: productData,
+      createdAt: new Date(),
+    };
+    const updatedData = { price: 899.99 };
 
-        mockRepo.findOne.mockResolvedValue(variant);
-        mockRepo.save.mockRejectedValue(new Error('Database error'));
+    mockRepo.findOne.mockResolvedValue(variant);
+    mockRepo.save.mockRejectedValue(new Error('Database error'));
 
-        await expect(service.update(1, updatedData)).rejects.toThrow('Database error');
-        expect(mockRepo.save).toHaveBeenCalled();
-    });
+    await expect(service.update(1, updatedData)).rejects.toThrow('Database error');
+    expect(mockRepo.save).toHaveBeenCalled();
+  });
 
-    it('should return false when deleting a non-existent variant', async () => {
-        mockRepo.delete.mockResolvedValue({ affected: 0 } as any);
+  it('should return false when deleting a non-existent variant', async () => {
+    mockRepo.delete.mockResolvedValue({ affected: 0 } as any);
 
-        const result = await service.delete(1);
+    const result = await service.delete(1);
 
-        expect(mockRepo.delete).toHaveBeenCalledWith(1);
-        expect(result).toBe(false);
-    });
+    expect(mockRepo.delete).toHaveBeenCalledWith(1);
+    expect(result).toBe(false);
+  });
 });

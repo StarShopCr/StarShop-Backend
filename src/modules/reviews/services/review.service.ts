@@ -17,8 +17,12 @@ export class ReviewService {
     this.userService = new UserService(AppDataSource);
   }
 
-
-  async createReview(userId: number, productId: number, rating: number, comment?: string): Promise<Review> {
+  async createReview(
+    userId: number,
+    productId: number,
+    rating: number,
+    comment?: string
+  ): Promise<Review> {
     if (rating < 1 || rating > 5) {
       throw new BadRequestError('Rating must be between 1 and 5');
     }
@@ -35,7 +39,7 @@ export class ReviewService {
     }
 
     const existingReview = await this.repository.findOne({
-      where: { userId, productId }
+      where: { userId, productId },
     });
 
     if (existingReview) {
@@ -46,7 +50,7 @@ export class ReviewService {
       userId,
       productId,
       rating,
-      comment
+      comment,
     });
 
     try {
@@ -65,32 +69,32 @@ export class ReviewService {
     const reviews = await this.repository.find({
       where: { productId },
       relations: ['user'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
 
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
-    const reviewDTOs: ReviewResponseDTO[] = reviews.map(review => ({
+    const reviewDTOs: ReviewResponseDTO[] = reviews.map((review) => ({
       id: review.id,
       userId: review.userId,
       productId: review.productId,
       rating: review.rating,
       comment: review.comment,
       createdAt: review.createdAt,
-      userName: review.user?.name || undefined
+      userName: review.user?.name || undefined,
     }));
 
     return {
       reviews: reviewDTOs,
       averageRating,
-      totalReviews: reviews.length
+      totalReviews: reviews.length,
     };
   }
 
   async deleteReview(userId: number, reviewId: string): Promise<boolean> {
     const review = await this.repository.findOne({
-      where: { id: reviewId }
+      where: { id: reviewId },
     });
 
     if (!review) {
@@ -120,8 +124,8 @@ export class ReviewService {
   }
 
   async getSortedProductReviews(
-    productId: number, 
-    sortBy: 'rating' | 'date' = 'date', 
+    productId: number,
+    sortBy: 'rating' | 'date' = 'date',
     sortOrder: 'ASC' | 'DESC' = 'DESC'
   ): Promise<ProductReviewsResponseDTO> {
     const product = await this.productService.getById(productId);
@@ -129,7 +133,8 @@ export class ReviewService {
       throw new NotFoundError(`Product with ID ${productId} not found`);
     }
 
-    const queryBuilder = this.repository.createQueryBuilder('review')
+    const queryBuilder = this.repository
+      .createQueryBuilder('review')
       .where('review.productId = :productId', { productId })
       .leftJoinAndSelect('review.user', 'user');
 
@@ -143,20 +148,20 @@ export class ReviewService {
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = reviews.length > 0 ? totalRating / reviews.length : 0;
 
-    const reviewDTOs: ReviewResponseDTO[] = reviews.map(review => ({
+    const reviewDTOs: ReviewResponseDTO[] = reviews.map((review) => ({
       id: review.id,
       userId: review.userId,
       productId: review.productId,
       rating: review.rating,
       comment: review.comment,
       createdAt: review.createdAt,
-      userName: review.user?.name || undefined
+      userName: review.user?.name || undefined,
     }));
 
     return {
       reviews: reviewDTOs,
       averageRating,
-      totalReviews: reviews.length
+      totalReviews: reviews.length,
     };
   }
 }

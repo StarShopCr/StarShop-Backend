@@ -19,7 +19,7 @@ export class OrderController {
   @Get(':id')
   async getOrderDetails(
     @Param('id') orderId: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ): Promise<OrderDto> {
     const userId = req.user?.id;
     if (!userId) {
@@ -27,4 +27,4 @@ export class OrderController {
     }
     return this.orderService.getOrderDetails(userId.toString(), orderId);
   }
-} 
+}

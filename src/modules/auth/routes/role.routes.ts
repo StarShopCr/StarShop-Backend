@@ -28,9 +28,6 @@ router.post(
 );
 
 // Get current user's roles
-router.get(
-  '/me/roles',
-  roleController.getMyRoles.bind(roleController)
-);
+router.get('/me/roles', roleController.getMyRoles.bind(roleController));
 
-export default router; 
+export default router;

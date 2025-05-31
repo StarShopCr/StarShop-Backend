@@ -35,7 +35,7 @@ describe('SorobanService', () => {
   describe('submitTransaction', () => {
     it('should throw error if XDR is invalid or empty', async () => {
       await expect(SorobanService.submitTransaction('')).rejects.toThrow(
-        'Invalid transaction XDR: must be a non-empty base64 string.',
+        'Invalid transaction XDR: must be a non-empty base64 string.'
       );
     });
 
@@ -56,7 +56,9 @@ describe('SorobanService', () => {
 
   describe('invokeContractMethod', () => {
     it('should invoke a contract method successfully', async () => {
-      const result = await SorobanService.invokeContractMethod('fake-contract-id', 'mint', ['arg1']);
+      const result = await SorobanService.invokeContractMethod('fake-contract-id', 'mint', [
+        'arg1',
+      ]);
       expect(result).toEqual({ hash: 'mocked_hash' });
     });
   });

@@ -24,20 +24,13 @@ router.post(
  * @desc Get all reviews for a product
  * @access Public
  */
-router.get(
-  '/:productId',
-  reviewController.getProductReviews
-);
+router.get('/:productId', reviewController.getProductReviews);
 
 /**
  * @route DELETE /api/v1/reviews/:reviewId
  * @desc Delete a review (only by the user who created it)
  * @access Private (Authenticated Users Only)
  */
-router.delete(
-  '/:reviewId',
-  authMiddleware,
-  reviewController.deleteReview
-);
+router.delete('/:reviewId', authMiddleware, reviewController.deleteReview);
 
 export default router;

@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
-import { ProductType } from '../entities/ProductType';
-import AppDataSource from '../config/ormconfig';
+import { ProductType } from '../entities/productTypes.entity';
+import AppDataSource from '../../../config/ormconfig';
 
 export class ProductTypeService {
   private repository: Repository<ProductType>;

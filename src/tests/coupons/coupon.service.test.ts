@@ -64,7 +64,9 @@ describe('CouponService', () => {
     });
 
     it('should throw an error if coupon does not exist', async () => {
-      await expect(couponService.validateCoupon('INVALID', 100)).rejects.toThrow('Coupon not found');
+      await expect(couponService.validateCoupon('INVALID', 100)).rejects.toThrow(
+        'Coupon not found'
+      );
     });
 
     it('should throw an error if coupon is expired', async () => {
@@ -76,18 +78,24 @@ describe('CouponService', () => {
         created_by: 'admin-uuid-123',
       });
 
-      await expect(couponService.validateCoupon('EXPIRED', 100)).rejects.toThrow('Coupon has expired');
+      await expect(couponService.validateCoupon('EXPIRED', 100)).rejects.toThrow(
+        'Coupon has expired'
+      );
     });
 
     it('should throw an error if cart value is below minimum', async () => {
-      await expect(couponService.validateCoupon('WELCOME10', 40)).rejects.toThrow('Cart value is below minimum required');
+      await expect(couponService.validateCoupon('WELCOME10', 40)).rejects.toThrow(
+        'Cart value is below minimum required'
+      );
     });
 
     it('should throw an error if usage limit is reached', async () => {
       await couponUsageRepository.save({ coupon_id: coupon.id, user_id: 'user-1' });
       await couponUsageRepository.save({ coupon_id: coupon.id, user_id: 'user-2' });
 
-      await expect(couponService.validateCoupon('WELCOME10', 100)).rejects.toThrow('Coupon usage limit reached');
+      await expect(couponService.validateCoupon('WELCOME10', 100)).rejects.toThrow(
+        'Coupon usage limit reached'
+      );
     });
   });
 
@@ -116,7 +124,9 @@ describe('CouponService', () => {
       expect(updatedOrder.total).toBe(90);
       expect(updatedOrder.id).toBe('order-123');
 
-      const usage = await couponUsageRepository.findOne({ where: { coupon_id: coupon.id, user_id: 'user-1' } });
+      const usage = await couponUsageRepository.findOne({
+        where: { coupon_id: coupon.id, user_id: 'user-1' },
+      });
       expect(usage).toBeDefined();
     });
 
@@ -136,13 +146,17 @@ describe('CouponService', () => {
       expect(updatedOrder.total).toBe(95);
       expect(updatedOrder.id).toBe('order-123');
 
-      const usage = await couponUsageRepository.findOne({ where: { coupon_id: fixedCoupon.id, user_id: 'user-1' } });
+      const usage = await couponUsageRepository.findOne({
+        where: { coupon_id: fixedCoupon.id, user_id: 'user-1' },
+      });
       expect(usage).toBeDefined();
     });
 
     it('should throw an error if coupon is invalid', async () => {
       const order = { id: 'order-123', total: 100 };
-      await expect(couponService.applyCouponToOrder(order, 'INVALID', 'user-1')).rejects.toThrow('Coupon not found');
+      await expect(couponService.applyCouponToOrder(order, 'INVALID', 'user-1')).rejects.toThrow(
+        'Coupon not found'
+      );
     });
   });
 });

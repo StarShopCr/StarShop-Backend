@@ -32,4 +32,4 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-export default router; 
+export default router;

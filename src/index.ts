@@ -11,7 +11,6 @@ import wishlistRouter from './modules/wishlist/route/wishlist.routes';
 // import errorHandler from './middleware/error.middleware';
 import { NotFoundError } from './middleware/error.classes';
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -29,7 +28,7 @@ app.use('/api/v1/wishlist', wishlistRouter); // Integrate wishlist routes here
 // Swagger documentation route
 app.use('/docs', SwaggerUI.serve, SwaggerUI.setup(swaggerDocument));
 
-app.use("*", (req, res, next) => next(new NotFoundError()));
+app.use('*', (req, res, next) => next(new NotFoundError()));
 
 // Register the global error-handling middleware
 // app.use(errorHandler);
@@ -46,4 +45,3 @@ AppDataSource.initialize()
   });
 
 // app.use('/', router)
-

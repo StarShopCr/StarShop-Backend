@@ -8,4 +8,4 @@ export const mockConfigService = {
     };
     return config[key];
   }),
-}; 
+};

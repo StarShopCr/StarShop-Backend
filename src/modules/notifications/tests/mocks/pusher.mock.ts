@@ -5,4 +5,4 @@ export const mockPusher = {
 
 jest.mock('pusher', () => {
   return jest.fn().mockImplementation(() => mockPusher);
-}); 
+});

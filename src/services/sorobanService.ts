@@ -3,10 +3,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const {
-  SOROBAN_RPC_URL,
-  SOROBAN_SERVER_SECRET,
-} = process.env;
+const { SOROBAN_RPC_URL, SOROBAN_SERVER_SECRET } = process.env;
 
 if (!SOROBAN_RPC_URL || !SOROBAN_SERVER_SECRET) {
   throw new Error('Missing Soroban config in environment variables.');
@@ -32,7 +29,7 @@ export class SorobanService {
     if (!transactionXDR || typeof transactionXDR !== 'string') {
       throw new Error('Invalid transaction XDR: must be a non-empty base64 string.');
     }
-  
+
     try {
       const tx = TransactionBuilder.fromXDR(transactionXDR, Networks.FUTURENET);
       const response = await this.server.sendTransaction(tx);
@@ -42,8 +39,6 @@ export class SorobanService {
       throw new Error('Failed to submit transaction to Soroban network.');
     }
   }
-  
-  
 
   /**
    * Invoke a contract method with provided arguments.
@@ -57,7 +52,7 @@ export class SorobanService {
   static async invokeContractMethod(
     contractId: string,
     methodName: string,
-    args: any[],
+    args: any[]
   ): Promise<any> {
     try {
       const account = await this.server.getAccount(publicKey);

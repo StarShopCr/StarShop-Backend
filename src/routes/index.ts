@@ -5,7 +5,7 @@ import attributeValuesRoutes from './AttributeValueRouter';
 import productRoutes from './ProductRouter';
 import productVariantAttributeRoutes from './ProductVariantAttributeRouter';
 import protectedRoutes from './ProtectedRouter';
-import orderRoutes from "../modules/orders/routes/order.routes";
+import orderRoutes from '../modules/orders/routes/order.routes';
 import cartRoutes from '../modules/cart/routes/cart.routes';
 import ReviewRouter from '../modules/reviews/routes/review.routes';
 import { fileRoutes } from '../modules/files';
@@ -26,8 +26,8 @@ router.use('/attributes', attributeRoutes);
 router.use('/attribute-values', attributeValuesRoutes);
 router.use('/products', productRoutes);
 router.use('/product-variant-attributes', productVariantAttributeRoutes);
-router.use("/orders", orderRoutes);
-// 
+router.use('/orders', orderRoutes);
+//
 router.use('/cart', cartRoutes);
 router.use('/reviews', ReviewRouter);
 router.use('/notifications', notificationRoutes);

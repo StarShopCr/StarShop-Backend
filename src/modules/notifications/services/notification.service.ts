@@ -22,7 +22,7 @@ export class NotificationService {
     try {
       const channel = `user-${data.userId}`;
       this.logger.log(`Attempting to send notification to channel: ${channel}`);
-      
+
       await this.pusher.trigger(channel, 'notification', {
         title: data.title,
         message: data.message,
@@ -30,9 +30,9 @@ export class NotificationService {
         timestamp: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isRead: false
+        isRead: false,
       });
-      
+
       this.logger.log(`Successfully sent notification to user ${data.userId}`);
       return true;
     } catch (error) {
@@ -44,7 +44,7 @@ export class NotificationService {
   async broadcastNotification(data: NotificationDto): Promise<boolean> {
     try {
       this.logger.log('Attempting to broadcast notification');
-      
+
       await this.pusher.trigger('notifications', 'broadcast', {
         title: data.title,
         message: data.message,
@@ -52,9 +52,9 @@ export class NotificationService {
         timestamp: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isRead: false
+        isRead: false,
       });
-      
+
       this.logger.log('Successfully broadcasted notification');
       return true;
     } catch (error) {

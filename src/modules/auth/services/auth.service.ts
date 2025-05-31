@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly roleService: RoleService,
+    private readonly roleService: RoleService
   ) {}
 
   async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
@@ -24,15 +24,15 @@ export class AuthService {
     const roleRepository = AppDataSource.getRepository(Role);
 
     // Try to find an existing user with this wallet address
-    let user = await userRepository.findOne({ 
+    let user = await userRepository.findOne({
       where: { walletAddress },
-      relations: ['userRoles', 'userRoles.role']
+      relations: ['userRoles', 'userRoles.role'],
     });
 
     // If no user exists, create a new one with default 'buyer' role
     if (!user) {
-      user = userRepository.create({ 
-        walletAddress
+      user = userRepository.create({
+        walletAddress,
       });
       await userRepository.save(user);
 
@@ -47,14 +47,14 @@ export class AuthService {
         userId: user.id,
         roleId: buyerRole.id,
         user,
-        role: buyerRole
+        role: buyerRole,
       });
       await userRoleRepository.save(userRole);
 
       // Reload user with relations
-      user = await userRepository.findOne({ 
+      user = await userRepository.findOne({
         where: { id: user.id },
-        relations: ['userRoles', 'userRoles.role']
+        relations: ['userRoles', 'userRoles.role'],
       });
     }
 
@@ -65,7 +65,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       walletAddress: user.walletAddress,
-      role: primaryRole
+      role: primaryRole,
     };
 
     return {
@@ -85,7 +85,7 @@ export class AuthService {
     }
 
     const userRoleRepository = AppDataSource.getRepository(UserRole);
-    
+
     // Remove existing roles
     await userRoleRepository.delete({ userId });
 
@@ -94,7 +94,7 @@ export class AuthService {
       userId: user.id,
       roleId: role.id,
       user,
-      role
+      role,
     });
     await userRoleRepository.save(userRole);
 
@@ -113,4 +113,4 @@ export class AuthService {
     // Assign default buyer role
     return this.assignRole(userId, 'buyer');
   }
-} 
+}

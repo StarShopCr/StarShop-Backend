@@ -15,13 +15,13 @@ export class Notification {
   @Column({
     type: 'enum',
     enum: ['info', 'warning', 'error'],
-    default: 'info'
+    default: 'info',
   })
   type: 'info' | 'warning' | 'error';
 
-  @ManyToOne(() => User, user => user.notifications)
+  @ManyToOne(() => User, (user) => user.notifications)
   user: User;
 
   @CreateDateColumn()
   createdAt: Date;
-} 
+}

@@ -7,7 +7,7 @@ import { RoleName } from '../modules/auth/types/role.types';
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private roleService: RoleService,
+    private roleService: RoleService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -21,4 +21,4 @@ export class RolesGuard implements CanActivate {
 
     return this.roleService.hasAnyRole(user.id, requiredRoles as RoleName[]);
   }
-} 
+}

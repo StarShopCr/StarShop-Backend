@@ -24,9 +24,7 @@ describe('Cart Integration Test', () => {
     id: 'cart-123',
     userId: fakeUser.id,
     createdAt: new Date(),
-    items: [
-      { id: 'item-1', productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4', quantity: 2 },
-    ],
+    items: [{ id: 'item-1', productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4', quantity: 2 }],
   };
 
   beforeAll(() => {
@@ -64,10 +62,12 @@ describe('Cart Integration Test', () => {
       const response = await request(app).get('/cart');
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(expect.objectContaining({
-        id: 'cart-123',
-        userId: fakeUser.id,
-      }));
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 'cart-123',
+          userId: fakeUser.id,
+        })
+      );
       expect(cartService.getCart).toHaveBeenCalledWith(fakeUser.id);
     });
 
@@ -87,19 +87,15 @@ describe('Cart Integration Test', () => {
         id: 'cart-123',
         userId: fakeUser.id,
         createdAt: new Date(),
-        items: [
-          { id: 'item-1', productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4', quantity: 2 },
-        ],
+        items: [{ id: 'item-1', productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4', quantity: 2 }],
       };
 
       (cartService.addItem as jest.Mock).mockResolvedValue(fakeCart);
 
-      const response = await request(app)
-        .post('/cart/add-item')
-        .send({
-          productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
-          quantity: 2,
-        });
+      const response = await request(app).post('/cart/add-item').send({
+        productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
+        quantity: 2,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.items.length).toBeGreaterThan(0);
@@ -122,11 +118,9 @@ describe('Cart Integration Test', () => {
 
       (cartService.removeItem as jest.Mock).mockResolvedValue(fakeCart);
 
-      const response = await request(app)
-        .post('/cart/remove-item')
-        .send({
-          productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
-        });
+      const response = await request(app).post('/cart/remove-item').send({
+        productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
+      });
 
       expect(response.status).toBe(200);
       expect(cartService.removeItem).toHaveBeenCalledWith(
@@ -171,12 +165,10 @@ describe('Cart Integration Test', () => {
       (cartService.getCart as jest.Mock).mockResolvedValue(fakeCart);
 
       // Simulate adding an item to the cart
-      let response = await request(app)
-        .post('/cart/add-item')
-        .send({
-          productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
-          quantity: 2,
-        });
+      let response = await request(app).post('/cart/add-item').send({
+        productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
+        quantity: 2,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.items.length).toBeGreaterThan(0);
@@ -189,37 +181,39 @@ describe('Cart Integration Test', () => {
       response = await request(app).get('/cart');
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(expect.objectContaining({
-        userId: fakeUser.id,
-        items: expect.arrayContaining([
-          expect.objectContaining({
-            productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
-            quantity: 2,
-          }),
-        ]),
-      }));
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          userId: fakeUser.id,
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              productId: 'e1d48bfa-73b4-49e5-8792-191cf9e7c4c4',
+              quantity: 2,
+            }),
+          ]),
+        })
+      );
     });
   });
 
   describe('POST /cart/clear persistence', () => {
     it('should persist the empty cart after clearing and re-login', async () => {
       const clearedCart = { ...fakeCart, items: [] };
-    
+
       (cartService.clearCart as jest.Mock).mockResolvedValue(clearedCart);
-    
+
       // Simulate clearing the cart
       let response = await request(app).post('/cart/clear');
-      
+
       // Check that the cart is empty after clearing
       expect(response.status).toBe(200);
       expect(response.body.items).toEqual([]);
-    
+
       // IMPORTANT: Update the mock for getCart to return the empty cart for the "re-login" simulation
       (cartService.getCart as jest.Mock).mockResolvedValue(clearedCart);
-      
+
       // Simulate re-login after cart is cleared and verify that it's still cleared
       response = await request(app).get('/cart');
-      
+
       // Check that the cart is still empty after re-login
       expect(response.status).toBe(200);
       expect(response.body.items).toEqual([]);

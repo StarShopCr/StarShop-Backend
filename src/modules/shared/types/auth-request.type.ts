@@ -8,4 +8,4 @@ export interface AuthenticatedRequest extends Request {
     walletAddress?: string;
     email?: string;
   };
-} 
+}

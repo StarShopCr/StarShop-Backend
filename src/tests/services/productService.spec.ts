@@ -1,12 +1,12 @@
-import { ProductService } from '../../services/product.service';
-import { Product } from '../../entities/Product';
+import { ProductService } from '../../modules/products/services/product.service';
+import { Product } from '../../modules/products/entities/product.entity';
 import { Repository } from 'typeorm';
-import { ProductType } from '../../entities/ProductType';
+import { ProductType } from '../../modules/productTypes/entities/productTypes.entity';
 import AppDataSource from '../../config/ormconfig';
 
 jest.mock('../../config/ormconfig', () => ({
-    getRepository: jest.fn(),
-  }));
+  getRepository: jest.fn(),
+}));
 
 describe('ProductService', () => {
   let service: ProductService;
@@ -61,7 +61,13 @@ describe('ProductService', () => {
   // Added Tests
   it('should throw an error when creating a product with missing name', async () => {
     const productData = { description: 'Gaming Laptop' }; // No name
-    const productType = { id: 1, name: 'Electronics', description: 'Category for electronics', createdAt: new Date(), products: [] };
+    const productType = {
+      id: 1,
+      name: 'Electronics',
+      description: 'Category for electronics',
+      createdAt: new Date(),
+      products: [],
+    };
 
     const productTypeRepo = { findOne: jest.fn().mockResolvedValue(productType) };
     (AppDataSource.getRepository as jest.Mock)
@@ -86,13 +92,25 @@ describe('ProductService', () => {
 
   it('should handle repository save failure', async () => {
     const productData = { name: 'Laptop', description: 'Gaming Laptop' };
-    const productType = { id: 1, name: 'Electronics', description: 'Category for electronics', createdAt: new Date(), products: [] };
-    const savedProduct = { id: 1, ...productData, productType, variants: [], createdAt: new Date() };
+    const productType = {
+      id: 1,
+      name: 'Electronics',
+      description: 'Category for electronics',
+      createdAt: new Date(),
+      products: [],
+    };
+    const savedProduct = {
+      id: 1,
+      ...productData,
+      productType,
+      variants: [],
+      createdAt: new Date(),
+    };
 
     const productTypeRepo = { findOne: jest.fn().mockResolvedValue(productType) };
     (AppDataSource.getRepository as jest.Mock)
       .mockReturnValueOnce(productTypeRepo) // For ProductType
-      .mockReturnValueOnce(mockRepo);       // For Product
+      .mockReturnValueOnce(mockRepo); // For Product
 
     mockRepo.create.mockReturnValue(savedProduct);
     mockRepo.save.mockRejectedValue(new Error('Database error'));

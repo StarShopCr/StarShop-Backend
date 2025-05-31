@@ -9,7 +9,7 @@ export enum ErrorType {
   INTERNAL_ERROR = 'InternalError',
   UNAUTHORIZED = 'UnauthorizedError',
   FORBIDDEN = 'ForbiddenError',
-  CONFLICT = 'ConflictError'
+  CONFLICT = 'ConflictError',
 }
 
 export abstract class AppError extends Error {
@@ -52,77 +52,101 @@ export abstract class AppError extends Error {
         error: {
           code: err.code,
           message: err.message,
-          details: err.details
-        }
+          details: err.details,
+        },
       });
     }
-    
+
     // Handle other types of errors
     console.error('Unhandled error:', err);
-    
+
     // Create a new InternalError with the error message
     const internalError = new InternalError(
-      process.env.NODE_ENV === 'production' 
-        ? undefined  // Use the default message in production
+      process.env.NODE_ENV === 'production'
+        ? undefined // Use the default message in production
         : err.message || undefined
     );
-    
+
     // Use the AppError handling for consistency
     return res.status(internalError.status).json({
       success: false,
       error: {
         code: internalError.code,
         message: internalError.message,
-        details: internalError.details
-      }
+        details: internalError.details,
+      },
     });
   }
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string = 'Validation failed', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Validation failed',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('VALIDATION_ERROR', message, 400, details);
   }
 }
 
 export class BadRequestError extends AppError {
-  constructor(message: string = 'Bad request', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Bad request',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('BAD_REQUEST_ERROR', message, 400, details);
   }
 }
 
 export class DatabaseError extends AppError {
-  constructor(message: string = 'Database operation failed', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Database operation failed',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('DATABASE_ERROR', message, 500, details);
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(message: string = 'Resource not found', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Resource not found',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('NOT_FOUND', message, 404, details);
   }
 }
 
 export class InternalError extends AppError {
-  constructor(message: string = 'Something went wrong', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Something went wrong',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('INTERNAL_ERROR', message, 500, details);
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Unauthorized access', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Unauthorized access',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('UNAUTHORIZED', message, 401, details);
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message: string = 'Access forbidden', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Access forbidden',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('FORBIDDEN', message, 403, details);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string = 'Resource conflict', details?: Partial<{ field: string; error: string }>) {
+  constructor(
+    message: string = 'Resource conflict',
+    details?: Partial<{ field: string; error: string }>
+  ) {
     super('CONFLICT', message, 409, details);
   }
 }

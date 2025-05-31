@@ -8,7 +8,7 @@ dotenv.config();
 const dataSource = new DataSource({
   type: 'sqlite',
   database: ':memory:',
-  entities: [Coupon, CouponUsage], 
+  entities: [Coupon, CouponUsage],
   synchronize: true,
 });
 
@@ -42,7 +42,7 @@ afterEach(async () => {
   try {
     await dataSource.transaction(async (manager) => {
       for (const entity of entities) {
-        await manager.query(`PRAGMA foreign_keys = OFF;`); 
+        await manager.query(`PRAGMA foreign_keys = OFF;`);
         await manager.query(`DELETE FROM ${entity.tableName};`);
         await manager.query(`PRAGMA foreign_keys = ON;`);
       }

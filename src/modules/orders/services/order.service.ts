@@ -9,7 +9,7 @@ import { plainToClass } from 'class-transformer';
 export class OrderService {
   constructor(
     @InjectRepository(Order)
-    private orderRepository: Repository<Order>,
+    private orderRepository: Repository<Order>
   ) {}
 
   async getOrdersByUser(userId: string): Promise<OrderDto[]> {
@@ -19,7 +19,7 @@ export class OrderService {
       order: { created_at: 'DESC' },
     });
 
-    return orders.map(order => this.transformOrder(order));
+    return orders.map((order) => this.transformOrder(order));
   }
 
   async getOrderDetails(userId: string, orderId: string): Promise<OrderDto> {
@@ -41,7 +41,7 @@ export class OrderService {
     });
 
     // Transform order items to include product name
-    orderDto.order_items = order.order_items.map(item => ({
+    orderDto.order_items = order.order_items.map((item) => ({
       id: item.id,
       product_id: item.product_id,
       quantity: item.quantity,
@@ -51,4 +51,4 @@ export class OrderService {
 
     return orderDto;
   }
-} 
+}

@@ -16,10 +16,8 @@ router.post(
   (req: AuthenticatedRequest, res) => notificationController.sendToUser(req, res)
 );
 
-router.post(
-  '/broadcast',
-  validateRequest(NotificationDto),
-  (req: AuthenticatedRequest, res) => notificationController.broadcast(req, res)
+router.post('/broadcast', validateRequest(NotificationDto), (req: AuthenticatedRequest, res) =>
+  notificationController.broadcast(req, res)
 );
 
-export default router; 
+export default router;

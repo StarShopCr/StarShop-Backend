@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { User } from '../../../entities/User';
 
@@ -20,7 +28,7 @@ export class Cart {
   @Column({ name: 'expires_at', nullable: true })
   expiresAt: Date;
 
-  @OneToMany(() => CartItem, cartItem => cartItem.cart, { cascade: true })
+  @OneToMany(() => CartItem, (cartItem) => cartItem.cart, { cascade: true })
   items: CartItem[];
   discount: any;
   discountedTotal: number;

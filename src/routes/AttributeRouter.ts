@@ -8,7 +8,11 @@ import {
   deleteAttribute,
 } from '../controllers/AttributeController';
 import { CreateAttributeDto, UpdateAttributeDto } from '../dtos/AttributeDTO';
-import { paramValidationMiddleware, paramValidators, validationMiddleware } from '../middleware/validation.middleware';
+import {
+  paramValidationMiddleware,
+  paramValidators,
+  validationMiddleware,
+} from '../middleware/validation.middleware';
 
 const router = Router();
 

@@ -14,8 +14,8 @@ describe('authorizeRoles', () => {
       user: {
         id: 1,
         walletAddress: '0x123',
-        role: 'admin'
-      }
+        role: 'admin',
+      },
     };
     mockResponse = {
       status: jest.fn().mockReturnThis(),
@@ -29,4 +29,4 @@ describe('authorizeRoles', () => {
   });
 
   // Add your specific test cases here
-}); 
+});

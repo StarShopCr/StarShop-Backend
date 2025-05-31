@@ -36,10 +36,10 @@ export class AttributeValueService {
    * @returns {Promise<AttributeValue[]>} A promise that resolves to an array of attribute values with their related attributes.
    */
   async getAll(limit?: number, offset?: number): Promise<AttributeValue[]> {
-    return await this.repository.find({ 
-        skip: offset, 
-        take: limit, 
-        relations: ["attribute"] 
+    return await this.repository.find({
+      skip: offset,
+      take: limit,
+      relations: ['attribute'],
     });
   }
 

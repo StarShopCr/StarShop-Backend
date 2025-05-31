@@ -7,8 +7,14 @@ import {
   updateProductVariantAttribute,
   deleteProductVariantAttribute,
 } from '../controllers/productVariantAttributeController';
-import { validationMiddleware, paramValidationMiddleware } from '../middleware/validation.middleware';
-import { CreateProductVariantAttributeDto, UpdateProductVariantAttributeDto } from '../dtos/ProductVariantAttributeDTO';
+import {
+  validationMiddleware,
+  paramValidationMiddleware,
+} from '../middleware/validation.middleware';
+import {
+  CreateProductVariantAttributeDto,
+  UpdateProductVariantAttributeDto,
+} from '../dtos/ProductVariantAttributeDTO';
 import { paramValidators } from '../middleware/validation.middleware';
 
 const router = Router();

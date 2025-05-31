@@ -11,7 +11,6 @@ jest.mock('../../../modules/cart/services/cart.service');
 
 jest.spyOn(classValidator, 'validate').mockImplementation(jest.fn());
 
-
 describe('CartController', () => {
   let cartController: CartController;
   let mockRequest: any;
@@ -59,9 +58,11 @@ describe('CartController', () => {
       await cartController.getCart(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Failed to retrieve cart',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Failed to retrieve cart',
+        })
+      );
     });
   });
 
@@ -85,9 +86,11 @@ describe('CartController', () => {
       await cartController.addItem(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Validation failed',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Validation failed',
+        })
+      );
     });
 
     it('should handle errors and return 500', async () => {
@@ -97,9 +100,11 @@ describe('CartController', () => {
       await cartController.addItem(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Failed to add item to cart',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Failed to add item to cart',
+        })
+      );
     });
   });
 
@@ -123,9 +128,11 @@ describe('CartController', () => {
       await cartController.removeItem(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Validation failed',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Validation failed',
+        })
+      );
     });
 
     it('should handle errors and return 500', async () => {
@@ -135,9 +142,11 @@ describe('CartController', () => {
       await cartController.removeItem(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Failed to remove item from cart',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Failed to remove item from cart',
+        })
+      );
     });
   });
 
@@ -157,11 +166,11 @@ describe('CartController', () => {
       await cartController.clearCart(mockRequest, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Failed to clear cart',
-      }));
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Failed to clear cart',
+        })
+      );
     });
   });
-
-  
 });

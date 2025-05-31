@@ -1,1 +1,1 @@
-export type RoleName = 'buyer' | 'seller' | 'admin'; 
+export type RoleName = 'buyer' | 'seller' | 'admin';

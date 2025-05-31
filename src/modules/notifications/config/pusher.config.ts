@@ -14,4 +14,4 @@ export class PusherConfig {
       useTLS: true,
     };
   }
-} 
+}

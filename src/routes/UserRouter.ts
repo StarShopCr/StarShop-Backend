@@ -24,6 +24,6 @@ router.put('/:id', sessionMiddleware, validationMiddleware(UpdateUserDto), updat
 // Route to delete a user by ID
 router.delete('/:id', sessionMiddleware, deleteUser);
 
-router.post('/login', AuthController.login)
+router.post('/login', AuthController.login);
 
 export default router;

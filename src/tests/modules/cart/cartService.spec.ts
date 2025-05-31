@@ -88,24 +88,24 @@ describe('CartService', () => {
         expiresAt: new Date(now.getTime() - 1000), // expired (already passed)
         items: [mockCartItem], // Cart has some items
       };
-    
+
       mockCartRepository.findOne.mockResolvedValue(expiredCart);
-      
+
       // Mock the save to update the cart object
       mockCartRepository.save.mockImplementation((cart) => {
         // When cart is saved, return it with updated values
         return { ...cart };
       });
-      
+
       // Mock the delete to clear items
       mockCartItemRepository.delete.mockImplementation(() => {
         // Clear items array when delete is called
         expiredCart.items = [];
         return { affected: 1 };
       });
-    
+
       const cart = await cartService.getOrCreateCart(testUserId);
-    
+
       expect(mockCartItemRepository.delete).toHaveBeenCalledWith({ cartId: testCartId });
       expect(cart.expiresAt.getTime()).toBeGreaterThan(now.getTime()); // ExpiresAt should be updated
       expect(cart.items.length).toBe(0); // Cart should be empty now
@@ -124,12 +124,14 @@ describe('CartService', () => {
         id: testCartId,
         userId: testUserId,
         createdAt: now,
-        items: [{
-          id: mockCartItem.id,
-          productId: mockCartItem.productId,
-          quantity: mockCartItem.quantity,
-          product: mockCartItem.product,
-        }],
+        items: [
+          {
+            id: mockCartItem.id,
+            productId: mockCartItem.productId,
+            quantity: mockCartItem.quantity,
+            product: mockCartItem.product,
+          },
+        ],
       });
     });
   });

@@ -22,17 +22,17 @@ export class UpdateProductVariantAttributeDto {
 }
 
 export class ProductVariantAttributeDTO {
-    @IsNumber()
-    id: number;
+  @IsNumber()
+  id: number;
 
-    @ValidateNested()
-    @Type(() => ProductVariantDTO)
-    productVariant: ProductVariantDTO;
+  @ValidateNested()
+  @Type(() => ProductVariantDTO)
+  productVariant: ProductVariantDTO;
 
-    @ValidateNested()
-    @Type(() => AttributeValueDTO)
-    attributeValue: AttributeValueDTO;
+  @ValidateNested()
+  @Type(() => AttributeValueDTO)
+  attributeValue: AttributeValueDTO;
 
-    @IsDate()
-    createdAt: Date;
-} 
+  @IsDate()
+  createdAt: Date;
+}

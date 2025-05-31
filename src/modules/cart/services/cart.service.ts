@@ -19,16 +19,16 @@ export class CartService {
       where: { userId },
       relations: ['items', 'items.product'],
     });
-  
+
     if (!cart) {
       cart = this.cartRepository.create({ userId });
       await this.cartRepository.save(cart);
     }
-  
+
     const now = new Date();
     if (cart && cart.expiresAt && cart.expiresAt < now) {
       await this.cartItemRepository.delete({ cartId: cart.id });
-      cart.items = []; 
+      cart.items = [];
       cart.expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
       await this.cartRepository.save(cart);
     } else if (cart) {
@@ -36,9 +36,9 @@ export class CartService {
       cart.expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
       await this.cartRepository.save(cart);
     } else {
-      cart = this.cartRepository.create({ 
+      cart = this.cartRepository.create({
         userId,
-        expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
+        expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days
       });
       await this.cartRepository.save(cart);
     }
@@ -52,7 +52,7 @@ export class CartService {
       id: cart.id,
       userId: cart.userId,
       createdAt: cart.createdAt,
-      items: (cart.items || []).map(item => ({
+      items: (cart.items || []).map((item) => ({
         id: item.id,
         productId: item.productId,
         quantity: item.quantity,
@@ -110,19 +110,18 @@ export class CartService {
     };
   }
 
-
   async mergeGuestCartWithUserCart(guestCartId: string, userId: string): Promise<CartResponseDto> {
     const guestCart = await this.cartRepository.findOne({
       where: { id: guestCartId },
       relations: ['items', 'items.product'],
     });
-  
+
     const userCart = await this.getOrCreateCart(userId);
-  
+
     if (guestCart && guestCart.items.length > 0) {
       for (const guestItem of guestCart.items) {
-        const existingItem = userCart.items.find(item => item.productId === guestItem.productId);
-  
+        const existingItem = userCart.items.find((item) => item.productId === guestItem.productId);
+
         if (existingItem) {
           existingItem.quantity += guestItem.quantity;
           await this.cartItemRepository.save(existingItem);
@@ -135,45 +134,40 @@ export class CartService {
           await this.cartItemRepository.save(newCartItem);
         }
       }
-  
+
       // Clear the guest cart after merging
       await this.cartItemRepository.delete({ cartId: guestCart.id });
     }
-  
+
     return this.getCart(userId);
   }
 
-
   async calculateTotal(cart: Cart): Promise<number> {
     let total = 0;
-  
+
     // Fetching the price from the ProductVariant for each cart item
     for (const item of cart.items) {
       const productVariant = await this.getProductVariantForProduct(String(item.product.id));
-  
 
       if (productVariant) {
         total += productVariant.price * item.quantity; // Calculate total price for the item
       }
     }
-  
+
     // Apply any discounts if they exist
     if (cart.discount) {
       total -= (cart.discount.percentage / 100) * total; // Apply discount
     }
-  
+
     return total;
   }
-  
+
   // Helper method to get the ProductVariant for a product
   private async getProductVariantForProduct(productId: string): Promise<ProductVariant | null> {
     return await AppDataSource.getRepository(ProductVariant).findOne({
       where: { product: { id: Number(productId) } },
     });
   }
-  
 }
-
-
 
 export const cartService = new CartService();

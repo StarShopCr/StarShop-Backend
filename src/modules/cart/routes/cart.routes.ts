@@ -5,7 +5,6 @@ import { Response } from 'express';
 
 const router = Router();
 
-
 router.use(authMiddleware);
 
 // Cart routes

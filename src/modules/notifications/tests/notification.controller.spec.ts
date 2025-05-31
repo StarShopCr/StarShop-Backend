@@ -137,4 +137,4 @@ describe('NotificationController', () => {
       });
     });
   });
-}); 
+});

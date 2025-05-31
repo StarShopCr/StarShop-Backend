@@ -11,7 +11,7 @@ export const authorizeRoles = (allowedRoles: RoleName[]) => {
       }
 
       const userRole = req.user.role as RoleName;
-      
+
       if (!allowedRoles.includes(userRole)) {
         throw new UnauthorizedException('Insufficient permissions');
       }
@@ -21,14 +21,14 @@ export const authorizeRoles = (allowedRoles: RoleName[]) => {
       if (error instanceof UnauthorizedException) {
         res.status(403).json({
           success: false,
-          message: error.message
+          message: error.message,
         });
       } else {
         res.status(500).json({
           success: false,
-          message: 'Internal server error'
+          message: 'Internal server error',
         });
       }
     }
   };
-}; 
+};

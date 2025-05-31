@@ -9,10 +9,10 @@ export class NotificationController {
 
   private isAdmin(req: AuthenticatedRequest): boolean {
     if (!req.user) return false;
-    
+
     const userRole = req.user.role;
     if (Array.isArray(userRole)) {
-      return userRole.some(role => role === UserRole.ADMIN);
+      return userRole.some((role) => role === UserRole.ADMIN);
     }
     return userRole === UserRole.ADMIN;
   }
@@ -53,7 +53,9 @@ export class NotificationController {
       const success = await this.notificationService.broadcastNotification(data);
       res.status(200).json({
         success,
-        message: success ? 'Notification broadcasted successfully' : 'Failed to broadcast notification',
+        message: success
+          ? 'Notification broadcasted successfully'
+          : 'Failed to broadcast notification',
       });
     } catch (error) {
       res.status(500).json({
@@ -62,4 +64,4 @@ export class NotificationController {
       });
     }
   }
-} 
+}

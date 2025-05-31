@@ -36,9 +36,7 @@ describe('Notification Routes', () => {
         type: 'info',
       };
 
-      const response = await request(app)
-        .post('/notifications/send-to-user')
-        .send(notification);
+      const response = await request(app).post('/notifications/send-to-user').send(notification);
 
       expect(response.status).toBe(200);
       expect(notificationService.sendNotificationToUser).toHaveBeenCalledWith(notification);
@@ -66,9 +64,7 @@ describe('Notification Routes', () => {
         type: 'info',
       };
 
-      const response = await request(app)
-        .post('/notifications/broadcast')
-        .send(notification);
+      const response = await request(app).post('/notifications/broadcast').send(notification);
 
       expect(response.status).toBe(200);
       expect(notificationService.broadcastNotification).toHaveBeenCalledWith(notification);
@@ -107,9 +103,7 @@ describe('Notification Routes', () => {
         type: 'info',
       };
 
-      const response = await request(app)
-        .post('/notifications/send-to-user')
-        .send(notification);
+      const response = await request(app).post('/notifications/send-to-user').send(notification);
 
       expect(response.status).toBe(403);
     });
@@ -121,11 +115,9 @@ describe('Notification Routes', () => {
         type: 'info',
       };
 
-      const response = await request(app)
-        .post('/notifications/broadcast')
-        .send(notification);
+      const response = await request(app).post('/notifications/broadcast').send(notification);
 
       expect(response.status).toBe(403);
     });
   });
-}); 
+});
