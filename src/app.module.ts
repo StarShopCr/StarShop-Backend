@@ -5,6 +5,7 @@ import { CouponModule } from './modules/coupons/coupon.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ProductTypesModule } from './modules/productTypes/productTypes.module';
 import { ProductVariantsModule } from './modules/productVariants/productVariants.module';
+import { AttributeModule } from './modules/attributes/attributes.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ProductVariantsModule } from './modules/productVariants/productVariants
     ProductsModule,
     ProductTypesModule,
     ProductVariantsModule,
+    AttributeModule,
   ],
 })
 export class AppModule {}

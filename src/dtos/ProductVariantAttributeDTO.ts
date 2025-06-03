@@ -1,7 +1,7 @@
 import { IsNumber, IsDate, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProductVariantDTO } from './ProductVariantDTO';
-import { AttributeValueDTO } from './AttributeValueDTO';
+import { AttributeValueResponseDto } from '@/modules/attributes/dto/attribute-response.dto';
 
 export class CreateProductVariantAttributeDto {
   @IsNumber()
@@ -30,8 +30,8 @@ export class ProductVariantAttributeDTO {
   productVariant: ProductVariantDTO;
 
   @ValidateNested()
-  @Type(() => AttributeValueDTO)
-  attributeValue: AttributeValueDTO;
+  @Type(() => AttributeValueResponseDto)
+  attributeValue: AttributeValueResponseDto;
 
   @IsDate()
   createdAt: Date;
