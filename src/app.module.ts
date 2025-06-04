@@ -5,7 +5,7 @@ import { CouponModule } from './modules/coupons/coupon.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ProductTypesModule } from './modules/productTypes/productTypes.module';
 import { ProductVariantsModule } from './modules/productVariants/productVariants.module';
-
+import { WishlistModule } from './modules/wishlist/wishlist.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -20,6 +20,7 @@ import { ProductVariantsModule } from './modules/productVariants/productVariants
     }),
     SharedModule,
     CouponModule,
+    WishlistModule,
     ProductsModule,
     ProductTypesModule,
     ProductVariantsModule,

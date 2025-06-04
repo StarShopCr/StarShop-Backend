@@ -1,14 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { WishlistController } from './wishlist.controller';
-import { WishlistService } from '../service/wishlist.service';
+import { WishlistController } from '../controller/wishlist.controller';
+import { WishlistService } from '../services/wishlist.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { ConflictException } from '@nestjs/common';
-import { Wishlist } from '../entitities/wishlist.entity';
+import { Wishlist } from '../entities/wishlist.entity';
 import { mockRequest } from '../common/mock/mock-request';
 import { AuthRequest } from '../common/types/auth-request.type';
-import { Role } from '@/types/role';
+import { Role } from '../../../types/role';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Product } from '../../products/entities/product.entity';
+import { User } from '../../users/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 
 describe('WishlistController', () => {
@@ -30,6 +31,10 @@ describe('WishlistController', () => {
     findOne: jest.fn(),
   };
 
+  const mockUserRepository = {
+    findOne: jest.fn(),
+  };
+
   const mockJwtService = {
     sign: jest.fn(),
     verify: jest.fn(),
@@ -47,6 +52,10 @@ describe('WishlistController', () => {
         {
           provide: getRepositoryToken(Product),
           useValue: mockProductRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
         },
         {
           provide: JwtService,

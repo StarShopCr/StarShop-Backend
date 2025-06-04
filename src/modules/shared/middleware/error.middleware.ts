@@ -12,7 +12,6 @@ const errorHandler = (err: any, req: Request, res: Response) => {
   error.message = err.message;
 
   process.env.NODE_ENV !== 'TEST' && console.log((err as any).stack);
-
   if (err instanceof AppError) {
     const status = err instanceof HttpException ? err.getStatus() : 500;
     return res.status(status).json({

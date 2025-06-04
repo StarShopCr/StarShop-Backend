@@ -1,21 +1,21 @@
-import { Controller, Post, Delete, Get, Param, UseGuards, Req, HttpCode } from '@nestjs/common';
-import { ParsedQs } from 'qs';
-import { RequestHandler } from 'express';
-import { WishlistService } from '../service/wishlist.service';
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Param,
+  UseGuards,
+  Req,
+  HttpCode,
+} from '@nestjs/common';
+import { WishlistService } from '../services/wishlist.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { AuthRequest } from '../common/types/auth-request.type';
-import { Wishlist } from '../entitities/wishlist.entity';
+import { Wishlist } from '../entities/wishlist.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('wishlist')
 export class WishlistController {
-  static addToWishlist: RequestHandler<{ productId: string }, ParsedQs, Record<string, unknown>>;
-  static removeFromWishlist: RequestHandler<
-    { productId: string },
-    ParsedQs,
-    Record<string, unknown>
-  >;
-  static getWishlist: RequestHandler<Record<string, never>, ParsedQs, Record<string, unknown>>;
   constructor(private readonly wishlistService: WishlistService) {}
 
   @Post(':productId')
