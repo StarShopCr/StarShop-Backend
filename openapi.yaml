@@ -65,7 +65,7 @@ paths:
         400:
           $ref: "#/components/responses/ValidationError"
 
-  /users/show/{id}:
+  /users/{id}:
     get:
       tags: [Users]
       summary: Get a specific user by ID
@@ -88,7 +88,6 @@ paths:
         404:
           $ref: "#/components/responses/NotFound"
 
-  /users/update/{id}:
     put:
       tags: [Users]
       summary: Update a user by ID
@@ -118,7 +117,6 @@ paths:
         404:
           $ref: "#/components/responses/NotFound"
 
-  /users/delete/{id}:
     delete:
       tags: [Users]
       summary: Delete a user by ID
@@ -137,7 +135,7 @@ paths:
         404:
           $ref: "#/components/responses/NotFound"
 
-  /attributes/attributes:
+  /attributes:
     get:
       tags: [Attributes]
       summary: Get all attributes with pagination
@@ -166,7 +164,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/Attribute"
 
-  /attribute-values/attribute-values:
+  /attribute-values:
     get:
       tags: [AttributeValues]
       summary: Get all attribute values with pagination
