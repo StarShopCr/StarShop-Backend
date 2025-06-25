@@ -138,6 +138,7 @@ export class FileController {
           status: 'error',
           message: error.message,
         });
+        return;
       }
 
       res.status(500).json({
