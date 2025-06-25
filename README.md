@@ -114,8 +114,9 @@ To access the docs:
 
 1. Edit the `openapi.yaml` file
 2. Add/update endpoint documentation following OpenAPI spec
-3. Restart the server to see changes
-4. Validate schema: `npm run docs:validate`
+3. Consulta `docs/api-guidelines.md` para mantener la nomenclatura consistente
+4. Restart the server to see changes
+5. Validate schema: `npm run docs:validate`
 
 ### Generating Static Docs
 
