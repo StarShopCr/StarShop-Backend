@@ -19,14 +19,13 @@ const jwtService = new JwtService({ secret: process.env.JWT_SECRET });
 const authService = new AuthService(userService, jwtService, roleService);
 const authController = new AuthController(authService);
 
-// Public routes
-router.post('/register', (req, res) => authController.register(req, res));
-router.post('/login', (req, res) => authController.login(req, res));
+// Public routes - Stellar wallet authentication
+router.post('/challenge', (req, res) => authController.generateChallenge(req, res));
+router.post('/login', (req, res) => authController.loginWithWallet(req, res));
+router.post('/register', (req, res) => authController.registerWithWallet(req, res));
 
 // Protected routes
 router.get('/me', jwtAuthMiddleware, (req, res) => authController.getMe(req, res));
-router.delete('/logout', jwtAuthMiddleware, (req, res) =>
-  authController.logout(req, res)
-);
+router.delete('/logout', jwtAuthMiddleware, (req, res) => authController.logout(req, res));
 
 export default router;

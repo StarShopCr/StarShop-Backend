@@ -1,81 +1,184 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
-import { User } from '../src/modules/users/entities/user.entity';
-import { Role } from '../src/modules/auth/entities/role.entity';
-import { UserRole } from '../src/modules/auth/entities/user-role.entity';
+
 import { Keypair } from 'stellar-sdk';
+import { app } from '../src/main';
 
-describe('Auth wallet login (e2e)', () => {
-  let app: INestApplication;
-  let dataSource: DataSource;
+describe('Auth Endpoints (e2e)', () => {
+  const mockWalletAddress = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
+  let mockSignature: string;
+  let mockMessage: string;
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    dataSource = app.get(DataSource);
+  beforeAll(() => {
+    // Generate a mock signature for testing
+    const keypair = Keypair.random();
+    mockMessage =
+      'StarShop Authentication Challenge - GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF - 1234567890';
+    const messageBuffer = Buffer.from(mockMessage, 'utf8');
+    const signatureBuffer = keypair.sign(messageBuffer);
+    mockSignature = signatureBuffer.toString('base64');
   });
 
-  afterAll(async () => {
-    await app.close();
+  describe('POST /auth/challenge', () => {
+    it('should generate challenge for valid wallet address', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/challenge')
+        .send({ walletAddress: mockWalletAddress })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.challenge).toContain('StarShop Authentication Challenge');
+      expect(response.body.data.challenge).toContain(mockWalletAddress);
+      expect(response.body.data.walletAddress).toBe(mockWalletAddress);
+      expect(response.body.data.timestamp).toBeDefined();
+    });
+
+    it('should reject invalid wallet address format', async () => {
+      await request(app)
+        .post('/api/v1/auth/challenge')
+        .send({ walletAddress: 'invalid-address' })
+        .expect(400);
+    });
   });
 
-  it('login with valid signature', async () => {
-    const wallet = Keypair.random();
-    const userRepo = dataSource.getRepository(User);
-    const roleRepo = dataSource.getRepository(Role);
-    const userRoleRepo = dataSource.getRepository(UserRole);
+  describe('POST /auth/register', () => {
+    it('should register new user with valid signature', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: mockWalletAddress,
+          signature: mockSignature,
+          message: mockMessage,
+          name: 'Test User',
+          email: 'test@example.com',
+        })
+        .expect(201);
 
-    const user = await userRepo.save({ walletAddress: wallet.publicKey() });
-    const role = await roleRepo.findOne({ where: { name: 'buyer' } });
-    if (role) {
-      await userRoleRepo.save({ userId: user.id, roleId: role.id });
-    }
-    const message = Buffer.from('StarShop Login');
-    const signature = wallet.sign(message).toString('base64');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.walletAddress).toBe(mockWalletAddress);
+      expect(response.body.data.user.name).toBe('Test User');
+      expect(response.body.data.user.email).toBe('test@example.com');
+      expect(response.body.data.expiresIn).toBe(3600);
+      expect(response.headers['set-cookie']).toBeDefined();
+    });
 
-    return request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ walletAddress: wallet.publicKey(), signature })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.token).toBeDefined();
-      });
+    it('should reject duplicate wallet address', async () => {
+      // First registration
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        });
+
+      // Second registration with same address
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        })
+        .expect(400);
+    });
+
+    it('should reject invalid signature', async () => {
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: mockWalletAddress,
+          signature: 'invalid-signature',
+          message: mockMessage,
+        })
+        .expect(401);
+    });
   });
 
-  it('login with invalid signature fails', async () => {
-    const wallet = Keypair.random();
-    const other = Keypair.random();
-    const userRepo = dataSource.getRepository(User);
-    await userRepo.save({ walletAddress: wallet.publicKey() });
-    const signature = other.sign(Buffer.from('StarShop Login')).toString('base64');
+  describe('POST /auth/login', () => {
+    beforeEach(async () => {
+      // Register a user first
+      await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        });
+    });
 
-    return request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ walletAddress: wallet.publicKey(), signature })
-      .expect(401);
+    it('should login existing user with valid signature', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/login')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.walletAddress).toBe(
+        'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE'
+      );
+      expect(response.body.data.expiresIn).toBe(3600);
+      expect(response.headers['set-cookie']).toBeDefined();
+    });
+
+    it('should reject login for non-existent user', async () => {
+      await request(app)
+        .post('/api/v1/auth/login')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        })
+        .expect(401);
+    });
   });
 
-  it('duplicate user registration fails', async () => {
-    const wallet = Keypair.random();
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ walletAddress: wallet.publicKey(), role: 'buyer' })
-      .expect(201);
+  describe('GET /auth/me', () => {
+    let authToken: string;
 
-    return request(app.getHttpServer())
-      .post('/users')
-      .send({ walletAddress: wallet.publicKey(), role: 'buyer' })
-      .expect(400);
+    beforeEach(async () => {
+      // Register and login to get token
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
+          signature: mockSignature,
+          message: mockMessage,
+        });
+
+      authToken = response.headers['set-cookie'][0].split(';')[0].split('=')[1];
+    });
+
+    it('should return user info with valid token', async () => {
+      const response = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Cookie', `token=${authToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.walletAddress).toBe(
+        'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE'
+      );
+    });
+
+    it('should reject request without token', async () => {
+      await request(app).get('/api/v1/auth/me').expect(401);
+    });
   });
 
-  it('accessing /auth/me without token returns 401', () => {
-    return request(app.getHttpServer()).get('/auth/me').expect(401);
+  describe('DELETE /auth/logout', () => {
+    it('should clear authentication cookie', async () => {
+      const response = await request(app)
+        .delete('/api/v1/auth/logout')
+        .set('Cookie', 'token=some-token')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Logged out successfully');
+      expect(response.headers['set-cookie']).toBeDefined();
+    });
   });
 });

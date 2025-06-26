@@ -8,19 +8,35 @@ import { Role } from '../../../types/role';
 
 export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    let token: string | undefined;
+
+    // Check for token in Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+
+    // Check for token in cookies (fallback)
+    if (!token && req.cookies?.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) {
       throw new UnauthorizedError('No token provided');
     }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new UnauthorizedError('Invalid token format');
-    }
+    const decoded = verify(token, config.jwtSecret) as {
+      id: string;
+      walletAddress: string;
+      role: string;
+      email?: string;
+    };
 
-    const decoded = verify(token, config.jwtSecret) as { id: string; email: string };
     const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOne({ where: { id: parseInt(decoded.id) } });
+    const user = await userRepository.findOne({
+      where: { id: parseInt(decoded.id) },
+      relations: ['userRoles', 'userRoles.role'],
+    });
 
     if (!user) {
       throw new UnauthorizedError('User not found');
@@ -31,21 +47,15 @@ export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextF
       email: user.email,
       walletAddress: user.walletAddress,
       name: user.name,
-      role: user.userRoles.map((ur) => ur.role.name as Role),
+      role: user.userRoles?.map((ur) => ur.role.name as Role) || [decoded.role as Role],
     };
 
     next();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      res.status(401).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(401).json({ success: false, message: error.message });
     } else {
-      res.status(401).json({
-        success: false,
-        message: 'Invalid token',
-      });
+      res.status(401).json({ success: false, message: 'Invalid token' });
     }
   }
 };

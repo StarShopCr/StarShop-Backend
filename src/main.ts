@@ -13,6 +13,10 @@ app.use((err: any, req: express.Request, res: express.Response) => {
   errorHandler(err, req, res);
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export { app };

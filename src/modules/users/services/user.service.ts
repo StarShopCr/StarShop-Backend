@@ -44,11 +44,18 @@ export class UserService {
   }
 
   async getUserById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: parseInt(id) } });
+    const user = await this.userRepository.findOne({
+      where: { id: parseInt(id) },
+      relations: ['userRoles', 'userRoles.role'],
+    });
     if (!user) {
       throw new BadRequestError('User not found');
     }
     return user;
+  }
+
+  async getUsers(): Promise<User[]> {
+    return this.userRepository.find({ relations: ['userRoles', 'userRoles.role'] });
   }
 
   async updateUser(id: string, data: { name?: string; email?: string }): Promise<User> {
