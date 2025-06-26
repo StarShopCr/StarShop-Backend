@@ -6,10 +6,11 @@ import { PassportModule } from '@nestjs/passport';
 
 import { Role } from './entities/role.entity';
 import { UserRole } from './entities/user-role.entity';
-import { User } from '../../modules/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
 import { RoleService } from './services/role.service';
 import { AuthService } from './services/auth.service';
+import { AuthController } from './controllers/auth.controller';
 import { RoleController } from './controllers/role.controller';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -23,14 +24,12 @@ import { RolesGuard } from './guards/roles.guard';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME') || '1d',
-        },
+        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION_TIME') || '1h' },
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [RoleController],
+  controllers: [AuthController, RoleController],
   providers: [AuthService, RoleService, JwtAuthGuard, RolesGuard],
   exports: [AuthService, RoleService, JwtAuthGuard, RolesGuard, JwtModule],
 })

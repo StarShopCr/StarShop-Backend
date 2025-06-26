@@ -1,22 +1,26 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
-import { Wishlist } from '../../wishlist/entitities/wishlist.entity';
+import { Wishlist } from '../../wishlist/entities/wishlist.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ unique: true, nullable: true })
+  email?: string;
 
-  @Column()
-  password: string;
-
-  @Column()
-  name: string;
+  @Column({ nullable: true })
+  name?: string;
 
   @Column({ unique: true })
   walletAddress: string;
@@ -32,4 +36,10 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

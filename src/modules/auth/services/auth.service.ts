@@ -7,15 +7,16 @@ import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
 import AppDataSource from '../../../config/ormconfig';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
-import { compare, hash } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
+import { Keypair } from 'stellar-sdk';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
 @Injectable()
 export class AuthService {
   private userRepository = AppDataSource.getRepository(User);
+  private readonly CHALLENGE_MESSAGE = 'StarShop Authentication Challenge';
 
   constructor(
     private readonly userService: UserService,
@@ -23,53 +24,135 @@ export class AuthService {
     private readonly roleService: RoleService
   ) {}
 
-  async register(data: {
-    email: string;
-    password: string;
-    name: string;
+  /**
+   * Generate a challenge message for wallet authentication
+   */
+  generateChallenge(walletAddress: string): string {
+    const timestamp = Date.now();
+    return `${this.CHALLENGE_MESSAGE} - ${walletAddress} - ${timestamp}`;
+  }
+
+  /**
+   * Verify Stellar signature
+   */
+  verifyStellarSignature(walletAddress: string, message: string, signature: string): boolean {
+    try {
+      const keypair = Keypair.fromPublicKey(walletAddress);
+      const messageBuffer = Buffer.from(message, 'utf8');
+      const signatureBuffer = Buffer.from(signature, 'base64');
+
+      return keypair.verify(messageBuffer, signatureBuffer);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Register new user with Stellar wallet
+   */
+  async registerWithWallet(data: {
     walletAddress: string;
-  }): Promise<{ user: User; token: string }> {
-    const existingUser = await this.userRepository.findOne({ where: { email: data.email } });
-    if (existingUser) {
-      throw new BadRequestError('Email already registered');
+    signature: string;
+    message: string;
+    name?: string;
+    email?: string;
+  }): Promise<{ user: User; token: string; expiresIn: number }> {
+    // Verify signature
+    if (!this.verifyStellarSignature(data.walletAddress, data.message, data.signature)) {
+      throw new UnauthorizedError('Invalid signature');
     }
 
-    const hashedPassword = await hash(data.password, 10);
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { walletAddress: data.walletAddress },
+    });
+
+    if (existingUser) {
+      throw new BadRequestError('Wallet address already registered');
+    }
+
+    // Create new user
     const user = this.userRepository.create({
-      ...data,
-      password: hashedPassword,
+      walletAddress: data.walletAddress,
+      name: data.name,
+      email: data.email,
       userRoles: [{ role: { name: 'buyer' as const } }],
     });
 
     await this.userRepository.save(user);
 
-    const token = sign({ id: user.id, email: user.email }, config.jwtSecret, { expiresIn: '24h' });
+    // Generate JWT token
+    const role = user.userRoles?.[0]?.role?.name || 'buyer';
+    const token = sign({ id: user.id, walletAddress: user.walletAddress, role }, config.jwtSecret, {
+      expiresIn: '1h',
+    });
 
-    return { user, token };
+    return { user, token, expiresIn: 3600 };
   }
 
-  async login(email: string, password: string): Promise<{ user: User; token: string }> {
-    const user = await this.userRepository.findOne({ where: { email } });
+  /**
+   * Login with Stellar wallet
+   */
+  async loginWithWallet(
+    walletAddress: string,
+    signature: string,
+    message: string
+  ): Promise<{ user: User; token: string; expiresIn: number }> {
+    // Verify signature
+    if (!this.verifyStellarSignature(walletAddress, message, signature)) {
+      throw new UnauthorizedError('Invalid signature');
+    }
+
+    // Find user
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+
     if (!user) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('User not found. Please register first.');
     }
 
-    const isPasswordValid = await compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid credentials');
-    }
+    // Generate JWT token
+    const role = user.userRoles?.[0]?.role?.name || 'buyer';
+    const token = sign({ id: user.id, walletAddress: user.walletAddress, role }, config.jwtSecret, {
+      expiresIn: '1h',
+    });
 
-    const token = sign({ id: user.id, email: user.email }, config.jwtSecret, { expiresIn: '24h' });
-
-    return { user, token };
+    return { user, token, expiresIn: 3600 };
   }
 
+  /**
+   * Get user by ID
+   */
   async getUserById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: Number(id) } });
+    const user = await this.userRepository.findOne({
+      where: { id: Number(id) },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+
     if (!user) {
       throw new BadRequestError('User not found');
     }
+
     return user;
+  }
+
+  /**
+   * Update user information
+   */
+  async updateUser(userId: number, updateData: { name?: string; email?: string }): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+
+    // Update user data
+    Object.assign(user, updateData);
+    await this.userRepository.save(user);
+
+    return this.getUserById(String(userId));
   }
 
   async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
@@ -86,9 +169,7 @@ export class AuthService {
 
     // If no user exists, create a new one with default 'buyer' role
     if (!user) {
-      user = userRepository.create({
-        walletAddress,
-      });
+      user = userRepository.create({ walletAddress });
       await userRepository.save(user);
 
       // Get the buyer role
@@ -117,15 +198,9 @@ export class AuthService {
     const primaryRole = user.userRoles?.[0]?.role?.name || 'buyer';
 
     // Create a JWT token containing user information
-    const payload = {
-      sub: user.id,
-      walletAddress: user.walletAddress,
-      role: primaryRole,
-    };
+    const payload = { sub: user.id, walletAddress: user.walletAddress, role: primaryRole };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    return { access_token: this.jwtService.sign(payload) };
   }
 
   async assignRole(userId: number, roleName: RoleName): Promise<User> {
@@ -145,12 +220,7 @@ export class AuthService {
     await userRoleRepository.delete({ userId });
 
     // Create new user role relationship
-    const userRole = userRoleRepository.create({
-      userId: user.id,
-      roleId: role.id,
-      user,
-      role,
-    });
+    const userRole = userRoleRepository.create({ userId: user.id, roleId: role.id, user, role });
     await userRoleRepository.save(userRole);
 
     return this.userService.getUserById(String(userId));
@@ -165,7 +235,6 @@ export class AuthService {
     const userRoleRepository = AppDataSource.getRepository(UserRole);
     await userRoleRepository.delete({ userId });
 
-    // Assign default buyer role
-    return this.assignRole(userId, 'buyer');
+    return this.userService.getUserById(String(userId));
   }
 }
