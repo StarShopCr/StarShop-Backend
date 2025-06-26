@@ -10,7 +10,7 @@ import {
 
 export class CreateUserDto {
   @IsNotEmpty()
-  @Matches(/^0x[a-fA-F0-9]{40}$/, { message: 'Invalid wallet address format' })
+  @Matches(/^G[A-Z2-7]{55}$/, { message: 'Invalid wallet address format' })
   walletAddress: string;
 
   @IsOptional()

@@ -10,7 +10,7 @@ import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { compare, hash } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
-import { ethers } from 'ethers';
+import { Keypair } from 'stellar-sdk';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
@@ -69,13 +69,15 @@ export class AuthService {
     walletAddress: string,
     signature: string
   ): Promise<{ user: User; token: string; expiresIn: number }> {
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    if (!/^G[A-Z2-7]{55}$/.test(walletAddress)) {
       throw new BadRequestError('Invalid wallet address');
     }
 
-    const message = 'StarShop Login';
-    const recovered = ethers.utils.verifyMessage(message, signature);
-    if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
+    const message = Buffer.from('StarShop Login');
+    const sig = Buffer.from(signature, 'base64');
+    const keypair = Keypair.fromPublicKey(walletAddress);
+    const isValid = keypair.verify(message, sig);
+    if (!isValid) {
       throw new UnauthorizedError('Invalid signature');
     }
 

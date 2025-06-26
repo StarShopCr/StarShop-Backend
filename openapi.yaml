@@ -41,10 +41,10 @@ paths:
               properties:
                 walletAddress:
                   type: string
-                  example: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+                  example: "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE"
                 signature:
                   type: string
-                  example: "0xsignature"
+                  example: "MEUCIQDexample=="
       responses:
         200:
           description: Login successful
@@ -374,8 +374,8 @@ components:
       properties:
         walletAddress:
           type: string
-          pattern: "^0x[a-fA-F0-9]{40}$"
-          example: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+          pattern: "^G[A-Z2-7]{55}$"
+          example: "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE"
         name:
           type: string
           minLength: 2
