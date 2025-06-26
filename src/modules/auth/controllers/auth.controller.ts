@@ -16,6 +16,37 @@ import { BadRequestError } from '../../../utils/errors';
 import { StellarWalletLoginDto, RegisterUserDto, ChallengeDto } from '../dto/auth.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
+interface ChallengeResponse {
+  success: boolean;
+  data: { challenge: string; walletAddress: string; timestamp: number };
+}
+
+interface AuthResponse {
+  success: boolean;
+  data: {
+    user: { id: number; walletAddress: string; name: string; email: string; role: string };
+    expiresIn: number;
+  };
+}
+
+interface UserResponse {
+  success: boolean;
+  data: {
+    id: number;
+    walletAddress: string;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+interface LogoutResponse {
+  success: boolean;
+  message: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -26,7 +57,7 @@ export class AuthController {
    */
   @Post('challenge')
   @HttpCode(HttpStatus.OK)
-  async generateChallenge(@Body() challengeDto: ChallengeDto) {
+  async generateChallenge(@Body() challengeDto: ChallengeDto): Promise<ChallengeResponse> {
     const challenge = this.authService.generateChallenge(challengeDto.walletAddress);
 
     return {
@@ -44,7 +75,7 @@ export class AuthController {
   async loginWithWallet(
     @Body() loginDto: StellarWalletLoginDto,
     @Res({ passthrough: true }) res: Response
-  ) {
+  ): Promise<AuthResponse> {
     const result = await this.authService.loginWithWallet(
       loginDto.walletAddress,
       loginDto.signature,
@@ -83,7 +114,7 @@ export class AuthController {
   async registerWithWallet(
     @Body() registerDto: RegisterUserDto,
     @Res({ passthrough: true }) res: Response
-  ) {
+  ): Promise<AuthResponse> {
     const result = await this.authService.registerWithWallet({
       walletAddress: registerDto.walletAddress,
       signature: registerDto.signature,
@@ -122,7 +153,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async getMe(@Req() req: Request) {
+  async getMe(@Req() req: Request): Promise<UserResponse> {
     const userId = req.user?.id;
     if (!userId) {
       throw new BadRequestError('User not authenticated');
@@ -151,7 +182,7 @@ export class AuthController {
   @Delete('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponse> {
     // Clear the JWT cookie
     res.clearCookie('token', {
       httpOnly: true,
