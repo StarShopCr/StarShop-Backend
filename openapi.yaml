@@ -28,6 +28,76 @@ paths:
                     format: date-time
                     example: "2023-08-21T14:30:00Z"
 
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                walletAddress:
+                  type: string
+                  example: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+                signature:
+                  type: string
+                  example: "0xsignature"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  token:
+                    type: string
+                  expiresIn:
+                    type: integer
+                    example: 3600
+        401:
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    delete:
+      tags: [Auth]
+      summary: Logout user
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
   /users:
     get:
       tags: [Users]
@@ -64,6 +134,35 @@ paths:
                 $ref: "#/components/schemas/User"
         400:
           $ref: "#/components/responses/ValidationError"
+
+  /users/update/{id}:
+    put:
+      tags: [Users]
+      summary: Update user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        200:
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        401:
+          $ref: "#/components/responses/Unauthorized"
 
   /users/{id}:
     get:

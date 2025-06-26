@@ -25,6 +25,8 @@ router.post('/login', (req, res) => authController.login(req, res));
 
 // Protected routes
 router.get('/me', jwtAuthMiddleware, (req, res) => authController.getMe(req, res));
-router.post('/logout', jwtAuthMiddleware, (req, res) => authController.logout(req, res));
+router.delete('/logout', jwtAuthMiddleware, (req, res) =>
+  authController.logout(req, res)
+);
 
 export default router;

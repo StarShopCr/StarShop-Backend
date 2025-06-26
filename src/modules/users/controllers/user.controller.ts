@@ -1,9 +1,39 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
-import { BadRequestError } from '../../../utils/errors';
+import { BadRequestError, ForbiddenError } from '../../../utils/errors';
+import { CreateUserDto, UpdateUserDto } from '../../../dtos/UserDTO';
 
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  async createUser(req: Request, res: Response): Promise<void> {
+    try {
+      const dto: CreateUserDto = req.body;
+      const user = await this.userService.createUser(dto);
+      res.status(201).json({ success: true, data: user });
+    } catch (error) {
+      res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+  }
+
+  async updateUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const dto: UpdateUserDto = req.body;
+      const currentId = req.user?.id;
+      const roles = req.user?.role || [];
+      if (!currentId) {
+        throw new BadRequestError('User not authenticated');
+      }
+      if (currentId.toString() !== id && !roles.includes('admin')) {
+        throw new ForbiddenError('Not authorized');
+      }
+      const user = await this.userService.updateUser(id, dto);
+      res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+  }
 
   async getProfile(req: Request, res: Response): Promise<void> {
     try {

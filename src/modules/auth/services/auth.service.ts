@@ -10,6 +10,7 @@ import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { compare, hash } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
+import { ethers } from 'ethers';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
@@ -62,6 +63,36 @@ export class AuthService {
     const token = sign({ id: user.id, email: user.email }, config.jwtSecret, { expiresIn: '24h' });
 
     return { user, token };
+  }
+
+  async walletLogin(
+    walletAddress: string,
+    signature: string
+  ): Promise<{ user: User; token: string; expiresIn: number }> {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new BadRequestError('Invalid wallet address');
+    }
+
+    const message = 'StarShop Login';
+    const recovered = ethers.utils.verifyMessage(message, signature);
+    if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
+      throw new UnauthorizedError('Invalid signature');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+    if (!user) {
+      throw new UnauthorizedError('User not found');
+    }
+
+    const role = user.userRoles?.[0]?.role?.name || 'buyer';
+    const token = sign({ id: user.id, walletAddress: user.walletAddress, role }, config.jwtSecret, {
+      expiresIn: '1h',
+    });
+
+    return { user, token, expiresIn: 3600 };
   }
 
   async getUserById(id: string): Promise<User> {

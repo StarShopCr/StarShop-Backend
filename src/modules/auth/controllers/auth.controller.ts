@@ -23,8 +23,8 @@ export class AuthController {
 
   async login(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password } = req.body;
-      const result = await this.authService.login(email, password);
+      const { walletAddress, signature } = req.body;
+      const result = await this.authService.walletLogin(walletAddress, signature);
       res.status(200).json({
         success: true,
         data: result,
@@ -57,6 +57,7 @@ export class AuthController {
   }
 
   async logout(req: Request, res: Response): Promise<void> {
+    res.clearCookie('token');
     res.status(200).json({
       success: true,
       message: 'Logged out successfully',
