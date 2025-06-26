@@ -1,141 +1,135 @@
-import { Request, Response } from 'express';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductService } from '../services/product.service';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { RolesGuard } from '../../shared/guards/roles.guard';
+import { Roles } from '../../shared/decorators/roles.decorator';
 import { BadRequestError, ForbiddenError } from '../../../utils/errors';
 
+@ApiTags('products')
+@Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  async getAllProducts(req: Request, res: Response): Promise<void> {
-    try {
-      const { page = '1', limit = '10', search, category, sort } = req.query;
-      const products = await this.productService.getAllProducts({
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        search: search as string,
-        category: category as string,
-        sort: sort as string,
-      });
+  @Get()
+  @ApiOperation({ summary: 'Get all products' })
+  @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
+  async getAllProducts(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('sort') sort?: string
+  ) {
+    const products = await this.productService.getAllProducts({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      search,
+      category,
+      sort,
+    });
 
-      res.status(200).json({
-        success: true,
-        data: products,
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+    return { success: true, data: products };
   }
 
-  async getProductById(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const product = await this.productService.getProductById(parseInt(id));
-      res.status(200).json({
-        success: true,
-        data: product,
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+  @Get(':id')
+  @ApiOperation({ summary: 'Get product by ID' })
+  @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async getProductById(@Param('id') id: string) {
+    const product = await this.productService.getProductById(parseInt(id));
+    return { success: true, data: product };
   }
 
-  async createProduct(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new BadRequestError('User not authenticated');
-      }
-
-      const { name, description, price, category, images } = req.body;
-      if (!name || !description || !price || !category) {
-        throw new BadRequestError('Missing required fields');
-      }
-
-      const product = await this.productService.createProduct({
-        name,
-        description,
-        price,
-        category,
-        images,
-        sellerId: Number(userId),
-      });
-
-      res.status(201).json({
-        success: true,
-        data: product,
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('seller', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new product' })
+  @ApiResponse({ status: 201, description: 'Product created successfully' })
+  async createProduct(@Body() createProductDto: any, @Request() req: any) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestError('User not authenticated');
     }
+
+    const { name, description, price, category, images } = createProductDto;
+    if (!name || !description || !price || !category) {
+      throw new BadRequestError('Missing required fields');
+    }
+
+    const product = await this.productService.createProduct({
+      name,
+      description,
+      price,
+      category,
+      images,
+      sellerId: Number(userId),
+    });
+
+    return { success: true, data: product };
   }
 
-  async updateProduct(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new BadRequestError('User not authenticated');
-      }
-
-      const { id } = req.params;
-      const product = await this.productService.getProductById(parseInt(id));
-
-      if (product.sellerId !== userId) {
-        throw new ForbiddenError('Not authorized to update this product');
-      }
-
-      const { name, description, price, category, images } = req.body;
-      const updatedProduct = await this.productService.updateProduct(parseInt(id), {
-        name,
-        description,
-        price,
-        category,
-        images,
-      });
-
-      res.status(200).json({
-        success: true,
-        data: updatedProduct,
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('seller', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a product' })
+  @ApiResponse({ status: 200, description: 'Product updated successfully' })
+  async updateProduct(@Param('id') id: string, @Body() updateProductDto: any, @Request() req: any) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestError('User not authenticated');
     }
+
+    const product = await this.productService.getProductById(parseInt(id));
+
+    if (product.sellerId !== userId) {
+      throw new ForbiddenError('Not authorized to update this product');
+    }
+
+    const { name, description, price, category, images } = updateProductDto;
+    const updatedProduct = await this.productService.updateProduct(parseInt(id), {
+      name,
+      description,
+      price,
+      category,
+      images,
+    });
+
+    return { success: true, data: updatedProduct };
   }
 
-  async deleteProduct(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new BadRequestError('User not authenticated');
-      }
-
-      const { id } = req.params;
-      const product = await this.productService.getProductById(parseInt(id));
-
-      if (product.sellerId !== userId) {
-        throw new ForbiddenError('Not authorized to delete this product');
-      }
-
-      await this.productService.deleteProduct(parseInt(id));
-      res.status(200).json({
-        success: true,
-        message: 'Product deleted successfully',
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('seller', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a product' })
+  @ApiResponse({ status: 200, description: 'Product deleted successfully' })
+  async deleteProduct(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestError('User not authenticated');
     }
+
+    const product = await this.productService.getProductById(parseInt(id));
+
+    if (product.sellerId !== userId) {
+      throw new ForbiddenError('Not authorized to delete this product');
+    }
+
+    await this.productService.deleteProduct(parseInt(id));
+    return { success: true, message: 'Product deleted successfully' };
   }
 }

@@ -1,14 +1,23 @@
 import request from 'supertest';
-
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { Keypair } from 'stellar-sdk';
-import { app } from '../src/main';
+import { AppModule } from '../src/app.module';
 
 describe('Auth Endpoints (e2e)', () => {
+  let app: INestApplication;
   const mockWalletAddress = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
   let mockSignature: string;
   let mockMessage: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
     // Generate a mock signature for testing
     const keypair = Keypair.random();
     mockMessage =
@@ -18,9 +27,13 @@ describe('Auth Endpoints (e2e)', () => {
     mockSignature = signatureBuffer.toString('base64');
   });
 
+  afterAll(async () => {
+    await app.close();
+  });
+
   describe('POST /auth/challenge', () => {
     it('should generate challenge for valid wallet address', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/v1/auth/challenge')
         .send({ walletAddress: mockWalletAddress })
         .expect(200);
@@ -33,7 +46,7 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should reject invalid wallet address format', async () => {
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/challenge')
         .send({ walletAddress: 'invalid-address' })
         .expect(400);
@@ -42,7 +55,7 @@ describe('Auth Endpoints (e2e)', () => {
 
   describe('POST /auth/register', () => {
     it('should register new user with valid signature', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: mockWalletAddress,
@@ -63,7 +76,7 @@ describe('Auth Endpoints (e2e)', () => {
 
     it('should reject duplicate wallet address', async () => {
       // First registration
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -72,7 +85,7 @@ describe('Auth Endpoints (e2e)', () => {
         });
 
       // Second registration with same address
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -83,7 +96,7 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should reject invalid signature', async () => {
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: mockWalletAddress,
@@ -97,7 +110,7 @@ describe('Auth Endpoints (e2e)', () => {
   describe('POST /auth/login', () => {
     beforeEach(async () => {
       // Register a user first
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -107,7 +120,7 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should login existing user with valid signature', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -125,7 +138,7 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should reject login for non-existent user', async () => {
-      await request(app)
+      await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -141,7 +154,7 @@ describe('Auth Endpoints (e2e)', () => {
 
     beforeEach(async () => {
       // Register and login to get token
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
           walletAddress: 'GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE',
@@ -153,7 +166,7 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should return user info with valid token', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Cookie', `token=${authToken}`)
         .expect(200);
@@ -165,13 +178,13 @@ describe('Auth Endpoints (e2e)', () => {
     });
 
     it('should reject request without token', async () => {
-      await request(app).get('/api/v1/auth/me').expect(401);
+      await request(app.getHttpServer()).get('/api/v1/auth/me').expect(401);
     });
   });
 
   describe('DELETE /auth/logout', () => {
     it('should clear authentication cookie', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .delete('/api/v1/auth/logout')
         .set('Cookie', 'token=some-token')
         .expect(200);

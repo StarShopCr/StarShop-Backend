@@ -8,4 +8,3 @@ export * from './entities/user-role.entity';
 export * from './controllers/role.controller';
 export * from './controllers/auth.controller';
 export * from './middleware/authorize-roles.middleware';
-export * from './routes/role.routes';

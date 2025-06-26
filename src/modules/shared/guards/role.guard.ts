@@ -24,7 +24,9 @@ export class RoleGuard implements CanActivate {
     }
 
     const userRoles = await this.roleService.getUserRoles(user.id);
-    const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+    const hasRole = requiredRoles.some((requiredRole) =>
+      userRoles.some((userRole) => userRole.name === requiredRole)
+    );
 
     if (!hasRole) {
       throw new ForbiddenError('User does not have required role');

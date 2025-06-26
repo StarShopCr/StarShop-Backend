@@ -61,10 +61,7 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       const userRoles = await this.roleService.getUserRoles(decoded.id);
-      req.user = {
-        ...decoded,
-        role: userRoles.map((role) => this.mapRoleToEnum(role)),
-      };
+      req.user = { ...decoded, role: userRoles.map((role) => this.mapRoleToEnum(role.name)) };
 
       next();
     } catch (error) {
