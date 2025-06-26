@@ -7,6 +7,9 @@ import { ProductTypesModule } from './modules/productTypes/productTypes.module';
 import { ProductVariantsModule } from './modules/productVariants/productVariants.module';
 import { AttributeModule } from './modules/attributes/attributes.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -20,6 +23,8 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
       synchronize: true, // Set to false in production
     }),
     SharedModule,
+    AuthModule,
+    UsersModule,
     CouponModule,
     WishlistModule,
     ProductsModule,
