@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { BadRequestError, ForbiddenError } from '../../../utils/errors';
 import { CreateUserDto, UpdateUserDto } from '../../../dtos/UserDTO';
+import { Role } from '../../../types/role';
 
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -25,7 +26,7 @@ export class UserController {
       if (!currentId) {
         throw new BadRequestError('User not authenticated');
       }
-      if (currentId.toString() !== id && !roles.includes('admin')) {
+      if (currentId.toString() !== id && !roles.includes(Role.ADMIN)) {
         throw new ForbiddenError('Not authorized');
       }
       const user = await this.userService.updateUser(id, dto);
@@ -43,15 +44,9 @@ export class UserController {
       }
 
       const user = await this.userService.getUserById(userId.toString());
-      res.status(200).json({
-        success: true,
-        data: user,
-      });
+      res.status(200).json({ success: true, data: user });
     } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(error.status || 500).json({ success: false, message: error.message });
     }
   }
 
@@ -64,15 +59,9 @@ export class UserController {
 
       const { name, email } = req.body;
       const user = await this.userService.updateUser(userId.toString(), { name, email });
-      res.status(200).json({
-        success: true,
-        data: user,
-      });
+      res.status(200).json({ success: true, data: user });
     } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(error.status || 500).json({ success: false, message: error.message });
     }
   }
 
@@ -84,15 +73,9 @@ export class UserController {
       }
 
       const orders = await this.userService.getUserOrders(userId.toString());
-      res.status(200).json({
-        success: true,
-        data: orders,
-      });
+      res.status(200).json({ success: true, data: orders });
     } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(error.status || 500).json({ success: false, message: error.message });
     }
   }
 
@@ -104,15 +87,9 @@ export class UserController {
       }
 
       const wishlist = await this.userService.getUserWishlist(userId.toString());
-      res.status(200).json({
-        success: true,
-        data: wishlist,
-      });
+      res.status(200).json({ success: true, data: wishlist });
     } catch (error) {
-      res.status(error.status || 500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(error.status || 500).json({ success: false, message: error.message });
     }
   }
 }

@@ -9,7 +9,7 @@ import {
 import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
-import { Wishlist } from '../../wishlist/entitities/wishlist.entity';
+import { Wishlist } from '../../wishlist/entities/wishlist.entity';
 
 @Entity('users')
 export class User {
