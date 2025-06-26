@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleService } from '../../auth/services/role.service';
+import { RoleService } from '../services/role.service';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 

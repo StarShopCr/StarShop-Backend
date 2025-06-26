@@ -1,22 +1,37 @@
-import express from 'express';
-import authRoutes from './modules/auth/routes/auth.routes';
-import userRoutes from './modules/users/routes/user.routes';
-import errorHandler from './modules/shared/middleware/error.middleware';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-const app = express();
-const port = process.env.PORT || 3000;
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-app.use(express.json());
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use((err: any, req: express.Request, res: express.Response) => {
-  errorHandler(err, req, res);
-});
+  // Enable CORS
+  app.enableCors();
 
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+  // Global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
+  );
+
+  // Global prefix
+  app.setGlobalPrefix('api/v1');
+
+  // Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle('StarShop API')
+    .setDescription('The StarShop e-commerce API with Stellar blockchain integration')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger documentation: http://localhost:${port}/docs`);
 }
 
-export { app };
+bootstrap();

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { SharedModule } from './modules/shared/shared.module';
 import { CouponModule } from './modules/coupons/coupon.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -9,18 +10,54 @@ import { AttributeModule } from './modules/attributes/attributes.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
+// Entities
+import { User } from './modules/users/entities/user.entity';
+import { Order } from './modules/orders/entities/order.entity';
+import { OrderItem } from './modules/orders/entities/order-item.entity';
+import { UserRole } from './modules/auth/entities/user-role.entity';
+import { Role } from './modules/auth/entities/role.entity';
+import { Notification } from './modules/notifications/entities/notification.entity';
+import { Wishlist } from './modules/wishlist/entities/wishlist.entity';
+import { Product } from './modules/products/entities/product.entity';
+import { ProductType } from './modules/productTypes/entities/productTypes.entity';
+import { ProductVariant } from './modules/productVariants/entities/productVariants.entity';
+import { Attribute } from './modules/attributes/entities/attribute.entity';
+import { AttributeValue } from './modules/attributes/entities/attribute-value.entity';
+import { Coupon } from './modules/coupons/entities/coupon.entity';
+import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
+
+console.log();
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'starshop',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // Set to false in production
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 5432,
+      username: process.env.DB_USERNAME || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_DATABASE || 'starshop',
+      entities: [
+        User,
+        Order,
+        OrderItem,
+        UserRole,
+        Role,
+        Notification,
+        Wishlist,
+        Product,
+        ProductType,
+        ProductVariant,
+        Attribute,
+        AttributeValue,
+        Coupon,
+        CouponUsage,
+      ],
+      synchronize: process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV === 'development',
     }),
     SharedModule,
     AuthModule,
@@ -31,6 +68,8 @@ import { UsersModule } from './modules/users/users.module';
     ProductTypesModule,
     ProductVariantsModule,
     AttributeModule,
+    NotificationsModule,
+    OrdersModule,
   ],
 })
 export class AppModule {}

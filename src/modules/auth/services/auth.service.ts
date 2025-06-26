@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../../users/services/user.service';
 import { RoleService } from './role.service';
@@ -19,6 +19,7 @@ export class AuthService {
   private readonly CHALLENGE_MESSAGE = 'StarShop Authentication Challenge';
 
   constructor(
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService

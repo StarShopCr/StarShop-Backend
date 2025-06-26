@@ -12,23 +12,13 @@ interface ExtendedMulterFile extends Express.Multer.File {
 }
 
 // Mock external dependencies
-jest.mock('../../../config/ormconfig', () => ({
-  getRepository: jest.fn(),
-}));
+jest.mock('../../../config/ormconfig', () => ({ getRepository: jest.fn() }));
 
 jest.mock('../config/cloudinary.config', () => ({
-  cloudinary: {
-    uploader: {
-      destroy: jest.fn(),
-    },
-  },
+  cloudinary: { uploader: { destroy: jest.fn() } },
 }));
 
-jest.mock('../config/s3.config', () => ({
-  s3Client: {
-    send: jest.fn(),
-  },
-}));
+jest.mock('../config/s3.config', () => ({ s3Client: { send: jest.fn() } }));
 
 jest.mock('@aws-sdk/client-s3', () => ({
   DeleteObjectCommand: jest.fn().mockImplementation((params) => ({ ...params })),
@@ -64,6 +54,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFile = {
@@ -116,6 +110,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFile = {
@@ -170,6 +168,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFile = {
@@ -217,6 +219,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFiles = [
@@ -279,6 +285,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFile = {
@@ -315,6 +325,10 @@ describe('FileService', () => {
         password: 'hashed_password',
         orders: [],
         userRoles: [],
+        notifications: [],
+        wishlist: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockFile = {
@@ -337,11 +351,7 @@ describe('FileService', () => {
 
       const result = await fileService.deleteFile('uuid', 1);
 
-      expect(s3Client.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          Key: 'public-id',
-        })
-      );
+      expect(s3Client.send).toHaveBeenCalledWith(expect.objectContaining({ Key: 'public-id' }));
 
       expect(fileRepository.remove).toHaveBeenCalledWith(mockFile);
       expect(result).toBe(true);

@@ -5,6 +5,7 @@ import { CouponService } from './services/coupon.service';
 import { Coupon } from './entities/coupon.entity';
 import { CouponUsage } from './entities/coupon-usage.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [
@@ -13,8 +14,10 @@ import { JwtModule } from '@nestjs/jwt';
       secret: process.env.JWT_SECRET || 'test-secret',
       signOptions: { expiresIn: '1h' },
     }),
+    SharedModule,
   ],
   controllers: [CouponController],
   providers: [CouponService],
+  exports: [CouponService],
 })
 export class CouponModule {}
