@@ -8,7 +8,7 @@ describe('BuyerRequest Entity', () => {
     req.budgetMin = 100;
     req.budgetMax = 50;
     req.expiresAt = new Date();
-    req.status = 'open' as any;
+    req.status = 'close' as any;
 
     const errors = await validate(req);
     expect(errors.some(e => e.constraints?.BudgetRange)).toBeTruthy();

@@ -32,10 +32,10 @@ export class BuyerRequest {
   @IsNotEmpty()
   buyer: User;
 
-  // @ManyToOne(() => Category, { eager: true })
-  // @Index()
-  // @IsNotEmpty()
-  // category: Category;
+  @ManyToOne(() => Category, { eager: true })
+  @Index()
+  @IsNotEmpty()
+  category: Category;
 
   @Column({ type: 'varchar', length: 100 })
   @IsString()

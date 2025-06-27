@@ -11,7 +11,7 @@ export class CreateOrders1746193420633 implements MigrationInterface {
     await queryRunner.query(`
             CREATE TABLE "orders" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "user_id" z NOT NULL,
+                "user_id" uuid NOT NULL,
                 "status" "public"."orders_status_enum" NOT NULL DEFAULT 'PENDING',
                 "total_price" decimal(10,2) NOT NULL,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
