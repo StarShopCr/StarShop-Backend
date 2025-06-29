@@ -28,6 +28,8 @@ import { Attribute } from './modules/attributes/entities/attribute.entity';
 import { AttributeValue } from './modules/attributes/entities/attribute-value.entity';
 import { Coupon } from './modules/coupons/entities/coupon.entity';
 import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
+import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
+import { Offer } from './modules/offers/entities/offer.entity';
 
 console.log();
 @Module({
@@ -55,6 +57,8 @@ console.log();
         AttributeValue,
         Coupon,
         CouponUsage,
+        BuyerRequest,
+        Offer,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
