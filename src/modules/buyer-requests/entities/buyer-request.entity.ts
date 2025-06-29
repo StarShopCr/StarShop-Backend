@@ -1,3 +1,4 @@
+import { Offer } from '@/modules/offers/entities/offer.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -5,7 +6,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Offer } from '@/modules/offers/entities/offer.entity';
 // Import will be resolved at runtime to avoid circular dependency
 
 export enum BuyerRequestStatus {
@@ -22,7 +22,7 @@ export class BuyerRequest {
   // TODO : We need to complete the following fields
 
 
-  @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
+  @OneToMany('Offer', (offer: Offer) => offer.buyerRequest)
   offers: Offer[];
 
   @CreateDateColumn({ name: 'created_at' })

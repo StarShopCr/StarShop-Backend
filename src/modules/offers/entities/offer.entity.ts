@@ -53,7 +53,7 @@ export class Offer {
 
   @Column({
     type: 'enum',
-    enum: OfferStatus,
+    enum: OfferStatus,     
     default: OfferStatus.PENDING,
   })
   status: OfferStatus;
