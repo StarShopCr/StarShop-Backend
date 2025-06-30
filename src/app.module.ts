@@ -30,6 +30,9 @@ import { Coupon } from "./modules/coupons/entities/coupon.entity"
 import { CouponUsage } from "./modules/coupons/entities/coupon-usage.entity"
 import { BuyerRequest } from "./modules/buyer-requests/entities/buyer-request.entity"
 import { BuyerRequestsModule } from "./modules/buyer-requests/buyer-requests.module"
+import { OffersModule } from './modules/offers/offers.module';
+import { Offer } from "./modules/offers/entities/offer.entity"
+import { OfferAttachment } from "./modules/offers/entities/offer-attachment.entity"
 
 console.log()
 @Module({
@@ -58,6 +61,8 @@ console.log()
         Coupon,
         CouponUsage,
         BuyerRequest,
+        Offer,
+        OfferAttachment,
       ],
       synchronize: process.env.NODE_ENV !== "production",
       logging: process.env.NODE_ENV === "development",
@@ -74,6 +79,7 @@ console.log()
     NotificationsModule,
     OrdersModule,
     BuyerRequestsModule,
+    OffersModule,
   ],
 })
 export class AppModule {}
