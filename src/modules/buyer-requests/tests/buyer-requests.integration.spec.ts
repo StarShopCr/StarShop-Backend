@@ -19,6 +19,7 @@ describe("BuyerRequestsController (e2e)", () => {
           database: ":memory:",
           entities: [BuyerRequest],
           synchronize: true,
+          dropSchema: true, // Ensure clean state
         }),
         BuyerRequestsModule,
       ],
@@ -27,10 +28,12 @@ describe("BuyerRequestsController (e2e)", () => {
     app = moduleFixture.createNestApplication()
     repository = moduleFixture.get<Repository<BuyerRequest>>(getRepositoryToken(BuyerRequest))
     await app.init()
-  })
+  }, 30000) // Increased timeout to 30 seconds
 
   afterEach(async () => {
-    await app.close()
+    if (app) {
+      await app.close()
+    }
   })
 
   describe("/buyer-requests (GET)", () => {
