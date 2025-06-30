@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from "typeorm"
 import { User } from "../../users/entities/user.entity"
 
@@ -15,6 +16,12 @@ export enum BuyerRequestStatus {
 }
 
 @Entity("buyer_requests")
+@Index("idx_buyer_requests_search", { synchronize: false }) // Full-text search index
+@Index("idx_buyer_requests_category", ["categoryId"])
+@Index("idx_buyer_requests_budget", ["budgetMin", "budgetMax"])
+@Index("idx_buyer_requests_expires_at", ["expiresAt"])
+@Index("idx_buyer_requests_status", ["status"])
+@Index("idx_buyer_requests_created_at", ["createdAt"])
 export class BuyerRequest {
   @PrimaryGeneratedColumn()
   id: number
@@ -44,6 +51,9 @@ export class BuyerRequest {
   @Column()
   userId: number
 
+  @Column({ type: "timestamp", nullable: true })
+  expiresAt: Date
+
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: "userId" })
   user: User
@@ -53,4 +63,8 @@ export class BuyerRequest {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  // Virtual column for full-text search (PostgreSQL specific)
+  @Column({ type: "tsvector", select: false, insert: false, update: false })
+  searchVector?: string
 }

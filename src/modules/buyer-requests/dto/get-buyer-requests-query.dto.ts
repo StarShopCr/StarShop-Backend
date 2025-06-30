@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, Min, Max } from "class-validator"
+import { IsOptional, IsString, IsNumber, Min, Max, IsBoolean } from "class-validator"
 import { Transform } from "class-transformer"
 
 export class GetBuyerRequestsQueryDto {
@@ -27,10 +27,23 @@ export class GetBuyerRequestsQueryDto {
   @IsOptional()
   @IsNumber({}, { message: "Min budget must be a valid number" })
   @Transform(({ value }) => Number.parseFloat(value))
-  minBudget?: number
+  budgetMin?: number
 
   @IsOptional()
   @IsNumber({}, { message: "Max budget must be a valid number" })
   @Transform(({ value }) => Number.parseFloat(value))
-  maxBudget?: number
+  budgetMax?: number
+
+  @IsOptional()
+  @IsBoolean({ message: "Expiring soon must be a boolean" })
+  @Transform(({ value }) => value === "true" || value === true)
+  expiringSoon?: boolean
+
+  @IsOptional()
+  @IsString()
+  sortBy?: "createdAt" | "budgetMin" | "budgetMax" | "expiresAt" = "createdAt"
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: "ASC" | "DESC" = "DESC"
 }

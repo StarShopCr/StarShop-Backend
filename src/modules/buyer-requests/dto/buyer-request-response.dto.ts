@@ -1,14 +1,15 @@
 import type { BuyerRequestStatus } from "../entities/buyer-request.entity"
 
-export class BuyerRequestResponseDto {
+export interface BuyerRequestResponseDto {
   id: number
   title: string
-  description: string
+  description?: string
   budgetMin: number
   budgetMax: number
   categoryId: number
   status: BuyerRequestStatus
   userId: number
+  expiresAt?: Date
   createdAt: Date
   updatedAt: Date
   user?: {
@@ -16,12 +17,21 @@ export class BuyerRequestResponseDto {
     name: string
     walletAddress: string
   }
+  isExpiringSoon?: boolean
+  daysUntilExpiry?: number
 }
 
-export class PaginatedBuyerRequestsResponseDto {
+export interface PaginatedBuyerRequestsResponseDto {
   data: BuyerRequestResponseDto[]
   total: number
   page: number
   limit: number
   totalPages: number
+  filters?: {
+    search?: string
+    categoryId?: number
+    budgetMin?: number
+    budgetMax?: number
+    expiringSoon?: boolean
+  }
 }
