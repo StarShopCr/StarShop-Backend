@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { BuyerRequestsAdminService } from '../services/buyerRequestsAdmin.service';
 import { BlockBuyerRequestDto } from '../dto/block-buyer-request.dto';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -16,7 +16,7 @@ export class BuyerRequestsAdminController {
   }
 
   @Patch(':id/block')
-  block(@Param('id') id: number, @Body() dto: BlockBuyerRequestDto) {
+  block(@Param('id', ParseIntPipe) id: number, @Body() dto: BlockBuyerRequestDto) {
     return this.adminService.block(id, dto.isBlocked ?? true);
   }
 }
