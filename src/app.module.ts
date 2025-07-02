@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { OffersModule } from './modules/offers/offers.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -28,8 +29,9 @@ import { Attribute } from './modules/attributes/entities/attribute.entity';
 import { AttributeValue } from './modules/attributes/entities/attribute-value.entity';
 import { Coupon } from './modules/coupons/entities/coupon.entity';
 import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
+import { Offer } from './modules/offers/entities/offer.entity';
+import { BuyerRequest } from './modules/offers/entities/buyer-request.entity';
 
-console.log();
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -55,6 +57,8 @@ console.log();
         AttributeValue,
         Coupon,
         CouponUsage,
+        Offer,
+        BuyerRequest,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -70,6 +74,7 @@ console.log();
     AttributeModule,
     NotificationsModule,
     OrdersModule,
+    OffersModule,
   ],
 })
 export class AppModule {}
