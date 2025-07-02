@@ -5,14 +5,17 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from "typeorm"
 import { User } from "../../users/entities/user.entity"
+import { Offer } from "@/modules/offers/entities/offer.entity"
 
 export enum BuyerRequestStatus {
   OPEN = "open",
   CLOSED = "closed",
+  FULFILLED = "fulfilled",
 }
 
 @Entity("buyer_requests")
@@ -23,8 +26,8 @@ export enum BuyerRequestStatus {
 @Index("idx_buyer_requests_status", ["status"])
 @Index("idx_buyer_requests_created_at", ["createdAt"])
 export class BuyerRequest {
-  @PrimaryGeneratedColumn()
-  id: number
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
   @Column({ length: 100 })
   title: string
@@ -58,13 +61,15 @@ export class BuyerRequest {
   @JoinColumn({ name: "userId" })
   user: User
 
-  @CreateDateColumn()
+  @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
+  offers: Offer[]
+
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date
 
-  // Virtual column for full-text search (PostgreSQL specific)
   @Column({ type: "tsvector", select: false, insert: false, update: false })
   searchVector?: string
 }
