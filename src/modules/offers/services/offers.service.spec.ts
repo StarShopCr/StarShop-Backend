@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException, ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
-import { OffersService } from './offers.service';
+import { OffersService } from '../services/offers.service';
 import { Offer } from '../entities/offer.entity';
 import { BuyerRequest } from '../entities/buyer-request.entity';
 import { Product } from '../../products/entities/product.entity';
@@ -104,7 +104,7 @@ describe('OffersService', () => {
 
       expect(result).toEqual(mockOffer);
       expect(buyerRequestRepository.findOneBy).toHaveBeenCalledWith({ id: createOfferDto.requestId });
-      expect(productRepository.findOneBy).toHaveBeenCalledWith({ id: createOfferDto.productId, sellerId: mockSeller.id });
+      expect(productRepository.findOneBy).toHaveBeenCalledWith({ id: createOfferDto.productId, sellerId: mockSeller.id as number });
       expect(offerRepository.save).toHaveBeenCalled();
     });
 
