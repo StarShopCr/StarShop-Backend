@@ -10,6 +10,8 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: config.database.synchronize,
   logging: config.database.logging,
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  entities: [`${__dirname}/../modules/**/*.entity.{js,ts}`],
+  migrations: [`${__dirname}/../migrations/*.{js,ts}`],
 });
+
+export default AppDataSource;
