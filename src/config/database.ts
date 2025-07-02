@@ -13,3 +13,5 @@ export const AppDataSource = new DataSource({
   entities: [`${__dirname}/../modules/**/*.entity.{js,ts}`],
   migrations: [`${__dirname}/../migrations/*.{js,ts}`],
 });
+
+export default AppDataSource;
