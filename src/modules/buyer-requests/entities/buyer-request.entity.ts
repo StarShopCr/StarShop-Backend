@@ -6,51 +6,57 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-} from "typeorm"
-import { User } from "../../users/entities/user.entity"
+  OneToMany,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Offer } from '@/modules/offers/entities/offer.entity';
 
 export enum BuyerRequestStatus {
-  OPEN = "open",
-  CLOSED = "closed",
+  OPEN = 'open',
+  CLOSED = 'closed',
+  FULFILLED = 'fulfilled',
 }
 
-@Entity("buyer_requests")
+@Entity('buyer_requests')
 export class BuyerRequest {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
   @Column({ length: 100 })
-  title: string
+  title: string;
 
-  @Column({ type: "text", nullable: true })
-  description: string
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  budgetMin: number
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMin: number;
 
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  budgetMax: number
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMax: number;
 
   @Column()
-  categoryId: number
+  categoryId: number;
 
   @Column({
-    type: "enum",
+    type: 'enum',
     enum: BuyerRequestStatus,
     default: BuyerRequestStatus.OPEN,
   })
-  status: BuyerRequestStatus
+  status: BuyerRequestStatus;
 
   @Column()
-  userId: number
+  userId: number;
 
   @ManyToOne(() => User, { eager: false })
-  @JoinColumn({ name: "userId" })
-  user: User
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
-  @CreateDateColumn()
-  createdAt: Date
+  @OneToMany(() => Offer, (offer) => offer.buyerRequest)
+  offers: Offer[];
 
-  @UpdateDateColumn()
-  updatedAt: Date
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
