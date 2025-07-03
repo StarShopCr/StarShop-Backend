@@ -1,33 +1,75 @@
-import { Offer } from '@/modules/offers/entities/offer.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
-  OneToMany,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
-} from 'typeorm';
-// Import will be resolved at runtime to avoid circular dependency
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  Index,
+} from "typeorm"
+import { User } from "../../users/entities/user.entity"
+import { Offer } from "@/modules/offers/entities/offer.entity"
 
 export enum BuyerRequestStatus {
-  OPEN = 'open',
-  CLOSED = 'closed',
-  FULFILLED = 'fulfilled',
+  OPEN = "open",
+  CLOSED = "closed",
+  FULFILLED = "fulfilled",
 }
 
-@Entity('buyer_requests')
+@Entity("buyer_requests")
+@Index("idx_buyer_requests_search", { synchronize: false }) // Full-text search index
+@Index("idx_buyer_requests_category", ["categoryId"])
+@Index("idx_buyer_requests_budget", ["budgetMin", "budgetMax"])
+@Index("idx_buyer_requests_expires_at", ["expiresAt"])
+@Index("idx_buyer_requests_status", ["status"])
+@Index("idx_buyer_requests_created_at", ["createdAt"])
 export class BuyerRequest {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
-  // TODO : We need to complete the following fields
+  @Column({ length: 100 })
+  title: string
 
+  @Column({ type: "text", nullable: true })
+  description: string
 
-  @OneToMany('Offer', (offer: Offer) => offer.buyerRequest)
-  offers: Offer[];
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  budgetMin: number
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  budgetMax: number
 
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @Column()
+  categoryId: number
+
+  @Column({
+    type: "enum",
+    enum: BuyerRequestStatus,
+    default: BuyerRequestStatus.OPEN,
+  })
+  status: BuyerRequestStatus
+
+  @Column()
+  userId: number
+
+  @Column({ type: "timestamp", nullable: true })
+  expiresAt: Date
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: "userId" })
+  user: User
+
+  @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
+  offers: Offer[]
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date
+
+  @Column({ type: "tsvector", select: false, insert: false, update: false })
+  searchVector?: string
 }

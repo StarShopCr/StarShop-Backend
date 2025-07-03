@@ -2,14 +2,17 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
   JoinColumn,
   Check,
 } from 'typeorm';
-import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
 import { User } from '../../users/entities/user.entity';
+import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
 import { Product } from '../../products/entities/product.entity';
+import { OfferAttachment } from './offer-attachment.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
 
 @Entity('offers')
@@ -18,18 +21,18 @@ export class Offer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'request_id' })
-  requestId: string;
+  @Column({ name: 'buyer_request_id' })
+  buyerRequestId: string;
 
-  @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, { 
+  @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, {
     nullable: false,
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'request_id' })
+  @JoinColumn({ name: 'buyer_request_id' })
   buyerRequest: BuyerRequest;
 
   @Column({ name: 'seller_id' })
-  sellerId: number;
+  sellerId: string;
 
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'seller_id' })
@@ -42,7 +45,7 @@ export class Offer {
   @JoinColumn({ name: 'product_id' })
   product?: Product;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   title: string;
 
   @Column({ type: 'text' })
@@ -51,13 +54,27 @@ export class Offer {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
+  @Column({ type: 'int', default: 7 })
+  deliveryDays: number;
+
   @Column({
     type: 'enum',
-    enum: OfferStatus,     
+    enum: OfferStatus,
     default: OfferStatus.PENDING,
   })
   status: OfferStatus;
 
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
+  @OneToMany(() => OfferAttachment, (attachment) => attachment.offer, {
+    cascade: true,
+  })
+  attachments: OfferAttachment[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
