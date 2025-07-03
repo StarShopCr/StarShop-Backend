@@ -109,7 +109,7 @@ StarShop Backend is a robust and scalable API built with NestJS that provides co
 ### Prerequisites
 
 - Node.js (v18 or higher)
-- PostgreSQL
+- Docker and Docker Compose
 - npm or yarn
 
 ### 1. Clone the Repository
@@ -125,38 +125,54 @@ cd StarShop-Backend
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 3. Start Database with Docker
 
 ```bash
-cp .env.example .env
+# Start PostgreSQL database using Docker Compose
+docker-compose up -d postgres
 ```
 
-Configure the following variables in `.env`:
+This will start a PostgreSQL database with the following default configuration:
+- **Host**: localhost
+- **Port**: 5432
+- **Username**: user
+- **Password**: password
+- **Database**: starshop
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+touch .env
+```
+
+Add the following configuration to your `.env` file:
 
 ```env
-# Database
+# Database (Docker Compose defaults)
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
+DB_USERNAME=user
+DB_PASSWORD=password
 DB_DATABASE=starshop
 
 # JWT
-JWT_SECRET=your-super-secret-jwt-key
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRATION_TIME=1h
 
-# AWS S3
+# AWS S3 (Optional - for file uploads)
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
 AWS_S3_BUCKET=your_bucket_name
 
-# Cloudinary
+# Cloudinary (Optional - for image uploads)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
-# Pusher
+# Pusher (Optional - for real-time notifications)
 PUSHER_APP_ID=your_app_id
 PUSHER_KEY=your_key
 PUSHER_SECRET=your_secret
@@ -167,25 +183,72 @@ NODE_ENV=development
 PORT=3000
 ```
 
-### 4. Configure Database
+### 5. Run Database Migrations
 
 ```bash
-# Run migrations
+# Run migrations to create database tables
 npm run typeorm migration:run
-
-# Or if you prefer to sync (development only)
-npm run typeorm schema:sync
 ```
 
-### 5. Start the Application
+### 6. Start the Application
 
 ```bash
-# Development
+# Development mode with hot reload
 npm run dev
 
-# Production
+# Or start in production mode
 npm run build
-npm start
+npm run start:prod
+```
+
+The application will be available at `http://localhost:3000`
+
+### Alternative: Run Everything with Docker
+
+If you prefer to run the entire application with Docker:
+
+```bash
+# Build the application image
+docker build -t starshop-backend .
+
+# Start both database and application
+docker-compose up -d
+```
+
+## 🐳 Docker Setup
+
+### Using Docker Compose (Recommended)
+
+The project includes a `docker-compose.yml` file that sets up the PostgreSQL database:
+
+```bash
+# Start only the database
+docker-compose up -d postgres
+
+# Start all services (if you add the app service to docker-compose.yml)
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (this will delete all data)
+docker-compose down -v
+```
+
+### Database Management
+
+```bash
+# View database logs
+docker-compose logs postgres
+
+# Access database directly
+docker exec -it starshop-db psql -U user -d starshop
+
+# Backup database
+docker exec starshop-db pg_dump -U user starshop > backup.sql
+
+# Restore database
+docker exec -i starshop-db psql -U user -d starshop < backup.sql
 ```
 
 ## 🚀 Available Scripts
@@ -346,28 +409,45 @@ src/
 
 ## 🔧 Development Configuration
 
-### Docker
+### Docker Development
 
 ```bash
-# Start with Docker Compose
-docker-compose up -d
+# Start database only (recommended for development)
+docker-compose up -d postgres
 
-# Build image
+# Build and run application with Docker
 docker build -t starshop-backend .
+docker run -p 3000:3000 --env-file .env starshop-backend
+
+# Or use Docker Compose for both (if you extend docker-compose.yml)
+docker-compose up -d
 ```
 
-### Database
+### Database Management
 
 ```bash
-# Create migration
+# Create new migration
 npm run typeorm migration:create -- -n CreateNewTable
 
 # Run migrations
 npm run typeorm migration:run
 
-# Revert migration
+# Revert last migration
 npm run typeorm migration:revert
+
+# Generate migration from entity changes
+npm run typeorm migration:generate -- -n MigrationName
 ```
+
+### Development Workflow
+
+1. **Start Database**: `docker-compose up -d postgres`
+2. **Install Dependencies**: `npm install`
+3. **Setup Environment**: Create `.env` file
+4. **Run Migrations**: `npm run typeorm migration:run`
+5. **Start Development Server**: `npm run dev`
+6. **Access API**: `http://localhost:3000`
+7. **View Documentation**: `http://localhost:3000/docs`
 
 ## 📝 Coding Standards
 
