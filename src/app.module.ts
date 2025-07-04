@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { OfferModule } from './modules/offers/offer.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -74,6 +75,7 @@ console.log();
     AttributeModule,
     NotificationsModule,
     OrdersModule,
+    OfferModule,
   ],
 })
 export class AppModule {}

@@ -17,10 +17,9 @@ export enum BuyerRequestStatus {
 @Entity('buyer_requests')
 export class BuyerRequest {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: number;
 
   // TODO : We need to complete the following fields
-
 
   @OneToMany('Offer', (offer: Offer) => offer.buyerRequest)
   offers: Offer[];

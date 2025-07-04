@@ -1,16 +1,24 @@
-import { IsString, IsNumber, IsUUID, IsOptional, Min, MaxLength, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsUUID,
+  IsOptional,
+  Min,
+  MaxLength,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOfferDto {
   @ApiProperty({ description: 'ID of the buyer request this offer responds to' })
   @IsUUID()
   @IsNotEmpty()
-  requestId: string;
+  requestId: number;
 
   @ApiPropertyOptional({ description: 'ID of the product being offered (optional)' })
   @IsOptional()
   @IsNumber()
-  productId?: number;
+  productId: number;
 
   @ApiProperty({ description: 'Title of the offer', maxLength: 100 })
   @IsString()

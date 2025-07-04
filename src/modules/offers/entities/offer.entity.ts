@@ -19,11 +19,11 @@ export class Offer {
   id: string;
 
   @Column({ name: 'request_id' })
-  requestId: string;
+  requestId: number;
 
-  @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, { 
+  @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, {
     nullable: false,
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'request_id' })
   buyerRequest: BuyerRequest;
@@ -53,7 +53,7 @@ export class Offer {
 
   @Column({
     type: 'enum',
-    enum: OfferStatus,     
+    enum: OfferStatus,
     default: OfferStatus.PENDING,
   })
   status: OfferStatus;
