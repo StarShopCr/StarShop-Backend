@@ -1,39 +1,43 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  JoinColumn,
-  Check,
-} from 'typeorm';
-import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
+import { BuyerRequest } from './buyer-request.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
 
 @Entity('offers')
-@Check(`"price" >= 0`)
 export class Offer {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ name: 'request_id' })
-  requestId: string;
+  @Column()
+  title: string;
 
-  @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, { 
-    nullable: false,
-    onDelete: 'CASCADE'
+  @Column('text')
+  description: string;
+
+  @Column('decimal')
+  price: number;
+
+  @Column({
+    type: 'enum',
+    enum: OfferStatus,
+    default: OfferStatus.PENDING,
   })
-  @JoinColumn({ name: 'request_id' })
-  buyerRequest: BuyerRequest;
+  status: OfferStatus;
 
   @Column({ name: 'seller_id' })
   sellerId: number;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, (user) => user.offers)
   @JoinColumn({ name: 'seller_id' })
   seller: User;
+
+  @Column({ name: 'request_id' })
+  requestId: number;
+
+  @ManyToOne(() => BuyerRequest, (request) => request.offers)
+  @JoinColumn({ name: 'request_id' })
+  request: BuyerRequest;
 
   @Column({ name: 'product_id', nullable: true })
   productId?: number;
@@ -42,22 +46,6 @@ export class Offer {
   @JoinColumn({ name: 'product_id' })
   product?: Product;
 
-  @Column({ type: 'varchar', length: 100 })
-  title: string;
-
-  @Column({ type: 'text' })
-  description: string;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
-
-  @Column({
-    type: 'enum',
-    enum: OfferStatus,     
-    default: OfferStatus.PENDING,
-  })
-  status: OfferStatus;
-
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 }
