@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsIn, IsOptional, IsObject } from 'class-validator';
 
 export class NotificationDto {
   @IsString()
@@ -10,8 +10,12 @@ export class NotificationDto {
   message: string;
 
   @IsString()
-  @IsIn(['info', 'warning', 'error'])
-  type: 'info' | 'warning' | 'error';
+  @IsIn(['info', 'warning', 'error', 'offer'])
+  type: 'info' | 'warning' | 'error' | 'offer';
+
+  @IsOptional()
+  @IsObject()
+  payload?: Record<string, any>;
 }
 
 export class UserNotificationDto extends NotificationDto {
