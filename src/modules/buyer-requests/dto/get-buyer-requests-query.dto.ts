@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsNumber, Min, Max, IsBoolean } from "class-validator"
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsBoolean,
+} from "class-validator"
 import { Transform } from "class-transformer"
 
 export class GetBuyerRequestsQueryDto {

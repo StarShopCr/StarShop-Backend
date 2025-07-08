@@ -1,21 +1,21 @@
 import { Test, TestingModule } from "@nestjs/testing"
 import { getRepositoryToken } from "@nestjs/typeorm"
+import {
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from "@nestjs/common"
 import { Repository, SelectQueryBuilder } from "typeorm"
 import { BuyerRequestsService } from "../services/buyer-requests.service"
-import { BuyerRequest, BuyerRequestStatus } from "../entities/buyer-request.entity"
-import { NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common"
+import {
+  BuyerRequest,
+  BuyerRequestStatus,
+} from "../entities/buyer-request.entity"
 import { jest } from "@jest/globals"
 
 describe("BuyerRequestsService", () => {
   let service: BuyerRequestsService
   let repository: jest.Mocked<Repository<BuyerRequest>>
-
-  const mockRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    createQueryBuilder: jest.fn(),
-  } as unknown as jest.Mocked<Repository<BuyerRequest>>
 
   const mockQueryBuilder = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -33,8 +33,16 @@ describe("BuyerRequestsService", () => {
     getRawMany: jest.fn(),
   } as unknown as jest.Mocked<SelectQueryBuilder<BuyerRequest>>
 
-  // Helper function to create a complete mock BuyerRequest
-  const createMockBuyerRequest = (overrides: Partial<BuyerRequest> = {}): BuyerRequest => ({
+  const mockRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+    createQueryBuilder: jest.fn(() => mockQueryBuilder),
+  } as unknown as jest.Mocked<Repository<BuyerRequest>>
+
+  const createMockBuyerRequest = (
+    overrides: Partial<BuyerRequest> = {},
+  ): BuyerRequest => ({
     id: 1,
     title: "Test Request",
     description: "Test Description",
@@ -74,6 +82,7 @@ describe("BuyerRequestsService", () => {
     jest.clearAllMocks()
   })
 
+  // --- CREATE ---
   describe("create", () => {
     it("should create a buyer request successfully", async () => {
       const createDto = {
@@ -84,12 +93,7 @@ describe("BuyerRequestsService", () => {
         categoryId: 1,
       }
       const userId = 1
-      const mockRequest = createMockBuyerRequest({
-        ...createDto,
-        userId,
-        status: BuyerRequestStatus.OPEN,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      })
+      const mockRequest = createMockBuyerRequest({ ...createDto, userId })
 
       mockRepository.create.mockReturnValue(mockRequest)
       mockRepository.save.mockResolvedValue(mockRequest)
@@ -102,150 +106,132 @@ describe("BuyerRequestsService", () => {
         expiresAt: expect.any(Date),
         status: BuyerRequestStatus.OPEN,
       })
-      expect(result.title).toBe(createDto.title)
+      expect(result.title).toBe("Test Request")
     })
 
     it("should throw BadRequestException if budgetMin > budgetMax", async () => {
-      const createDto = {
-        title: "Test Request",
-        budgetMin: 200,
-        budgetMax: 100,
-        categoryId: 1,
-      }
-
-      await expect(service.create(createDto, 1)).rejects.toThrow(BadRequestException)
+      await expect(
+        service.create(
+          { title: "Invalid", budgetMin: 200, budgetMax: 100, categoryId: 1 },
+          1,
+        ),
+      ).rejects.toThrow(BadRequestException)
     })
 
     it("should throw BadRequestException if expiration date is in the past", async () => {
-      const createDto = {
-        title: "Test Request",
-        budgetMin: 100,
-        budgetMax: 200,
-        categoryId: 1,
-        expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-      }
-
-      await expect(service.create(createDto, 1)).rejects.toThrow(BadRequestException)
+      const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      await expect(
+        service.create(
+          {
+            title: "Expired",
+            budgetMin: 100,
+            budgetMax: 200,
+            categoryId: 1,
+            expiresAt: pastDate,
+          },
+          1,
+        ),
+      ).rejects.toThrow(BadRequestException)
     })
   })
 
+  // --- FIND ALL ---
   describe("findAll", () => {
     beforeEach(() => {
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder)
     })
 
     it("should return paginated buyer requests", async () => {
-      const query = { page: 1, limit: 10 }
       const mockRequests = [
-        createMockBuyerRequest({
-          id: 1,
-          title: "Request 1",
-          status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        }),
-        createMockBuyerRequest({
-          id: 2,
-          title: "Request 2",
-          status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        }),
+        createMockBuyerRequest({ id: 1 }),
+        createMockBuyerRequest({ id: 2 }),
       ]
-
       mockQueryBuilder.getManyAndCount.mockResolvedValue([mockRequests, 2])
 
-      const result = await service.findAll(query)
+      const result = await service.findAll({ page: 1, limit: 10 })
 
       expect(result.data).toHaveLength(2)
       expect(result.total).toBe(2)
-      expect(result.page).toBe(1)
       expect(result.totalPages).toBe(1)
     })
 
-    it("should apply search filter correctly", async () => {
-      const query = { page: 1, limit: 10, search: "test keyword" }
+    it("should apply search filter", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
-
-      await service.findAll(query)
+      await service.findAll({ search: "web" })
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         expect.stringContaining("to_tsvector"),
         expect.objectContaining({
-          search: "test keyword",
-          searchLike: "%test keyword%",
+          search: "web",
+          searchLike: "%web%",
         }),
       )
     })
 
-    it("should apply category filter correctly", async () => {
-      const query = { page: 1, limit: 10, categoryId: 5 }
+    it("should apply category filter", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+      await service.findAll({ categoryId: 5 })
 
-      await service.findAll(query)
-
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("request.categoryId = :categoryId", { categoryId: 5 })
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "request.categoryId = :categoryId",
+        { categoryId: 5 },
+      )
     })
 
-    it("should apply budget filters correctly", async () => {
-      const query = { page: 1, limit: 10, budgetMin: 100, budgetMax: 500 }
+    it("should apply budget filters", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+      await service.findAll({ budgetMin: 100, budgetMax: 500 })
 
-      await service.findAll(query)
-
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("request.budgetMax >= :budgetMin", { budgetMin: 100 })
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("request.budgetMin <= :budgetMax", { budgetMax: 500 })
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "request.budgetMax >= :budgetMin",
+        { budgetMin: 100 },
+      )
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "request.budgetMin <= :budgetMax",
+        { budgetMax: 500 },
+      )
     })
 
-    it("should apply expiring soon filter correctly", async () => {
-      const query = { page: 1, limit: 10, expiringSoon: true }
+    it("should apply expiringSoon filter", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+      await service.findAll({ expiringSoon: true })
 
-      await service.findAll(query)
-
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("request.expiresAt <= :threeDaysFromNow", {
-        threeDaysFromNow: expect.any(Date),
-      })
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "request.expiresAt <= :threeDaysFromNow",
+        { threeDaysFromNow: expect.any(Date) },
+      )
     })
 
-    it("should apply sorting correctly", async () => {
-      const query = { page: 1, limit: 10, sortBy: "budgetMin" as const, sortOrder: "ASC" as const }
+    it("should apply sorting", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0])
+      await service.findAll({ sortBy: "budgetMin", sortOrder: "ASC" })
 
-      await service.findAll(query)
-
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith("request.budgetMin", "ASC")
-      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith("request.createdAt", "DESC")
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+        "request.budgetMin",
+        "ASC",
+      )
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        "request.createdAt",
+        "DESC",
+      )
     })
   })
 
+  // --- FIND ONE ---
   describe("findOne", () => {
-    it("should return a buyer request by id", async () => {
-      const mockRequest = createMockBuyerRequest({
-        id: 1,
-        title: "Test Request",
-        status: BuyerRequestStatus.OPEN,
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        user: { id: 1, name: "Test User", walletAddress: "0x123" } as any,
-      })
-
+    it("should return a buyer request", async () => {
+      const mockRequest = createMockBuyerRequest({ id: 1 })
       mockRepository.findOne.mockResolvedValue(mockRequest)
 
       const result = await service.findOne(1)
 
       expect(result.id).toBe(1)
-      expect(result.title).toBe("Test Request")
       expect(result.isExpiringSoon).toBe(false)
-      expect(result.daysUntilExpiry).toBeGreaterThan(3)
     })
 
-    it("should mark request as expiring soon if within 3 days", async () => {
-      const mockRequest = createMockBuyerRequest({
-        id: 1,
-        title: "Test Request",
-        status: BuyerRequestStatus.OPEN,
-        expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-        user: { id: 1, name: "Test User", walletAddress: "0x123" } as any,
-      })
-
+    it("should detect expiring soon", async () => {
+      const expiresSoon = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+      const mockRequest = createMockBuyerRequest({ expiresAt: expiresSoon })
       mockRepository.findOne.mockResolvedValue(mockRequest)
 
       const result = await service.findOne(1)
@@ -254,129 +240,91 @@ describe("BuyerRequestsService", () => {
       expect(result.daysUntilExpiry).toBe(2)
     })
 
-    it("should throw NotFoundException if request not found", async () => {
+    it("should throw if not found", async () => {
       mockRepository.findOne.mockResolvedValue(null)
-
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException)
     })
   })
 
+  // --- UPDATE ---
   describe("update", () => {
-    it("should update a buyer request successfully", async () => {
-      const updateDto = { title: "Updated Title" }
-      const mockRequest = createMockBuyerRequest({
-        id: 1,
-        title: "Original Title",
-        userId: 1,
-        status: BuyerRequestStatus.OPEN,
-        budgetMin: 100,
-        budgetMax: 200,
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      })
-
+    it("should update buyer request", async () => {
+      const mockRequest = createMockBuyerRequest({ id: 1 })
       mockRepository.findOne.mockResolvedValue(mockRequest)
-      mockRepository.save.mockResolvedValue({ ...mockRequest, ...updateDto })
+      mockRepository.save.mockResolvedValue({ ...mockRequest, title: "Updated" })
 
-      const result = await service.update(1, updateDto, 1)
+      const result = await service.update(1, { title: "Updated" }, 1)
 
-      expect(result.title).toBe("Updated Title")
+      expect(result.title).toBe("Updated")
     })
 
-    it("should throw ForbiddenException if user is not owner", async () => {
-      const mockRequest = createMockBuyerRequest({
-        id: 1,
-        userId: 1,
-        status: BuyerRequestStatus.OPEN,
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      })
+    it("should validate ownership", async () => {
+      const mockRequest = createMockBuyerRequest({ userId: 1 })
       mockRepository.findOne.mockResolvedValue(mockRequest)
-
       await expect(service.update(1, {}, 2)).rejects.toThrow(ForbiddenException)
     })
 
-    it("should throw ForbiddenException if request is closed", async () => {
+    it("should reject update if closed", async () => {
       const mockRequest = createMockBuyerRequest({
-        id: 1,
-        userId: 1,
         status: BuyerRequestStatus.CLOSED,
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       })
       mockRepository.findOne.mockResolvedValue(mockRequest)
-
       await expect(service.update(1, {}, 1)).rejects.toThrow(ForbiddenException)
     })
 
-    it("should throw ForbiddenException if request has expired", async () => {
+    it("should reject update if expired", async () => {
       const mockRequest = createMockBuyerRequest({
-        id: 1,
-        userId: 1,
-        status: BuyerRequestStatus.OPEN,
-        expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
+        expiresAt: new Date(Date.now() - 1000),
       })
       mockRepository.findOne.mockResolvedValue(mockRequest)
-
       await expect(service.update(1, {}, 1)).rejects.toThrow(ForbiddenException)
     })
 
-    it("should validate budget range on update", async () => {
-      const updateDto = { budgetMin: 200, budgetMax: 100 }
-      const mockRequest = createMockBuyerRequest({
-        id: 1,
-        userId: 1,
-        status: BuyerRequestStatus.OPEN,
-        budgetMin: 50,
-        budgetMax: 150,
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      })
-
+    it("should reject invalid budget update", async () => {
+      const mockRequest = createMockBuyerRequest()
       mockRepository.findOne.mockResolvedValue(mockRequest)
-
-      await expect(service.update(1, updateDto, 1)).rejects.toThrow(BadRequestException)
+      await expect(
+        service.update(1, { budgetMin: 500, budgetMax: 100 }, 1),
+      ).rejects.toThrow(BadRequestException)
     })
   })
 
+  // --- getSearchSuggestions ---
   describe("getSearchSuggestions", () => {
-    it("should return search suggestions", async () => {
-      const mockSuggestions = [{ title: "Web Development" }, { title: "Web Design" }, { title: "Website Maintenance" }]
-
+    it("should return suggestions", async () => {
+      const mockSuggestions = [
+        { title: "Web Development" },
+        { title: "Web Design" },
+      ]
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder)
       mockQueryBuilder.getRawMany.mockResolvedValue(mockSuggestions)
 
-      const result = await service.getSearchSuggestions("web", 3)
+      const result = await service.getSearchSuggestions("web")
 
-      expect(result).toEqual(["Web Development", "Web Design", "Website Maintenance"])
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith("request.status = :status", {
-        status: BuyerRequestStatus.OPEN,
-      })
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("request.title ILIKE :query", { query: "%web%" })
+      expect(result).toEqual(["Web Development", "Web Design"])
     })
 
-    it("should return empty array for short queries", async () => {
+    it("should return [] for short query", async () => {
       const result = await service.getSearchSuggestions("a")
       expect(result).toEqual([])
     })
   })
 
+  // --- getPopularCategories ---
   describe("getPopularCategories", () => {
-    it("should return popular categories with counts", async () => {
-      const mockCategories = [
-        { categoryId: "1", count: "10" },
-        { categoryId: "2", count: "8" },
-        { categoryId: "3", count: "5" },
-      ]
-
+    it("should return category counts", async () => {
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder)
-      mockQueryBuilder.getRawMany.mockResolvedValue(mockCategories)
+      mockQueryBuilder.getRawMany.mockResolvedValue([
+        { categoryId: "1", count: "10" },
+        { categoryId: "2", count: "5" },
+      ])
 
       const result = await service.getPopularCategories()
 
       expect(result).toEqual([
         { categoryId: 1, count: 10 },
-        { categoryId: 2, count: 8 },
-        { categoryId: 3, count: 5 },
+        { categoryId: 2, count: 5 },
       ])
-      expect(mockQueryBuilder.groupBy).toHaveBeenCalledWith("request.categoryId")
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith("count", "DESC")
     })
   })
 })

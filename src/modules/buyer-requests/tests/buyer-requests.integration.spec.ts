@@ -20,6 +20,7 @@ describe("BuyerRequestsController (e2e)", () => {
           entities: [BuyerRequest],
           synchronize: true,
           dropSchema: true, // Ensure clean state
+          dropSchema: true,
         }),
         BuyerRequestsModule,
       ],
@@ -49,7 +50,6 @@ describe("BuyerRequestsController (e2e)", () => {
     })
 
     it("should apply search filter", async () => {
-      // Create test data
       await repository.save([
         {
           title: "Web Development Project",
@@ -140,8 +140,7 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.filters.expiringSoon).toBe(true)
-          // In SQLite, the expiring soon logic might not work exactly like PostgreSQL
-          // but the filter should be applied
+          expect(res.body.data.length).toBeGreaterThan(0)
         })
     })
   })
@@ -172,6 +171,7 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true)
+          expect(res.body.length).toBeGreaterThan(0)
         })
     })
   })
@@ -202,6 +202,8 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true)
+          expect(res.body[0]).toHaveProperty("categoryId")
+          expect(res.body[0]).toHaveProperty("count")
         })
     })
   })

@@ -13,6 +13,7 @@ import { UsersModule } from "./modules/users/users.module"
 import { NotificationsModule } from "./modules/notifications/notifications.module"
 import { OrdersModule } from "./modules/orders/orders.module"
 import { BuyerRequestsModule } from "./modules/buyer-requests/buyer-requests.module"
+import { OffersModule } from "./modules/offers/offers.module"
 
 // Entities
 import { User } from "./modules/users/entities/user.entity"
@@ -31,6 +32,7 @@ import { Coupon } from "./modules/coupons/entities/coupon.entity"
 import { CouponUsage } from "./modules/coupons/entities/coupon-usage.entity"
 import { BuyerRequest } from "./modules/buyer-requests/entities/buyer-request.entity"
 import { Offer } from "./modules/offers/entities/offer.entity"
+import { OfferAttachment } from "./modules/offers/entities/offer-attachment.entity"
 
 @Module({
   imports: [
@@ -59,6 +61,7 @@ import { Offer } from "./modules/offers/entities/offer.entity"
         CouponUsage,
         BuyerRequest,
         Offer,
+        OfferAttachment,
       ],
       synchronize: process.env.NODE_ENV !== "production",
       logging: process.env.NODE_ENV === "development",
@@ -75,6 +78,7 @@ import { Offer } from "./modules/offers/entities/offer.entity"
     NotificationsModule,
     OrdersModule,
     BuyerRequestsModule,
+    OffersModule,
   ],
 })
 export class AppModule {}
