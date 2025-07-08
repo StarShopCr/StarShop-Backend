@@ -19,7 +19,7 @@ describe("BuyerRequestsController (e2e)", () => {
           database: ":memory:",
           entities: [BuyerRequest],
           synchronize: true,
-          dropSchema: true, // Ensure clean state
+          dropSchema: true,
         }),
         BuyerRequestsModule,
       ],
@@ -28,7 +28,7 @@ describe("BuyerRequestsController (e2e)", () => {
     app = moduleFixture.createNestApplication()
     repository = moduleFixture.get<Repository<BuyerRequest>>(getRepositoryToken(BuyerRequest))
     await app.init()
-  }, 30000) // Increased timeout to 30 seconds
+  }, 30000)
 
   afterEach(async () => {
     if (app) {
@@ -49,7 +49,6 @@ describe("BuyerRequestsController (e2e)", () => {
     })
 
     it("should apply search filter", async () => {
-      // Create test data
       await repository.save([
         {
           title: "Web Development Project",
@@ -122,7 +121,7 @@ describe("BuyerRequestsController (e2e)", () => {
           categoryId: 1,
           userId: 1,
           status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
+          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
         },
         {
           title: "Not Expiring Soon",
@@ -131,7 +130,7 @@ describe("BuyerRequestsController (e2e)", () => {
           categoryId: 1,
           userId: 2,
           status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days
+          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
         },
       ])
 
@@ -140,8 +139,7 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.filters.expiringSoon).toBe(true)
-          // In SQLite, the expiring soon logic might not work exactly like PostgreSQL
-          // but the filter should be applied
+          expect(res.body.data.length).toBeGreaterThan(0)
         })
     })
   })
@@ -172,6 +170,7 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true)
+          expect(res.body.length).toBeGreaterThan(0)
         })
     })
   })
@@ -202,6 +201,8 @@ describe("BuyerRequestsController (e2e)", () => {
         .expect(200)
         .expect((res) => {
           expect(Array.isArray(res.body)).toBe(true)
+          expect(res.body[0]).toHaveProperty("categoryId")
+          expect(res.body[0]).toHaveProperty("count")
         })
     })
   })

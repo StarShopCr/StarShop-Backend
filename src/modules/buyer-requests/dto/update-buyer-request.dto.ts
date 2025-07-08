@@ -1,4 +1,12 @@
-import { IsString, MaxLength, IsNumber, Min, IsOptional, IsDateString } from "class-validator"
+import {
+  IsString,
+  IsOptional,
+  MaxLength,
+  IsNumber,
+  Min,
+  IsPositive,
+  IsDateString,
+} from "class-validator"
 import { Transform } from "class-transformer"
 
 export class UpdateBuyerRequestDto {
@@ -14,17 +22,20 @@ export class UpdateBuyerRequestDto {
   @IsOptional()
   @IsNumber({}, { message: "Budget minimum must be a valid number" })
   @Min(0, { message: "Budget minimum must be at least 0" })
+  @IsPositive({ message: "Budget minimum must be positive" })
   @Transform(({ value }) => Number.parseFloat(value))
   budgetMin?: number
 
   @IsOptional()
   @IsNumber({}, { message: "Budget maximum must be a valid number" })
   @Min(0, { message: "Budget maximum must be at least 0" })
+  @IsPositive({ message: "Budget maximum must be positive" })
   @Transform(({ value }) => Number.parseFloat(value))
   budgetMax?: number
 
   @IsOptional()
   @IsNumber({}, { message: "Category ID must be a valid number" })
+  @IsPositive({ message: "Category ID must be positive" })
   @Transform(({ value }) => Number.parseInt(value))
   categoryId?: number
 
