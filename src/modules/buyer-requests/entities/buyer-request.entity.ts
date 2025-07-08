@@ -1,12 +1,15 @@
-import { Offer } from '@/modules/offers/entities/offer.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
-  OneToMany,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
-// Import will be resolved at runtime to avoid circular dependency
+import { User } from '../../users/entities/user.entity';
+import { Offer } from '@/modules/offers/entities/offer.entity';
 
 export enum BuyerRequestStatus {
   OPEN = 'open',
@@ -16,13 +19,39 @@ export enum BuyerRequestStatus {
 
 @Entity('buyer_requests')
 export class BuyerRequest {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  // TODO : We need to complete the following fields
+  @Column({ length: 100 })
+  title: string;
 
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-  @OneToMany('Offer', (offer: Offer) => offer.buyerRequest)
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMin: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMax: number;
+
+  @Column()
+  categoryId: number;
+
+  @Column({
+    type: 'enum',
+    enum: BuyerRequestStatus,
+    default: BuyerRequestStatus.OPEN,
+  })
+  status: BuyerRequestStatus;
+
+  @Column()
+  userId: number;
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @OneToMany(() => Offer, (offer) => offer.buyerRequest)
   offers: Offer[];
 
   @CreateDateColumn({ name: 'created_at' })
