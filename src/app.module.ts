@@ -15,7 +15,6 @@ import { OrdersModule } from "./modules/orders/orders.module"
 import { BuyerRequestsModule } from "./modules/buyer-requests/buyer-requests.module"
 import { OffersModule } from "./modules/offers/offers.module"
 
-
 // Entities
 import { User } from "./modules/users/entities/user.entity"
 import { Order } from "./modules/orders/entities/order.entity"
@@ -34,7 +33,6 @@ import { CouponUsage } from "./modules/coupons/entities/coupon-usage.entity"
 import { BuyerRequest } from "./modules/buyer-requests/entities/buyer-request.entity"
 import { Offer } from "./modules/offers/entities/offer.entity"
 import { OfferAttachment } from "./modules/offers/entities/offer-attachment.entity"
-
 
 @Module({
   imports: [

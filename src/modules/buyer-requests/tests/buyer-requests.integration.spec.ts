@@ -19,6 +19,7 @@ describe("BuyerRequestsController (e2e)", () => {
           database: ":memory:",
           entities: [BuyerRequest],
           synchronize: true,
+          dropSchema: true, // Ensure clean state
           dropSchema: true,
         }),
         BuyerRequestsModule,
@@ -28,7 +29,7 @@ describe("BuyerRequestsController (e2e)", () => {
     app = moduleFixture.createNestApplication()
     repository = moduleFixture.get<Repository<BuyerRequest>>(getRepositoryToken(BuyerRequest))
     await app.init()
-  }, 30000)
+  }, 30000) // Increased timeout to 30 seconds
 
   afterEach(async () => {
     if (app) {
@@ -121,7 +122,7 @@ describe("BuyerRequestsController (e2e)", () => {
           categoryId: 1,
           userId: 1,
           status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
         },
         {
           title: "Not Expiring Soon",
@@ -130,7 +131,7 @@ describe("BuyerRequestsController (e2e)", () => {
           categoryId: 1,
           userId: 2,
           status: BuyerRequestStatus.OPEN,
-          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days
         },
       ])
 

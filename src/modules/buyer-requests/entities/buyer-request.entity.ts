@@ -5,8 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  OneToMany,
   JoinColumn,
+  OneToMany,
   Index,
 } from "typeorm"
 import { User } from "../../users/entities/user.entity"

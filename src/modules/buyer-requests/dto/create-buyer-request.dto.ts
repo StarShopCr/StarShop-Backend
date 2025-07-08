@@ -30,20 +30,24 @@ export class CreateBuyerRequestDto {
   @Transform(({ value }) => Number.parseFloat(value))
   budgetMin: number
 
-  @ApiProperty({ description: "Maximum budget", example: 500, minimum: 0 })
+  @ApiProperty({ description: "Maximum budget", example: 1000, minimum: 0 })
   @IsNumber({}, { message: "Budget maximum must be a valid number" })
   @Min(0, { message: "Budget maximum must be at least 0" })
   @IsPositive({ message: "Budget maximum must be positive" })
   @Transform(({ value }) => Number.parseFloat(value))
   budgetMax: number
 
-  @ApiProperty({ description: "ID of the product category", example: 3 })
+  @ApiProperty({ description: "Category ID", example: 5 })
   @IsNumber({}, { message: "Category ID must be a valid number" })
   @IsPositive({ message: "Category ID must be positive" })
   @Transform(({ value }) => Number.parseInt(value))
   categoryId: number
 
-  @ApiProperty({ description: "Expiration date", required: false })
+  @ApiProperty({
+    description: "Expiration date for this request",
+    required: false,
+    example: "2025-12-31T23:59:59Z",
+  })
   @IsOptional()
   @IsDateString({}, { message: "Expires at must be a valid date" })
   expiresAt?: string
