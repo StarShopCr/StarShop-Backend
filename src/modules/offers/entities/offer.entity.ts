@@ -51,6 +51,11 @@ export class Offer {
   @Column({ type: 'text' })
   description: string;
 
+  @Column({ default: false })
+  isBlocked: boolean;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
