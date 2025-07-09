@@ -11,11 +11,13 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
 
+
 export class CreateOfferDto {
   @ApiProperty({ description: 'ID of the buyer request this offer responds to' })
   @IsUUID()
   @IsNotEmpty()
-  buyerRequestId: string
+  requestId: number;
+
 
   @ApiPropertyOptional({ description: 'ID of the product being offered (optional)' })
   @IsOptional()
