@@ -1,53 +1,44 @@
 import {
   IsString,
-  IsNotEmpty,
+  IsOptional,
   MaxLength,
   IsNumber,
   Min,
-  IsOptional,
-  IsDateString,
   IsPositive,
+  IsDateString,
 } from "class-validator"
 import { Transform } from "class-transformer"
-import { ApiProperty } from "@nestjs/swagger"
 
-export class CreateBuyerRequestDto {
-  @ApiProperty({ description: "Title of the buyer request", maxLength: 100 })
+export class UpdateBuyerRequestDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: "Title is required" })
   @MaxLength(100, { message: "Title must not exceed 100 characters" })
-  title: string
+  title?: string
 
-  @ApiProperty({ description: "Detailed description of what the buyer is looking for", required: false })
   @IsOptional()
   @IsString()
   description?: string
 
-  @ApiProperty({ description: "Minimum budget", example: 100, minimum: 0 })
+  @IsOptional()
   @IsNumber({}, { message: "Budget minimum must be a valid number" })
   @Min(0, { message: "Budget minimum must be at least 0" })
   @IsPositive({ message: "Budget minimum must be positive" })
   @Transform(({ value }) => Number.parseFloat(value))
-  budgetMin: number
+  budgetMin?: number
 
-  @ApiProperty({ description: "Maximum budget", example: 1000, minimum: 0 })
+  @IsOptional()
   @IsNumber({}, { message: "Budget maximum must be a valid number" })
   @Min(0, { message: "Budget maximum must be at least 0" })
   @IsPositive({ message: "Budget maximum must be positive" })
   @Transform(({ value }) => Number.parseFloat(value))
-  budgetMax: number
+  budgetMax?: number
 
-  @ApiProperty({ description: "Category ID", example: 5 })
+  @IsOptional()
   @IsNumber({}, { message: "Category ID must be a valid number" })
   @IsPositive({ message: "Category ID must be positive" })
   @Transform(({ value }) => Number.parseInt(value))
-  categoryId: number
+  categoryId?: number
 
-  @ApiProperty({
-    description: "Expiration date for this request",
-    required: false,
-    example: "2025-12-31T23:59:59Z",
-  })
   @IsOptional()
   @IsDateString({}, { message: "Expires at must be a valid date" })
   expiresAt?: string

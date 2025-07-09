@@ -26,10 +26,8 @@ export enum BuyerRequestStatus {
 @Index("idx_buyer_requests_status", ["status"])
 @Index("idx_buyer_requests_created_at", ["createdAt"])
 export class BuyerRequest {
-
-  @PrimaryGeneratedColumn('uuid')
-  id: number;
-
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
   @Column({ length: 100 })
   title: string
@@ -59,18 +57,15 @@ export class BuyerRequest {
   @Column({ type: "timestamp", nullable: true })
   expiresAt: Date
 
-
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: "userId" })
   user: User
-
 
   @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
   offers: Offer[]
 
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date
-
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date
