@@ -10,8 +10,6 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
-import { Offer } from '../../offers/entities/offer.entity';
-import { BuyerRequest } from '../../offers/entities/buyer-request.entity';
 
 @Entity('users')
 export class User {
@@ -38,12 +36,6 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
-
-  @OneToMany(() => Offer, (offer) => offer.seller)
-  offers: Offer[];
-
-  @OneToMany(() => BuyerRequest, (request) => request.buyer)
-  buyerRequests: BuyerRequest[];
 
   @CreateDateColumn()
   createdAt: Date;
