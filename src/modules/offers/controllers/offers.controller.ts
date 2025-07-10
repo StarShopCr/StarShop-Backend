@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Body,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
@@ -44,7 +45,7 @@ export class OffersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
-  create(createOfferDto: CreateOfferDto, @Request() req: AuthRequest) {
+  create(@Body() createOfferDto: CreateOfferDto, @Request() req: AuthRequest) {
     return this.offersService.create(createOfferDto, String(req.user.id))
   }
 
@@ -88,7 +89,7 @@ export class OffersController {
     return this.offersService.reject(id, String(req.user.id));
   }
 
-  @Get()
+  @Get("all")
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
