@@ -49,6 +49,74 @@ export class OffersService {
     return this.offerRepository.save(offer)
   }
 
+  async accept(offerId: string, buyerId: string): Promise<Offer> {
+    const offer = await this.offerRepository.findOne({
+      where: { id: offerId },
+      relations: ["buyerRequest"],
+    });
+
+    if (!offer) {
+      throw new NotFoundException("Offer not found");
+    }
+
+    if (offer.buyerRequest.userId.toString() !== buyerId) {
+      throw new ForbiddenException("You are not authorized to accept this offer");
+    }
+
+    if (offer.status !== OfferStatus.PENDING) {
+      throw new BadRequestException(`Cannot accept an offer that is already ${offer.status}`);
+    }
+
+    const alreadyAccepted = await this.offerRepository.findOne({
+      where: {
+        buyerRequestId: offer.buyerRequestId,
+        status: OfferStatus.ACCEPTED,
+      },
+    });
+
+    if (alreadyAccepted) {
+      throw new BadRequestException("Another offer has already been accepted for this request");
+    }
+
+    // 1. Accept the current offer
+    offer.status = OfferStatus.ACCEPTED;
+    const acceptedOffer = await this.offerRepository.save(offer);
+
+    // 2. Reject all other pending offers for the same buyer request
+    await this.offerRepository.update(
+      {
+        buyerRequestId: offer.buyerRequestId,
+        status: OfferStatus.PENDING,
+      },
+      { status: OfferStatus.REJECTED },
+    );
+
+    console.log(`Offer #${offerId} accepted by buyer #${buyerId}. Other pending offers rejected.`);
+    return acceptedOffer;
+  }
+
+  async reject(offerId: string, buyerId: string): Promise<Offer> {
+    const offer = await this.offerRepository.findOne({
+      where: { id: offerId },
+      relations: ["buyerRequest"],
+    });
+
+    if (!offer) {
+      throw new NotFoundException("Offer not found");
+    }
+
+    if (offer.buyerRequest.userId.toString() !== buyerId) {
+      throw new ForbiddenException("You are not authorized to reject this offer");
+    }
+
+    if (offer.status !== OfferStatus.PENDING) {
+      throw new BadRequestException(`Cannot reject an offer that is already ${offer.status}`);
+    }
+
+    offer.status = OfferStatus.REJECTED;
+    console.log(`Offer #${offerId} rejected by buyer #${buyerId}.`);
+    return this.offerRepository.save(offer);
+  }
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       relations: ["seller", "buyerRequest", "attachments"],

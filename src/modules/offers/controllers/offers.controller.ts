@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Body,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
@@ -35,14 +36,60 @@ export class OffersController {
     private readonly offerAttachmentService: OfferAttachmentService,
   ) {}
 
+  /**
+   * Endpoint for a seller to create a new offer.
+   * Method: POST
+   * URL: /offers
+   * Access: Seller only
+   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
-  create(createOfferDto: CreateOfferDto, @Request() req: AuthRequest) {
+  create(@Body() createOfferDto: CreateOfferDto, @Request() req: AuthRequest) {
     return this.offersService.create(createOfferDto, String(req.user.id))
   }
 
+    /**
+   * Endpoint to list offers for a specific BuyerRequest.
+   * Method: GET
+   * URL: /offers?requestId=...
+   * Access: Public
+   */
   @Get()
+  findOffersForRequest(@Query('requestId') requestId: string) {
+    if (!requestId) {
+      throw new BadRequestException('The "requestId" query parameter is required.');
+    }
+    return this.offersService.findByBuyerRequest(requestId);
+  }
+
+  /**
+   * Endpoint for a buyer to accept an offer.
+   * Method: PATCH
+   * URL: /offers/:id/accept
+   * Access: Buyer only
+   */
+  @Patch(":id/accept")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
+  accept(@Param('id') id: string, @Request() req: AuthRequest) {
+    return this.offersService.accept(id, String(req.user.id));
+  }
+
+  /**
+   * Endpoint for a buyer to reject an offer.
+   * Method: PATCH
+   * URL: /offers/:id/reject
+   * Access: Buyer only
+   */
+  @Patch(":id/reject")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
+  reject(@Param('id') id: string, @Request() req: AuthRequest) {
+    return this.offersService.reject(id, String(req.user.id));
+  }
+
+  @Get("all")
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
