@@ -15,6 +15,8 @@ import { Product } from '../../products/entities/product.entity';
 import { OfferAttachment } from './offer-attachment.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
 
+export { OfferStatus } from '../enums/offer-status.enum';
+
 @Entity('offers')
 @Check(`"price" >= 0`)
 export class Offer {
@@ -54,8 +56,9 @@ export class Offer {
   @Column({ default: false })
   isBlocked: boolean;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Column({ default: false })
+  wasPurchased: boolean;
+
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
@@ -71,6 +74,9 @@ export class Offer {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @Column({ name: 'request_id' })
+  requestId: string;
 
   @OneToMany(() => OfferAttachment, (attachment) => attachment.offer, {
     cascade: true,

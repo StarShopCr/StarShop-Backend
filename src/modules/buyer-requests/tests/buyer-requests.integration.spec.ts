@@ -19,7 +19,6 @@ describe("BuyerRequestsController (e2e)", () => {
           database: ":memory:",
           entities: [BuyerRequest],
           synchronize: true,
-          dropSchema: true, // Ensure clean state
           dropSchema: true,
         }),
         BuyerRequestsModule,

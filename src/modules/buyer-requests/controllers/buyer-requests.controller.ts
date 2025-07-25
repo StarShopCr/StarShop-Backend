@@ -35,19 +35,19 @@ export class BuyerRequestsController {
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
+  findOne(@Param("id") id: string) {
     return this.buyerRequestsService.findOne(id)
   }
 
   @Patch(":id")
   @UseGuards(JwtAuthGuard)
-  update(@Param("id", ParseIntPipe) id: number, updateBuyerRequestDto: UpdateBuyerRequestDto, @Request() req) {
+  update(@Param("id") id: string, updateBuyerRequestDto: UpdateBuyerRequestDto, @Request() req) {
     return this.buyerRequestsService.update(id, updateBuyerRequestDto, req.user.id)
   }
 
   @Delete(":id")
   @UseGuards(JwtAuthGuard)
-  remove(@Param("id", ParseIntPipe) id: number, @Request() req) {
+  remove(@Param("id") id: string, @Request() req) {
     return this.buyerRequestsService.remove(id, req.user.id)
   }
 }

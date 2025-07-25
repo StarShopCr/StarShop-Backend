@@ -3,8 +3,9 @@ import { Repository } from "typeorm"
 import { Offer, OfferStatus } from "../entities/offer.entity"
 import { CreateOfferDto } from "../dto/create-offer.dto"
 import { UpdateOfferDto } from "../dto/update-offer.dto"
-import { BuyerRequest } from "../../buyer-requests/entities/buyer-request.entity"
+import { BuyerRequest, BuyerRequestStatus } from "../../buyer-requests/entities/buyer-request.entity"
 import { InjectRepository } from "@nestjs/typeorm"
+import { DataSource } from "typeorm"
 
 @Injectable()
 export class OffersService {
@@ -13,12 +14,13 @@ export class OffersService {
     private offerRepository: Repository<Offer>,
     @InjectRepository(BuyerRequest)
     private buyerRequestRepository: Repository<BuyerRequest>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createOfferDto: CreateOfferDto, sellerId: string): Promise<Offer> {
     // Verify buyer request exists and is open
     const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id: Number(createOfferDto.buyerRequestId) },
+      where: { id: createOfferDto.buyerRequestId },
     })
 
     if (!buyerRequest) {
@@ -188,5 +190,28 @@ export class OffersService {
     })
 
     return { offers, total }
+  }
+
+  async confirmPurchase(offerId: string, buyerId: string): Promise<Offer> {
+    return this.dataSource.transaction(async manager => {
+      const offer = await manager.findOne(Offer, {
+        where: { id: offerId },
+        relations: ["buyerRequest"],
+      });
+      if (!offer) throw new NotFoundException("Offer not found");
+      if (offer.buyerRequest.userId.toString() !== buyerId)
+        throw new ForbiddenException("You are not authorized to confirm this offer");
+      if (offer.wasPurchased)
+        throw new BadRequestException("This offer has already been confirmed as purchased");
+      // Set wasPurchased and BuyerRequest status
+      offer.wasPurchased = true;
+      await manager.save(offer);
+      // Set BuyerRequest status to fulfilled if not already
+      if (offer.buyerRequest.status !== BuyerRequestStatus.FULFILLED) {
+        offer.buyerRequest.status = BuyerRequestStatus.FULFILLED;
+        await manager.save(offer.buyerRequest);
+      }
+      return offer;
+    });
   }
 }
