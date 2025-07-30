@@ -282,4 +282,34 @@ export class BuyerRequestsService {
       daysUntilExpiry,
     };
   }
+
+  /**
+   * Manually close a buyer request (buyer-only access)
+   */
+  async closeRequest(id: number, userId: number): Promise<BuyerRequestResponseDto> {
+    const buyerRequest = await this.buyerRequestRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!buyerRequest) {
+      throw new NotFoundException('Buyer request not found');
+    }
+
+    // Only the buyer who created the request can close it
+    if (buyerRequest.userId !== userId) {
+      throw new ForbiddenException('You can only close your own buyer requests');
+    }
+
+    // Check if already closed
+    if (buyerRequest.status === BuyerRequestStatus.CLOSED) {
+      throw new BadRequestException('Buyer request is already closed');
+    }
+
+    // Update status to closed
+    buyerRequest.status = BuyerRequestStatus.CLOSED;
+    const updatedRequest = await this.buyerRequestRepository.save(buyerRequest);
+
+    return this.mapToResponseDto(updatedRequest);
+  }
 }
