@@ -7,14 +7,14 @@ import { Offer } from '../entities/offer.entity';
 export class OffersAdminService {
   constructor(
     @InjectRepository(Offer)
-    private readonly offerRepo: Repository<Offer>,
+    private readonly offerRepo: Repository<Offer>
   ) {}
 
   async findAll() {
     return this.offerRepo.find();
   }
 
-  async block(id: number, isBlocked: boolean) {
+  async block(id: string, isBlocked: boolean) {
     const offer = await this.offerRepo.findOne({ where: { id } });
     if (!offer) throw new NotFoundException('Offer not found');
     offer.isBlocked = isBlocked;
