@@ -8,68 +8,68 @@ import {
   JoinColumn,
   OneToMany,
   Index,
-} from "typeorm"
-import { User } from "../../users/entities/user.entity"
-import { Offer } from "@/modules/offers/entities/offer.entity"
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Offer } from '../../offers/entities/offer.entity';
 
 export enum BuyerRequestStatus {
-  OPEN = "open",
-  CLOSED = "closed",
-  FULFILLED = "fulfilled",
+  OPEN = 'open',
+  CLOSED = 'closed',
+  FULFILLED = 'fulfilled',
 }
 
-@Entity("buyer_requests")
-@Index("idx_buyer_requests_search", { synchronize: false }) // Full-text search index
-@Index("idx_buyer_requests_category", ["categoryId"])
-@Index("idx_buyer_requests_budget", ["budgetMin", "budgetMax"])
-@Index("idx_buyer_requests_expires_at", ["expiresAt"])
-@Index("idx_buyer_requests_status", ["status"])
-@Index("idx_buyer_requests_created_at", ["createdAt"])
+@Entity('buyer_requests')
+@Index('idx_buyer_requests_search', { synchronize: false }) // Full-text search index
+@Index('idx_buyer_requests_category', ['categoryId'])
+@Index('idx_buyer_requests_budget', ['budgetMin', 'budgetMax'])
+@Index('idx_buyer_requests_expires_at', ['expiresAt'])
+@Index('idx_buyer_requests_status', ['status'])
+@Index('idx_buyer_requests_created_at', ['createdAt'])
 export class BuyerRequest {
-  @PrimaryGeneratedColumn("uuid")
-  id: string
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ length: 100 })
-  title: string
+  title: string;
 
-  @Column({ type: "text", nullable: true })
-  description: string
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  budgetMin: number
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMin: number;
 
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  budgetMax: number
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  budgetMax: number;
 
   @Column()
-  categoryId: number
+  categoryId: number;
 
   @Column({
-    type: "enum",
+    type: 'enum',
     enum: BuyerRequestStatus,
     default: BuyerRequestStatus.OPEN,
   })
-  status: BuyerRequestStatus
+  status: BuyerRequestStatus;
 
   @Column()
-  userId: number
+  userId: number;
 
-  @Column({ type: "timestamp", nullable: true })
-  expiresAt: Date
+  @Column({ type: 'timestamp', nullable: true })
+  expiresAt: Date;
 
   @ManyToOne(() => User, { eager: false })
-  @JoinColumn({ name: "userId" })
-  user: User
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
-  offers: Offer[]
+  offers: Offer[];
 
-  @CreateDateColumn({ name: "created_at" })
-  createdAt: Date
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 
-  @Column({ type: "tsvector", select: false, insert: false, update: false })
-  searchVector?: string
+  @Column({ type: 'tsvector', select: false, insert: false, update: false })
+  searchVector?: string;
 }
