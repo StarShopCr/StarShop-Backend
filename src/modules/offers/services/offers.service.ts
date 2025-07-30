@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common"
-import { Repository } from "typeorm"
-import { Offer, OfferStatus } from "../entities/offer.entity"
-import { CreateOfferDto } from "../dto/create-offer.dto"
-import { UpdateOfferDto } from "../dto/update-offer.dto"
-import { BuyerRequest } from "../../buyer-requests/entities/buyer-request.entity"
-import { InjectRepository } from "@nestjs/typeorm"
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { Offer } from '../entities/offer.entity';
+import { OfferStatus } from '../enums/offer-status.enum';
+import { CreateOfferDto } from '../dto/create-offer.dto';
+import { UpdateOfferDto } from '../dto/update-offer.dto';
+import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OffersService {
@@ -12,21 +18,21 @@ export class OffersService {
     @InjectRepository(Offer)
     private offerRepository: Repository<Offer>,
     @InjectRepository(BuyerRequest)
-    private buyerRequestRepository: Repository<BuyerRequest>,
+    private buyerRequestRepository: Repository<BuyerRequest>
   ) {}
 
-  async create(createOfferDto: CreateOfferDto, sellerId: string): Promise<Offer> {
+  async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
     // Verify buyer request exists and is open
     const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id: Number(createOfferDto.buyerRequestId) },
-    })
+      where: { id: createOfferDto.buyerRequestId },
+    });
 
     if (!buyerRequest) {
-      throw new NotFoundException("Buyer request not found")
+      throw new NotFoundException('Buyer request not found');
     }
 
-    if (buyerRequest.status !== "open") {
-      throw new BadRequestException("Cannot create offer for closed buyer request")
+    if (buyerRequest.status !== 'open') {
+      throw new BadRequestException('Cannot create offer for closed buyer request');
     }
 
     // Check if seller already has an offer for this request
@@ -35,32 +41,32 @@ export class OffersService {
         buyerRequestId: createOfferDto.buyerRequestId,
         sellerId,
       },
-    })
+    });
 
     if (existingOffer) {
-      throw new BadRequestException("You already have an offer for this buyer request")
+      throw new BadRequestException('You already have an offer for this buyer request');
     }
 
     const offer = this.offerRepository.create({
       ...createOfferDto,
       sellerId,
-    })
+    });
 
-    return this.offerRepository.save(offer)
+    return this.offerRepository.save(offer);
   }
 
   async accept(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ["buyerRequest"],
+      relations: ['buyerRequest'],
     });
 
     if (!offer) {
-      throw new NotFoundException("Offer not found");
+      throw new NotFoundException('Offer not found');
     }
 
     if (offer.buyerRequest.userId.toString() !== buyerId) {
-      throw new ForbiddenException("You are not authorized to accept this offer");
+      throw new ForbiddenException('You are not authorized to accept this offer');
     }
 
     if (offer.status !== OfferStatus.PENDING) {
@@ -75,7 +81,7 @@ export class OffersService {
     });
 
     if (alreadyAccepted) {
-      throw new BadRequestException("Another offer has already been accepted for this request");
+      throw new BadRequestException('Another offer has already been accepted for this request');
     }
 
     // 1. Accept the current offer
@@ -88,7 +94,7 @@ export class OffersService {
         buyerRequestId: offer.buyerRequestId,
         status: OfferStatus.PENDING,
       },
-      { status: OfferStatus.REJECTED },
+      { status: OfferStatus.REJECTED }
     );
 
     console.log(`Offer #${offerId} accepted by buyer #${buyerId}. Other pending offers rejected.`);
@@ -98,15 +104,15 @@ export class OffersService {
   async reject(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ["buyerRequest"],
+      relations: ['buyerRequest'],
     });
 
     if (!offer) {
-      throw new NotFoundException("Offer not found");
+      throw new NotFoundException('Offer not found');
     }
 
     if (offer.buyerRequest.userId.toString() !== buyerId) {
-      throw new ForbiddenException("You are not authorized to reject this offer");
+      throw new ForbiddenException('You are not authorized to reject this offer');
     }
 
     if (offer.status !== OfferStatus.PENDING) {
@@ -119,74 +125,78 @@ export class OffersService {
   }
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
-      relations: ["seller", "buyerRequest", "attachments"],
-      order: { createdAt: "DESC" },
+      relations: ['seller', 'buyerRequest', 'attachments'],
+      order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-    })
+    });
 
-    return { offers, total }
+    return { offers, total };
   }
 
   async findOne(id: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id },
-      relations: ["seller", "buyerRequest", "attachments"],
-    })
+      relations: ['seller', 'buyerRequest', 'attachments'],
+    });
 
     if (!offer) {
-      throw new NotFoundException("Offer not found")
+      throw new NotFoundException('Offer not found');
     }
 
-    return offer
+    return offer;
   }
 
-  async update(id: string, updateOfferDto: UpdateOfferDto, userId: string): Promise<Offer> {
-    const offer = await this.findOne(id)
+  async update(id: string, updateOfferDto: UpdateOfferDto, userId: number): Promise<Offer> {
+    const offer = await this.findOne(id);
 
     if (offer.sellerId !== userId) {
-      throw new ForbiddenException("You can only update your own offers")
+      throw new ForbiddenException('You can only update your own offers');
     }
 
     if (offer.status !== OfferStatus.PENDING) {
-      throw new BadRequestException("Can only update pending offers")
+      throw new BadRequestException('Can only update pending offers');
     }
 
-    Object.assign(offer, updateOfferDto)
-    return this.offerRepository.save(offer)
+    Object.assign(offer, updateOfferDto);
+    return this.offerRepository.save(offer);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
-    const offer = await this.findOne(id)
+  async remove(id: string, userId: number): Promise<void> {
+    const offer = await this.findOne(id);
 
     if (offer.sellerId !== userId) {
-      throw new ForbiddenException("You can only delete your own offers")
+      throw new ForbiddenException('You can only delete your own offers');
     }
 
     if (offer.status === OfferStatus.ACCEPTED) {
-      throw new BadRequestException("Cannot delete accepted offers")
+      throw new BadRequestException('Cannot delete accepted offers');
     }
 
-    await this.offerRepository.remove(offer)
+    await this.offerRepository.remove(offer);
   }
 
-  async findByBuyerRequest(buyerRequestId: string): Promise<Offer[]> {
+  async findByBuyerRequest(buyerRequestId: number): Promise<Offer[]> {
     return this.offerRepository.find({
       where: { buyerRequestId },
-      relations: ["seller", "attachments"],
-      order: { createdAt: "DESC" },
-    })
+      relations: ['seller', 'attachments'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  async findBySeller(sellerId: string, page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
+  async findBySeller(
+    sellerId: number,
+    page = 1,
+    limit = 10
+  ): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       where: { sellerId },
-      relations: ["buyerRequest", "attachments"],
-      order: { createdAt: "DESC" },
+      relations: ['buyerRequest', 'attachments'],
+      order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-    })
+    });
 
-    return { offers, total }
+    return { offers, total };
   }
 }
