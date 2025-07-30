@@ -301,4 +301,69 @@ describe('BuyerRequestsService', () => {
       ]);
     });
   });
+
+  // --- closeRequest ---
+  describe('closeRequest', () => {
+    const mockOpenRequest = {
+      id: 1,
+      title: 'Test Request',
+      description: 'Test Description',
+      budgetMin: 100,
+      budgetMax: 200,
+      categoryId: 1,
+      userId: 1,
+      status: BuyerRequestStatus.OPEN,
+      expiresAt: new Date('2024-12-31'),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      offers: [],
+      user: {
+        id: 1,
+        name: 'Test User',
+        walletAddress: '0x123',
+      },
+    } as BuyerRequest;
+
+    const mockClosedRequest = {
+      ...mockOpenRequest,
+      status: BuyerRequestStatus.CLOSED,
+    } as BuyerRequest;
+
+    it('should close a buyer request successfully', async () => {
+      mockRepository.findOne.mockResolvedValue(mockOpenRequest);
+      mockRepository.save.mockResolvedValue(mockClosedRequest);
+
+      const result = await service.closeRequest(1, 1);
+
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['user'],
+      });
+      expect(mockRepository.save).toHaveBeenCalledWith({
+        ...mockOpenRequest,
+        status: BuyerRequestStatus.CLOSED,
+      });
+      expect(result.status).toBe(BuyerRequestStatus.CLOSED);
+    });
+
+    it('should throw NotFoundException if request not found', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.closeRequest(999, 1)).rejects.toThrow('Buyer request not found');
+    });
+
+    it('should throw ForbiddenException if user is not the owner', async () => {
+      mockRepository.findOne.mockResolvedValue(mockOpenRequest);
+
+      await expect(service.closeRequest(1, 999)).rejects.toThrow(
+        'You can only close your own buyer requests'
+      );
+    });
+
+    it('should throw BadRequestException if request is already closed', async () => {
+      mockRepository.findOne.mockResolvedValue(mockClosedRequest);
+
+      await expect(service.closeRequest(1, 1)).rejects.toThrow('Buyer request is already closed');
+    });
+  });
 });
