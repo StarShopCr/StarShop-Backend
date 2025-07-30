@@ -22,7 +22,7 @@ export class Offer {
   id: string;
 
   @Column({ name: 'buyer_request_id' })
-  buyerRequestId: string;
+  buyerRequestId: number;
 
   @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, {
     nullable: false,
@@ -32,7 +32,7 @@ export class Offer {
   buyerRequest: BuyerRequest;
 
   @Column({ name: 'seller_id' })
-  sellerId: string;
+  sellerId: number;
 
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'seller_id' })
@@ -54,8 +54,6 @@ export class Offer {
   @Column({ default: false })
   isBlocked: boolean;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
