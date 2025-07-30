@@ -2,8 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { BuyerRequestSchedulerService } from './modules/buyer-requests/services/buyer-request-scheduler.service';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
@@ -27,6 +28,15 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
+
+  // Close expired buyer requests on startup
+  try {
+    const schedulerService = app.get(BuyerRequestSchedulerService);
+    const closedCount = await schedulerService.closeExpiredRequests();
+    console.log(`Startup: Closed ${closedCount} expired buyer requests`);
+  } catch (error) {
+    console.error('Failed to close expired requests on startup:', error);
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
