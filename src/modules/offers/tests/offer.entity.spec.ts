@@ -5,43 +5,42 @@ import { Product } from '../../products/entities/product.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
 
 describe('Offer Entity', () => {
-
   describe('Entity Creation', () => {
     it('should create an offer with required fields', () => {
       const offer = new Offer();
-      offer.requestId = 'test-request-id';
+      offer.buyerRequestId = 123;
       offer.sellerId = 1;
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
-      offer.price = 100.50;
+      offer.price = 100.5;
 
-      expect(offer.requestId).toBe('test-request-id');
+      expect(offer.buyerRequestId).toBe(123);
       expect(offer.sellerId).toBe(1);
       expect(offer.title).toBe('Test Offer');
       expect(offer.description).toBe('Test offer description');
-      expect(offer.price).toBe(100.50);
+      expect(offer.price).toBe(100.5);
       expect(offer.status).toBeUndefined(); // Will be set by default in DB
     });
 
-    it('should create an offer with optional product', () => {
+    it('should create an offer with price validation', () => {
       const offer = new Offer();
-      offer.requestId = 'test-request-id';
+      offer.buyerRequestId = 123;
       offer.sellerId = 1;
-      offer.productId = 123;
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
-      offer.price = 100.50;
+      offer.price = -50; // Invalid negative price
 
-      expect(offer.productId).toBe(123);
+      expect(offer.buyerRequestId).toBe(123);
+      expect(offer.sellerId).toBe(1);
     });
 
     it('should create an offer without product (null product_id)', () => {
       const offer = new Offer();
-      offer.requestId = 'test-request-id';
+      offer.buyerRequestId = 123;
       offer.sellerId = 1;
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
-      offer.price = 100.50;
+      offer.price = 100.5;
 
       expect(offer.productId).toBeUndefined();
     });
@@ -57,7 +56,7 @@ describe('Offer Entity', () => {
     it('should validate title length constraint', () => {
       const offer = new Offer();
       const longTitle = 'a'.repeat(101); // Exceeds 100 character limit
-      
+
       offer.title = longTitle;
       expect(offer.title.length).toBeGreaterThan(100);
     });
@@ -65,7 +64,7 @@ describe('Offer Entity', () => {
     it('should validate price is numeric', () => {
       const offer = new Offer();
       offer.price = 99.99;
-      
+
       expect(typeof offer.price).toBe('number');
       expect(offer.price).toBe(99.99);
     });
@@ -75,23 +74,23 @@ describe('Offer Entity', () => {
     it('should have relationship with BuyerRequest', () => {
       const offer = new Offer();
       const buyerRequest = new BuyerRequest();
-      buyerRequest.id = 'test-request-id';
-      
+      buyerRequest.id = 123;
+
       offer.buyerRequest = buyerRequest;
-      offer.requestId = buyerRequest.id;
-      
+      offer.buyerRequestId = buyerRequest.id;
+
       expect(offer.buyerRequest).toBe(buyerRequest);
-      expect(offer.requestId).toBe('test-request-id');
+      expect(offer.buyerRequestId).toBe(123);
     });
 
     it('should have relationship with User (seller)', () => {
       const offer = new Offer();
       const seller = new User();
       seller.id = 1;
-      
+
       offer.seller = seller;
       offer.sellerId = seller.id;
-      
+
       expect(offer.seller).toBe(seller);
       expect(offer.sellerId).toBe(1);
     });
@@ -100,10 +99,10 @@ describe('Offer Entity', () => {
       const offer = new Offer();
       const product = new Product();
       product.id = 123;
-      
+
       offer.product = product;
       offer.productId = product.id;
-      
+
       expect(offer.product).toBe(product);
       expect(offer.productId).toBe(123);
     });
@@ -127,11 +126,11 @@ describe('Offer Entity', () => {
 
     it('should enforce foreign key constraints', () => {
       const offer = new Offer();
-      offer.requestId = 'non-existent-request-id';
+      offer.buyerRequestId = 999; // Non-existent request
       offer.sellerId = 999; // Non-existent user
 
       // In a real database with FK constraints, this would fail
-      expect(offer.requestId).toBe('non-existent-request-id');
+      expect(offer.buyerRequestId).toBe(999);
       expect(offer.sellerId).toBe(999);
     });
 
