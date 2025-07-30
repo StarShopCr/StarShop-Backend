@@ -14,26 +14,26 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-} from "@nestjs/common"
-import { FileInterceptor } from "@nestjs/platform-express"
-import { Express } from "express"
-import { OffersService } from "../services/offers.service"
-import { OfferAttachmentService } from "../services/offer-attachment.service"
-import { CreateOfferDto } from "../dto/create-offer.dto"
-import { UpdateOfferDto } from "../dto/update-offer.dto"
-import { UploadAttachmentDto } from "../dto/upload-attachment.dto"
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard"
-import { RolesGuard } from "../../auth/guards/roles.guard"
-import { Roles } from "../../auth/decorators/roles.decorator"
-import { cloudinaryUpload } from "../../files/config/cloudinary.config"
-import { AuthRequest } from "@/modules/wishlist/common/types/auth-request.type"
-import { Role } from "@/types/role"
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
+import { OffersService } from '../services/offers.service';
+import { OfferAttachmentService } from '../services/offer-attachment.service';
+import { CreateOfferDto } from '../dto/create-offer.dto';
+import { UpdateOfferDto } from '../dto/update-offer.dto';
+import { UploadAttachmentDto } from '../dto/upload-attachment.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { cloudinaryUpload } from '../../files/config/cloudinary.config';
+import { AuthRequest } from '@/modules/wishlist/common/types/auth-request.type';
+import { Role } from '@/types/role';
 
-@Controller("offers")
+@Controller('offers')
 export class OffersController {
   constructor(
     private readonly offersService: OffersService,
-    private readonly offerAttachmentService: OfferAttachmentService,
+    private readonly offerAttachmentService: OfferAttachmentService
   ) {}
 
   /**
@@ -46,10 +46,10 @@ export class OffersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   create(@Body() createOfferDto: CreateOfferDto, @Request() req: AuthRequest) {
-    return this.offersService.create(createOfferDto, String(req.user.id))
+    return this.offersService.create(createOfferDto, Number(req.user.id));
   }
 
-    /**
+  /**
    * Endpoint to list offers for a specific BuyerRequest.
    * Method: GET
    * URL: /offers?requestId=...
@@ -60,7 +60,7 @@ export class OffersController {
     if (!requestId) {
       throw new BadRequestException('The "requestId" query parameter is required.');
     }
-    return this.offersService.findByBuyerRequest(requestId);
+    return this.offersService.findByBuyerRequest(Number(requestId));
   }
 
   /**
@@ -69,7 +69,7 @@ export class OffersController {
    * URL: /offers/:id/accept
    * Access: Buyer only
    */
-  @Patch(":id/accept")
+  @Patch(':id/accept')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
   accept(@Param('id') id: string, @Request() req: AuthRequest) {
@@ -82,35 +82,35 @@ export class OffersController {
    * URL: /offers/:id/reject
    * Access: Buyer only
    */
-  @Patch(":id/reject")
+  @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
   reject(@Param('id') id: string, @Request() req: AuthRequest) {
     return this.offersService.reject(id, String(req.user.id));
   }
 
-  @Get("all")
+  @Get('all')
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ) {
-    return this.offersService.findAll(page, limit)
+    return this.offersService.findAll(page, limit);
   }
 
-  @Get("my-offers")
+  @Get('my-offers')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   findMyOffers(
     @Request() req: AuthRequest,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ) {
-    return this.offersService.findBySeller(String(req.user.id), page, limit)
+    return this.offersService.findBySeller(Number(req.user.id), page, limit);
   }
 
   @Get('buyer-request/:buyerRequestId')
   findByBuyerRequest(@Param('buyerRequestId') buyerRequestId: string) {
-    return this.offersService.findByBuyerRequest(buyerRequestId);
+    return this.offersService.findByBuyerRequest(Number(buyerRequestId));
   }
 
   @Get(':id')
@@ -118,35 +118,40 @@ export class OffersController {
     return this.offersService.findOne(id);
   }
 
-  @Patch(":id")
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   update(@Param('id') id: string, updateOfferDto: UpdateOfferDto, @Request() req: AuthRequest) {
-    return this.offersService.update(id, updateOfferDto, String(req.user.id))
+    return this.offersService.update(id, updateOfferDto, Number(req.user.id));
   }
 
-  @Delete(":id")
+  @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   remove(@Param('id') id: string, @Request() req: AuthRequest) {
-    return this.offersService.remove(id, String(req.user.id))
+    return this.offersService.remove(id, Number(req.user.id));
   }
 
   // Attachment endpoints
-  @Post(":id/attachments")
+  @Post(':id/attachments')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   async uploadAttachment(
     @Param('id') offerId: string,
     @UploadedFile() file: Express.Multer.File,
     uploadAttachmentDto: UploadAttachmentDto,
-    @Request() req: AuthRequest,
+    @Request() req: AuthRequest
   ) {
     if (!file) {
-      throw new BadRequestException("File is required")
+      throw new BadRequestException('File is required');
     }
 
-    return this.offerAttachmentService.uploadAttachment(offerId, file, String(req.user.id), "cloudinary")
+    return this.offerAttachmentService.uploadAttachment(
+      offerId,
+      file,
+      Number(req.user.id),
+      'cloudinary'
+    );
   }
 
   @Get(':id/attachments')
@@ -154,10 +159,10 @@ export class OffersController {
     return this.offerAttachmentService.getOfferAttachments(offerId);
   }
 
-  @Delete("attachments/:attachmentId")
+  @Delete('attachments/:attachmentId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
   deleteAttachment(@Param('attachmentId') attachmentId: string, @Request() req: AuthRequest) {
-    return this.offerAttachmentService.deleteAttachment(attachmentId, String(req.user.id))
+    return this.offerAttachmentService.deleteAttachment(attachmentId, Number(req.user.id));
   }
 }
