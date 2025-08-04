@@ -131,7 +131,10 @@ describe('BuyerRequestsService', () => {
     });
 
     it('should return paginated buyer requests', async () => {
-      const mockRequests = [createMockBuyerRequest({ id: 1 }), createMockBuyerRequest({ id: 2 })];
+      const mockRequests = [
+        createMockBuyerRequest({ id: 1 }),
+        createMockBuyerRequest({ id: 2 }),
+      ];
       mockQueryBuilder.getManyAndCount.mockResolvedValue([mockRequests, 2]);
 
       const result = await service.findAll({ page: 1, limit: 10 });
@@ -304,25 +307,11 @@ describe('BuyerRequestsService', () => {
 
   // --- closeRequest ---
   describe('closeRequest', () => {
-    const mockOpenRequest = {
+    const mockOpenRequest = createMockBuyerRequest({
       id: 1,
-      title: 'Test Request',
-      description: 'Test Description',
-      budgetMin: 100,
-      budgetMax: 200,
-      categoryId: 1,
-      userId: 1,
       status: BuyerRequestStatus.OPEN,
       expiresAt: new Date('2024-12-31'),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      offers: [],
-      user: {
-        id: 1,
-        name: 'Test User',
-        walletAddress: '0x123',
-      },
-    } as BuyerRequest;
+    });
 
     const mockClosedRequest = {
       ...mockOpenRequest,

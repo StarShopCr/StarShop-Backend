@@ -57,9 +57,11 @@ export class BuyerRequest {
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
 
+
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: 'userId' })
   user: User;
+
 
   @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
   offers: Offer[];

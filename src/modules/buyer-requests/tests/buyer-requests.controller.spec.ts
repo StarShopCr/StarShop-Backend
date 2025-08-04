@@ -9,19 +9,18 @@ import { jest } from '@jest/globals';
 describe('BuyerRequestsController', () => {
   let controller: BuyerRequestsController;
   let service: jest.Mocked<BuyerRequestsService>;
-  let mockService: jest.Mocked<BuyerRequestsService>;
 
   beforeEach(async () => {
-    mockService = {
+    const mockService: jest.Mocked<BuyerRequestsService> = {
       create: jest.fn(),
       findAll: jest.fn(),
+      getSearchSuggestions: jest.fn(),
+      getPopularCategories: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
-      getSearchSuggestions: jest.fn(),
-      getPopularCategories: jest.fn(),
       closeRequest: jest.fn(),
-    } as unknown as jest.Mocked<BuyerRequestsService>;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BuyerRequestsController],
@@ -54,7 +53,7 @@ describe('BuyerRequestsController', () => {
       const expectedResult = {
         id: 1,
         title: createDto.title,
-        description: createDto.description ?? 'Default Description', // ensure it's defined
+        description: createDto.description ?? 'Default Description',
         budgetMin: createDto.budgetMin,
         budgetMax: createDto.budgetMax,
         categoryId: createDto.categoryId,

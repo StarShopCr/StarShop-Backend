@@ -35,7 +35,7 @@ describe('BuyerRequestsController (e2e)', () => {
           database: ':memory:',
           entities: [BuyerRequest, TestUser],
           synchronize: true,
-          dropSchema: true, // Ensure clean state
+          dropSchema: true,
         }),
         TypeOrmModule.forFeature([BuyerRequest, TestUser]),
       ],

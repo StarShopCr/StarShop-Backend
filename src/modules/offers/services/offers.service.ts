@@ -4,25 +4,26 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { Offer } from '../entities/offer.entity';
-import { OfferStatus } from '../enums/offer-status.enum';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { Offer, OfferStatus } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
-import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
 
 @Injectable()
 export class OffersService {
   constructor(
     @InjectRepository(Offer)
     private offerRepository: Repository<Offer>,
+
     @InjectRepository(BuyerRequest)
-    private buyerRequestRepository: Repository<BuyerRequest>
+    private buyerRequestRepository: Repository<BuyerRequest>,
+
+    private dataSource: DataSource
   ) {}
 
   async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
-    // Verify buyer request exists and is open
     const buyerRequest = await this.buyerRequestRepository.findOne({
       where: { id: createOfferDto.buyerRequestId },
     });
@@ -31,11 +32,10 @@ export class OffersService {
       throw new NotFoundException('Buyer request not found');
     }
 
-    if (buyerRequest.status !== 'open') {
+    if (buyerRequest.status !== BuyerRequestStatus.OPEN) {
       throw new BadRequestException('Cannot create offer for closed buyer request');
     }
 
-    // Check if seller already has an offer for this request
     const existingOffer = await this.offerRepository.findOne({
       where: {
         buyerRequestId: createOfferDto.buyerRequestId,
@@ -84,11 +84,9 @@ export class OffersService {
       throw new BadRequestException('Another offer has already been accepted for this request');
     }
 
-    // 1. Accept the current offer
     offer.status = OfferStatus.ACCEPTED;
     const acceptedOffer = await this.offerRepository.save(offer);
 
-    // 2. Reject all other pending offers for the same buyer request
     await this.offerRepository.update(
       {
         buyerRequestId: offer.buyerRequestId,
@@ -123,6 +121,7 @@ export class OffersService {
     console.log(`Offer #${offerId} rejected by buyer #${buyerId}.`);
     return this.offerRepository.save(offer);
   }
+
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       relations: ['seller', 'buyerRequest', 'attachments'],
@@ -198,5 +197,34 @@ export class OffersService {
     });
 
     return { offers, total };
+  }
+
+  async confirmPurchase(offerId: string, buyerId: string): Promise<Offer> {
+    return this.dataSource.transaction(async (manager) => {
+      const offer = await manager.findOne(Offer, {
+        where: { id: offerId },
+        relations: ['buyerRequest'],
+      });
+
+      if (!offer) throw new NotFoundException('Offer not found');
+
+      if (offer.buyerRequest.userId.toString() !== buyerId) {
+        throw new ForbiddenException('You are not authorized to confirm this offer');
+      }
+
+      if (offer.wasPurchased) {
+        throw new BadRequestException('This offer has already been confirmed as purchased');
+      }
+
+      offer.wasPurchased = true;
+      await manager.save(offer);
+
+      if (offer.buyerRequest.status !== BuyerRequestStatus.FULFILLED) {
+        offer.buyerRequest.status = BuyerRequestStatus.FULFILLED;
+        await manager.save(offer.buyerRequest);
+      }
+
+      return offer;
+    });
   }
 }

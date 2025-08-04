@@ -81,6 +81,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     OrdersModule,
     BuyerRequestsModule,
     OffersModule,
+
   ],
 })
 export class AppModule {}

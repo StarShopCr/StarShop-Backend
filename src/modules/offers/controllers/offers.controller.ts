@@ -25,7 +25,6 @@ import { UploadAttachmentDto } from '../dto/upload-attachment.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { cloudinaryUpload } from '../../files/config/cloudinary.config';
 import { AuthRequest } from '@/modules/wishlist/common/types/auth-request.type';
 import { Role } from '@/types/role';
 
@@ -36,12 +35,6 @@ export class OffersController {
     private readonly offerAttachmentService: OfferAttachmentService
   ) {}
 
-  /**
-   * Endpoint for a seller to create a new offer.
-   * Method: POST
-   * URL: /offers
-   * Access: Seller only
-   */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
@@ -49,12 +42,6 @@ export class OffersController {
     return this.offersService.create(createOfferDto, Number(req.user.id));
   }
 
-  /**
-   * Endpoint to list offers for a specific BuyerRequest.
-   * Method: GET
-   * URL: /offers?requestId=...
-   * Access: Public
-   */
   @Get()
   findOffersForRequest(@Query('requestId') requestId: string) {
     if (!requestId) {
@@ -63,30 +50,25 @@ export class OffersController {
     return this.offersService.findByBuyerRequest(Number(requestId));
   }
 
-  /**
-   * Endpoint for a buyer to accept an offer.
-   * Method: PATCH
-   * URL: /offers/:id/accept
-   * Access: Buyer only
-   */
   @Patch(':id/accept')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
+  @Roles(Role.BUYER)
   accept(@Param('id') id: string, @Request() req: AuthRequest) {
     return this.offersService.accept(id, String(req.user.id));
   }
 
-  /**
-   * Endpoint for a buyer to reject an offer.
-   * Method: PATCH
-   * URL: /offers/:id/reject
-   * Access: Buyer only
-   */
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUYER) // Assuming Role.BUYER exists and is configured
+  @Roles(Role.BUYER)
   reject(@Param('id') id: string, @Request() req: AuthRequest) {
     return this.offersService.reject(id, String(req.user.id));
+  }
+
+  @Patch(':id/confirm-purchase')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUYER)
+  confirmPurchase(@Param('id') id: string, @Request() req: AuthRequest) {
+    return this.offersService.confirmPurchase(id, String(req.user.id));
   }
 
   @Get('all')
@@ -121,7 +103,11 @@ export class OffersController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
-  update(@Param('id') id: string, updateOfferDto: UpdateOfferDto, @Request() req: AuthRequest) {
+  update(
+    @Param('id') id: string,
+    @Body() updateOfferDto: UpdateOfferDto,
+    @Request() req: AuthRequest
+  ) {
     return this.offersService.update(id, updateOfferDto, Number(req.user.id));
   }
 
@@ -132,14 +118,14 @@ export class OffersController {
     return this.offersService.remove(id, Number(req.user.id));
   }
 
-  // Attachment endpoints
   @Post(':id/attachments')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SELLER)
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAttachment(
     @Param('id') offerId: string,
     @UploadedFile() file: Express.Multer.File,
-    uploadAttachmentDto: UploadAttachmentDto,
+    @Body() uploadAttachmentDto: UploadAttachmentDto,
     @Request() req: AuthRequest
   ) {
     if (!file) {

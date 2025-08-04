@@ -15,6 +15,8 @@ import { Product } from '../../products/entities/product.entity';
 import { OfferAttachment } from './offer-attachment.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
 
+export { OfferStatus } from '../enums/offer-status.enum';
+
 @Entity('offers')
 @Check(`"price" >= 0`)
 export class Offer {
@@ -45,7 +47,7 @@ export class Offer {
   @JoinColumn({ name: 'product_id' })
   product?: Product;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100 })
   title: string;
 
   @Column({ type: 'text' })
@@ -53,6 +55,9 @@ export class Offer {
 
   @Column({ default: false })
   isBlocked: boolean;
+
+  @Column({ default: false })
+  wasPurchased: boolean;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;

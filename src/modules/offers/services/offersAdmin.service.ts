@@ -16,7 +16,11 @@ export class OffersAdminService {
 
   async block(id: string, isBlocked: boolean) {
     const offer = await this.offerRepo.findOne({ where: { id } });
-    if (!offer) throw new NotFoundException('Offer not found');
+
+    if (!offer) {
+      throw new NotFoundException('Offer not found');
+    }
+
     offer.isBlocked = isBlocked;
     await this.offerRepo.save(offer);
     return offer;

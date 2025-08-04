@@ -313,3 +313,20 @@ export class BuyerRequestsService {
     return this.mapToResponseDto(updatedRequest);
   }
 }
+
+// Service skeleton to resolve missing export
+import { Injectable } from "@nestjs/common"
+import { CreateBuyerRequestDto } from "../dto/create-buyer-request.dto"
+import { UpdateBuyerRequestDto } from "../dto/update-buyer-request.dto"
+import { GetBuyerRequestsQueryDto } from "../dto/get-buyer-requests-query.dto"
+
+@Injectable()
+export class BuyerRequestsService {
+  create(createBuyerRequestDto: CreateBuyerRequestDto, userId: number): Promise<any> { throw new Error('Not implemented') }
+  findAll(query: GetBuyerRequestsQueryDto): Promise<any> { throw new Error('Not implemented') }
+  getSearchSuggestions(query: string, limit: number): Promise<any> { throw new Error('Not implemented') }
+  getPopularCategories(): Promise<any> { throw new Error('Not implemented') }
+  findOne(id: string): Promise<any> { throw new Error('Not implemented') }
+  update(id: string, updateBuyerRequestDto: UpdateBuyerRequestDto, userId: number): Promise<any> { throw new Error('Not implemented') }
+  remove(id: string, userId: number): Promise<any> { throw new Error('Not implemented') }
+}
