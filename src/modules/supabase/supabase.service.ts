@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService {
-  private client: any;
+  private client: SupabaseClient | null = null;
 
-  async getClient() {
+  async getClient(): Promise<SupabaseClient> {
     if (!this.client) {
       const { createClient } = await import('@supabase/supabase-js');
       const url = process.env.SUPABASE_URL;
