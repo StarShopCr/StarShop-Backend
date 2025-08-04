@@ -23,6 +23,10 @@ export class Offer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+
+  @Column({ name: 'request_id' })
+  requestId: number;
+
   @Column({ name: 'buyer_request_id' })
   buyerRequestId: string;
 

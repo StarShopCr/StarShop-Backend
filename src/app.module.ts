@@ -1,19 +1,20 @@
-import { Module } from "@nestjs/common"
-import { TypeOrmModule } from "@nestjs/typeorm"
-import { ConfigModule } from "@nestjs/config"
-import { SharedModule } from "./modules/shared/shared.module"
-import { CouponModule } from "./modules/coupons/coupon.module"
-import { ProductsModule } from "./modules/products/products.module"
-import { ProductTypesModule } from "./modules/productTypes/productTypes.module"
-import { ProductVariantsModule } from "./modules/productVariants/productVariants.module"
-import { AttributeModule } from "./modules/attributes/attributes.module"
-import { WishlistModule } from "./modules/wishlist/wishlist.module"
-import { AuthModule } from "./modules/auth/auth.module"
-import { UsersModule } from "./modules/users/users.module"
-import { NotificationsModule } from "./modules/notifications/notifications.module"
-import { OrdersModule } from "./modules/orders/orders.module"
-import { BuyerRequestsModule } from "./modules/buyer-requests/buyer-requests.module"
-import { OffersModule } from "./modules/offers/offers.module"
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+
+import { SharedModule } from './modules/shared/shared.module';
+import { CouponModule } from './modules/coupons/coupon.module';
+import { ProductsModule } from './modules/products/products.module';
+import { ProductTypesModule } from './modules/productTypes/productTypes.module';
+import { ProductVariantsModule } from './modules/productVariants/productVariants.module';
+import { AttributeModule } from './modules/attributes/attributes.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
+import { OffersModule } from './modules/offers/offers.module';
 
 // Entities
 import { User } from "./modules/users/entities/user.entity"
@@ -79,6 +80,7 @@ import { OfferAttachment } from "./modules/offers/entities/offer-attachment.enti
     OrdersModule,
     BuyerRequestsModule,
     OffersModule,
+
   ],
 })
 export class AppModule {}
