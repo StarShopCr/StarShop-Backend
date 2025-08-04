@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Offer } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
-import { BuyerRequest } from '../../buyer-request/buyer-request.entity';
+import { BuyerRequest } from '../../buyer-requests/entities/buyer-request.entity';
 import { NotificationService } from '../../notifications/services/notification.service';
 import { Product } from '@/modules/products/entities/product.entity';
 
@@ -24,11 +24,11 @@ export class OfferService {
   ) {}
 
   async create(createOfferDto: CreateOfferDto): Promise<Offer> {
-    const { requestId, title, description, price, productId } = createOfferDto;
+    const { buyerRequestId, title, description, price, productId } = createOfferDto;
 
     const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id: requestId },
-      relations: ['buyer'],
+      where: { id: buyerRequestId },
+      relations: ['user'],
     });
 
     if (!buyerRequest) {
@@ -39,17 +39,24 @@ export class OfferService {
       throw new BadRequestException('Cannot submit offer to a closed request');
     }
 
-    const seller = (
-      await this.ProductRepository.findOne({ where: { id: productId }, relations: ['Product'] })
-    ).seller;
+    const product = await this.ProductRepository.findOne({
+      where: { id: productId },
+      relations: ['seller'],
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const seller = product.seller;
 
     if (!seller) {
       throw new NotFoundException('Product not Found!!');
     }
 
     const offer = this.offerRepository.create({
-      requestId,
-      seller,
+      buyerRequestId,
+      sellerId: seller.id,
       title,
       description,
       price,
@@ -59,9 +66,9 @@ export class OfferService {
     const savedOffer = await this.offerRepository.save(offer);
 
     await this.notificationService.sendNotificationToUser({
-      userId: buyerRequest.buyer.id.toString(),
+      userId: buyerRequest.userId.toString(),
       title: 'New Offer Received',
-      message: `${seller.name || 'A seller'} submitted an offer on your requestId ${requestId}.`,
+      message: `${seller.name || 'A seller'} submitted an offer on your request ${buyerRequestId}.`,
       payload: {
         offerId: savedOffer.id,
         requestId: buyerRequest.id,

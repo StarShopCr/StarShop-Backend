@@ -11,7 +11,7 @@ describe('BuyerRequestsController', () => {
   let service: jest.Mocked<BuyerRequestsService>;
 
   beforeEach(async () => {
-    const mockService: jest.Mocked<BuyerRequestsService> = {
+    const mockService = {
       create: jest.fn(),
       findAll: jest.fn(),
       getSearchSuggestions: jest.fn(),
@@ -20,7 +20,7 @@ describe('BuyerRequestsController', () => {
       update: jest.fn(),
       remove: jest.fn(),
       closeRequest: jest.fn(),
-    };
+    } as unknown as jest.Mocked<BuyerRequestsService>;
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BuyerRequestsController],

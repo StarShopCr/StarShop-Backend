@@ -63,6 +63,8 @@ describe('OffersService', () => {
       updatedAt: new Date(),
     }) as Offer;
 
+  const mockPendingOffer = createMockPendingOffer();
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
