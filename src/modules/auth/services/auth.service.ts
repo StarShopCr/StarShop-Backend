@@ -1,11 +1,12 @@
 import { Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../../users/services/user.service';
 import { RoleService } from './role.service';
 import { User } from '../../users/entities/user.entity';
 import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
-import AppDataSource from '../../../config/ormconfig';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
@@ -15,10 +16,15 @@ type RoleName = 'buyer' | 'seller' | 'admin';
 
 @Injectable()
 export class AuthService {
-  private userRepository = AppDataSource.getRepository(User);
   private readonly CHALLENGE_MESSAGE = 'StarShop Authentication Challenge';
 
   constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -38,38 +44,59 @@ export class AuthService {
    */
   verifyStellarSignature(walletAddress: string, message: string, signature: string): boolean {
     try {
+      // In development mode, allow test signatures
+      if (
+        process.env.NODE_ENV === 'development' &&
+        signature === 'base64-encoded-signature-string-here'
+      ) {
+        console.log('Development mode: Bypassing signature verification for testing');
+        return true;
+      }
+
       const keypair = Keypair.fromPublicKey(walletAddress);
       const messageBuffer = Buffer.from(message, 'utf8');
       const signatureBuffer = Buffer.from(signature, 'base64');
 
       return keypair.verify(messageBuffer, signatureBuffer);
     } catch (error) {
+      console.error('Signature verification error:', error);
       return false;
     }
   }
 
   /**
-   * Register new user with Stellar wallet
+   * Register new user with Stellar wallet (no signature required)
    */
   async registerWithWallet(data: {
     walletAddress: string;
-    signature: string;
-    message: string;
+    role: 'buyer' | 'seller';
     name?: string;
     email?: string;
   }): Promise<{ user: User; token: string; expiresIn: number }> {
-    // Verify signature
-    if (!this.verifyStellarSignature(data.walletAddress, data.message, data.signature)) {
-      throw new UnauthorizedError('Invalid signature');
-    }
-
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
       where: { walletAddress: data.walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
     });
 
     if (existingUser) {
-      throw new BadRequestError('Wallet address already registered');
+      // Update existing user instead of throwing error
+      existingUser.name = data.name || existingUser.name;
+      existingUser.email = data.email || existingUser.email;
+
+      const updatedUser = await this.userRepository.save(existingUser);
+
+      // Generate JWT token
+      const role = updatedUser.userRoles?.[0]?.role?.name || 'buyer';
+      const token = sign(
+        { id: updatedUser.id, walletAddress: updatedUser.walletAddress, role },
+        config.jwtSecret,
+        {
+          expiresIn: '1h',
+        }
+      );
+
+      return { user: updatedUser, token, expiresIn: 3600 };
     }
 
     // Create new user
@@ -77,33 +104,40 @@ export class AuthService {
       walletAddress: data.walletAddress,
       name: data.name,
       email: data.email,
-      userRoles: [{ role: { name: 'buyer' as const } }],
     });
 
-    await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Assign user role
+    const userRole = await this.roleRepository.findOne({ where: { name: data.role } });
+    if (userRole) {
+      const userRoleEntity = this.userRoleRepository.create({
+        userId: savedUser.id,
+        roleId: userRole.id,
+        user: savedUser,
+        role: userRole,
+      });
+      await this.userRoleRepository.save(userRoleEntity);
+    }
 
     // Generate JWT token
-    const role = user.userRoles?.[0]?.role?.name || 'buyer';
-    const token = sign({ id: user.id, walletAddress: user.walletAddress, role }, config.jwtSecret, {
-      expiresIn: '1h',
-    });
+    const token = sign(
+      { id: savedUser.id, walletAddress: savedUser.walletAddress, role: data.role },
+      config.jwtSecret,
+      {
+        expiresIn: '1h',
+      }
+    );
 
-    return { user, token, expiresIn: 3600 };
+    return { user: savedUser, token, expiresIn: 3600 };
   }
 
   /**
-   * Login with Stellar wallet
+   * Login with Stellar wallet (no signature required)
    */
   async loginWithWallet(
-    walletAddress: string,
-    signature: string,
-    message: string
+    walletAddress: string
   ): Promise<{ user: User; token: string; expiresIn: number }> {
-    // Verify signature
-    if (!this.verifyStellarSignature(walletAddress, message, signature)) {
-      throw new UnauthorizedError('Invalid signature');
-    }
-
     // Find user
     const user = await this.userRepository.findOne({
       where: { walletAddress },
@@ -157,39 +191,34 @@ export class AuthService {
   }
 
   async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
-    // Get access to the User table in the database
-    const userRepository = AppDataSource.getRepository(User);
-    const userRoleRepository = AppDataSource.getRepository(UserRole);
-    const roleRepository = AppDataSource.getRepository(Role);
-
     // Try to find an existing user with this wallet address
-    let user = await userRepository.findOne({
+    let user = await this.userRepository.findOne({
       where: { walletAddress },
       relations: ['userRoles', 'userRoles.role'],
     });
 
     // If no user exists, create a new one with default 'buyer' role
     if (!user) {
-      user = userRepository.create({ walletAddress });
-      await userRepository.save(user);
+      user = this.userRepository.create({ walletAddress });
+      await this.userRepository.save(user);
 
       // Get the buyer role
-      const buyerRole = await roleRepository.findOne({ where: { name: 'buyer' } });
+      const buyerRole = await this.roleRepository.findOne({ where: { name: 'buyer' } });
       if (!buyerRole) {
         throw new Error('Default buyer role not found');
       }
 
       // Create user role relationship
-      const userRole = userRoleRepository.create({
+      const userRole = this.userRoleRepository.create({
         userId: user.id,
         roleId: buyerRole.id,
         user,
         role: buyerRole,
       });
-      await userRoleRepository.save(userRole);
+      await this.userRoleRepository.save(userRole);
 
       // Reload user with relations
-      user = await userRepository.findOne({
+      user = await this.userRepository.findOne({
         where: { id: user.id },
         relations: ['userRoles', 'userRoles.role'],
       });
@@ -215,14 +244,17 @@ export class AuthService {
       throw new UnauthorizedException('Role not found');
     }
 
-    const userRoleRepository = AppDataSource.getRepository(UserRole);
-
     // Remove existing roles
-    await userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId });
 
     // Create new user role relationship
-    const userRole = userRoleRepository.create({ userId: user.id, roleId: role.id, user, role });
-    await userRoleRepository.save(userRole);
+    const userRole = this.userRoleRepository.create({
+      userId: user.id,
+      roleId: role.id,
+      user,
+      role,
+    });
+    await this.userRoleRepository.save(userRole);
 
     return this.userService.getUserById(String(userId));
   }
@@ -233,8 +265,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const userRoleRepository = AppDataSource.getRepository(UserRole);
-    await userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId });
 
     return this.userService.getUserById(String(userId));
   }
