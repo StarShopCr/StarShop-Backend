@@ -10,6 +10,7 @@ export const AppDataSource = new DataSource({
   database: config.database.name,
   synchronize: config.database.synchronize,
   logging: config.database.logging,
+  ssl: config.database.ssl ? { rejectUnauthorized: false } : undefined,
   entities: [`${__dirname}/../modules/**/*.entity.{js,ts}`],
   migrations: [`${__dirname}/../migrations/*.{js,ts}`],
 });
