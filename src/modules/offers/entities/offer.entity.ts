@@ -23,12 +23,8 @@ export class Offer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-
-  @Column({ name: 'request_id' })
-  requestId: number;
-
   @Column({ name: 'buyer_request_id' })
-  buyerRequestId: string;
+  buyerRequestId: number;
 
   @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.offers, {
     nullable: false,
@@ -38,7 +34,7 @@ export class Offer {
   buyerRequest: BuyerRequest;
 
   @Column({ name: 'seller_id' })
-  sellerId: string;
+  sellerId: number;
 
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'seller_id' })
@@ -51,7 +47,7 @@ export class Offer {
   @JoinColumn({ name: 'product_id' })
   product?: Product;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100 })
   title: string;
 
   @Column({ type: 'text' })
@@ -78,9 +74,6 @@ export class Offer {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
-
-  @Column({ name: 'request_id' })
-  requestId: string;
 
   @OneToMany(() => OfferAttachment, (attachment) => attachment.offer, {
     cascade: true,
