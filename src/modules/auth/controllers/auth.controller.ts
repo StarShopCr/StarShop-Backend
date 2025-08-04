@@ -11,42 +11,28 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBody, 
+  ApiBearerAuth,
+  ApiCookieAuth 
+} from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { BadRequestError } from '../../../utils/errors';
 import { StellarWalletLoginDto, RegisterUserDto, ChallengeDto } from '../dto/auth.dto';
+import { 
+  ChallengeResponseDto, 
+  AuthResponseDto, 
+  UserResponseDto, 
+  LogoutResponseDto 
+} from '../dto/auth-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
-interface ChallengeResponse {
-  success: boolean;
-  data: { challenge: string; walletAddress: string; timestamp: number };
-}
 
-interface AuthResponse {
-  success: boolean;
-  data: {
-    user: { id: number; walletAddress: string; name: string; email: string; role: string };
-    expiresIn: number;
-  };
-}
 
-interface UserResponse {
-  success: boolean;
-  data: {
-    id: number;
-    walletAddress: string;
-    name: string;
-    email: string;
-    role: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-}
-
-interface LogoutResponse {
-  success: boolean;
-  message: string;
-}
-
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -57,7 +43,21 @@ export class AuthController {
    */
   @Post('challenge')
   @HttpCode(HttpStatus.OK)
-  async generateChallenge(@Body() challengeDto: ChallengeDto): Promise<ChallengeResponse> {
+  @ApiOperation({
+    summary: 'Generate authentication challenge',
+    description: 'Generate a challenge message for wallet authentication. The user must sign this message with their Stellar wallet to authenticate.'
+  })
+  @ApiBody({ type: ChallengeDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Challenge generated successfully',
+    type: ChallengeResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address format'
+  })
+  async generateChallenge(@Body() challengeDto: ChallengeDto): Promise<ChallengeResponseDto> {
     const challenge = this.authService.generateChallenge(challengeDto.walletAddress);
 
     return {
@@ -72,10 +72,28 @@ export class AuthController {
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Login with Stellar wallet',
+    description: 'Authenticate user using their Stellar wallet signature. The user must first get a challenge and sign it with their wallet.'
+  })
+  @ApiBody({ type: StellarWalletLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: AuthResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid signature or wallet address'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Authentication failed'
+  })
   async loginWithWallet(
     @Body() loginDto: StellarWalletLoginDto,
     @Res({ passthrough: true }) res: Response
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponseDto> {
     const result = await this.authService.loginWithWallet(
       loginDto.walletAddress,
       loginDto.signature,
@@ -111,10 +129,28 @@ export class AuthController {
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Register new user with Stellar wallet',
+    description: 'Register a new user using their Stellar wallet. The user must first get a challenge and sign it with their wallet.'
+  })
+  @ApiBody({ type: RegisterUserDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully',
+    type: AuthResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid signature, wallet address, or user already exists'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User already exists'
+  })
   async registerWithWallet(
     @Body() registerDto: RegisterUserDto,
     @Res({ passthrough: true }) res: Response
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponseDto> {
     const result = await this.authService.registerWithWallet({
       walletAddress: registerDto.walletAddress,
       signature: registerDto.signature,
@@ -153,7 +189,22 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async getMe(@Req() req: Request): Promise<UserResponse> {
+  @ApiOperation({
+    summary: 'Get current user information',
+    description: 'Get information about the currently authenticated user'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'User information retrieved successfully',
+    type: UserResponseDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'User not authenticated'
+  })
+  async getMe(@Req() req: Request): Promise<UserResponseDto> {
     const userId = req.user?.id;
     if (!userId) {
       throw new BadRequestError('User not authenticated');
@@ -182,7 +233,22 @@ export class AuthController {
   @Delete('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponse> {
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Logout the currently authenticated user and clear the session cookie'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Logout successful',
+    type: LogoutResponseDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'User not authenticated'
+  })
+  async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
     // Clear the JWT cookie
     res.clearCookie('token', {
       httpOnly: true,

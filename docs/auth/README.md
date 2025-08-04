@@ -1,78 +1,103 @@
-# Stellar Wallet Authentication
-
-This document describes the Stellar wallet-based authentication system implemented in StarShop.
+# Authentication API Documentation
 
 ## Overview
 
-The authentication system uses Stellar wallet addresses and cryptographic signatures to authenticate users. This provides a secure, Web3-style authentication experience without requiring passwords.
+The StarShop API uses Stellar wallet-based authentication. Users authenticate by signing challenge messages with their Stellar wallet.
 
-## Features
+## Authentication Flow
 
-- **Wallet-based authentication**: Users authenticate using their Stellar wallet
-- **Cryptographic signature verification**: Uses Stellar SDK to verify message signatures
-- **JWT tokens**: Secure session management with configurable expiration
-- **Role-based access control**: Support for buyer, seller, and admin roles
-- **HttpOnly cookies**: Secure token storage
-- **Challenge-response mechanism**: Prevents replay attacks
+1. **Generate Challenge**: Get a challenge message to sign
+2. **Sign Challenge**: User signs the challenge with their Stellar wallet
+3. **Authenticate**: Submit the signature to login or register
 
-## API Endpoints Reference
+## Endpoints
 
-### Authentication Endpoints
+### 1. Generate Challenge
 
-#### POST /auth/challenge
-Generate an authentication challenge for wallet signature.
+**POST** `/api/v1/auth/challenge`
 
-**Request Payload:**
+Generate a challenge message for wallet authentication.
+
+#### Request Body
 ```json
 {
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE"
+  "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890"
 }
 ```
 
-**Response (200 OK):**
+#### Response
 ```json
 {
   "success": true,
   "data": {
-    "challenge": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890",
-    "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-    "timestamp": 1234567890
+    "challenge": "Please sign this message to authenticate: 1234567890",
+    "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
+    "timestamp": 1640995200000
   }
 }
 ```
 
-**Error Response (400 Bad Request):**
+### 2. Login
+
+**POST** `/api/v1/auth/login`
+
+Authenticate user using their Stellar wallet signature.
+
+#### Request Body
 ```json
 {
-  "success": false,
-  "message": "Invalid wallet address format"
+  "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
+  "signature": "base64-encoded-signature-string-here",
+  "message": "Please sign this message to authenticate: 1234567890"
 }
 ```
 
-#### POST /auth/register
-Register a new user with Stellar wallet.
-
-**Request Payload:**
+#### Response
 ```json
 {
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "signature": "MEUCIQDexample==",
-  "message": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890",
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "role": "buyer"
+    },
+    "expiresIn": 3600
+  }
+}
+```
+
+**Note**: A JWT token is also set as an HTTP-only cookie.
+
+### 3. Register
+
+**POST** `/api/v1/auth/register`
+
+Register a new user using their Stellar wallet.
+
+#### Request Body
+```json
+{
+  "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
+  "signature": "base64-encoded-signature-string-here",
+  "message": "Please sign this message to authenticate: 1234567890",
   "name": "John Doe",
-  "email": "john@example.com"
+  "email": "john.doe@example.com"
 }
 ```
 
-**Response (201 Created):**
+#### Response
 ```json
 {
   "success": true,
   "data": {
     "user": {
       "id": 1,
-      "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
+      "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
       "name": "John Doe",
-      "email": "john@example.com",
+      "email": "john.doe@example.com",
       "role": "buyer"
     },
     "expiresIn": 3600
@@ -80,80 +105,26 @@ Register a new user with Stellar wallet.
 }
 ```
 
-**Error Response (400 Bad Request):**
-```json
-{
-  "success": false,
-  "message": "Wallet address already registered"
-}
+### 4. Get Current User
+
+**GET** `/api/v1/auth/me`
+
+Get information about the currently authenticated user.
+
+#### Headers
+```
+Authorization: Bearer <jwt-token>
 ```
 
-**Error Response (401 Unauthorized):**
-```json
-{
-  "success": false,
-  "message": "Invalid signature"
-}
-```
-
-#### POST /auth/login
-Login with existing Stellar wallet.
-
-**Request Payload:**
-```json
-{
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "signature": "MEUCIQDexample==",
-  "message": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": 1,
-      "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "buyer"
-    },
-    "expiresIn": 3600
-  }
-}
-```
-
-**Error Response (401 Unauthorized):**
-```json
-{
-  "success": false,
-  "message": "User not found or invalid signature"
-}
-```
-
-#### GET /auth/me
-Get current authenticated user information.
-
-**Request Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-OR
-```
-Cookie: token=<jwt_token>
-```
-
-**Response (200 OK):**
+#### Response
 ```json
 {
   "success": true,
   "data": {
     "id": 1,
-    "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
+    "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
     "name": "John Doe",
-    "email": "john@example.com",
+    "email": "john.doe@example.com",
     "role": "buyer",
     "createdAt": "2024-01-01T00:00:00.000Z",
     "updatedAt": "2024-01-01T00:00:00.000Z"
@@ -161,27 +132,18 @@ Cookie: token=<jwt_token>
 }
 ```
 
-**Error Response (401 Unauthorized):**
-```json
-{
-  "success": false,
-  "message": "User not authenticated"
-}
+### 5. Logout
+
+**DELETE** `/api/v1/auth/logout`
+
+Logout the currently authenticated user.
+
+#### Headers
+```
+Authorization: Bearer <jwt-token>
 ```
 
-#### DELETE /auth/logout
-Logout current user and clear authentication token.
-
-**Request Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-OR
-```
-Cookie: token=<jwt_token>
-```
-
-**Response (200 OK):**
+#### Response
 ```json
 {
   "success": true,
@@ -189,347 +151,69 @@ Cookie: token=<jwt_token>
 }
 ```
 
-### User Management Endpoints
+## Error Responses
 
-#### GET /users
-Get all users (Admin only).
-
-**Request Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-OR
-```
-Cookie: token=<jwt_token>
-```
-
-**Response (200 OK):**
+### 400 Bad Request
 ```json
 {
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "buyer",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE2",
-      "name": "Jane Smith",
-      "email": "jane@example.com",
-      "role": "seller",
-      "createdAt": "2024-01-02T00:00:00.000Z",
-      "updatedAt": "2024-01-02T00:00:00.000Z"
-    }
-  ]
+  "statusCode": 400,
+  "message": "Invalid Stellar wallet address format"
 }
 ```
 
-**Error Response (403 Forbidden):**
+### 401 Unauthorized
 ```json
 {
-  "success": false,
-  "message": "Insufficient permissions"
+  "statusCode": 401,
+  "message": "Authentication failed"
 }
 ```
 
-#### POST /users
-Create new user (same as /auth/register).
-
-**Request Payload:**
+### 409 Conflict
 ```json
 {
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "signature": "MEUCIQDexample==",
-  "message": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890",
-  "name": "John Doe",
-  "email": "john@example.com"
+  "statusCode": 409,
+  "message": "User already exists"
 }
 ```
 
-**Response (201 Created):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": 1,
-      "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "buyer"
-    },
-    "expiresIn": 3600
-  }
-}
-```
+## Testing with Swagger
 
-#### GET /users/:id
-Get user by ID (Own profile or Admin only).
+1. Open the Swagger documentation at `http://localhost:3000/docs`
+2. Navigate to the "Authentication" section
+3. Use the interactive documentation to test the endpoints
 
-**Request Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-OR
-```
-Cookie: token=<jwt_token>
-```
+## Example Usage with curl
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "buyer",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
-
-**Error Response (403 Forbidden):**
-```json
-{
-  "success": false,
-  "message": "Access denied"
-}
-```
-
-#### PUT /users/update/:id
-Update user information (Own profile or Admin only).
-
-**Request Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-OR
-```
-Cookie: token=<jwt_token>
-```
-
-**Request Payload:**
-```json
-{
-  "name": "John Updated",
-  "email": "john.updated@example.com"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-    "name": "John Updated",
-    "email": "john.updated@example.com",
-    "role": "buyer",
-    "updatedAt": "2024-01-01T12:00:00.000Z"
-  }
-}
-```
-
-**Error Response (403 Forbidden):**
-```json
-{
-  "success": false,
-  "message": "You can only update your own profile"
-}
-```
-
-## Authentication Flow
-
-### 1. Challenge Generation
-```
-POST /auth/challenge
-{
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE"
-}
-```
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "challenge": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890",
-    "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-    "timestamp": 1234567890
-  }
-}
-```
-
-### 2. User Registration
-```
-POST /auth/register
-{
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "signature": "MEUCIQDexample==",
-  "message": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890",
-  "name": "John Doe",
-  "email": "john@example.com"
-}
-```
-
-### 3. User Login
-```
-POST /auth/login
-{
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "signature": "MEUCIQDexample==",
-  "message": "StarShop Authentication Challenge - GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE - 1234567890"
-}
-```
-
-## Security Features
-
-### Wallet Address Validation
-- Must start with 'G' (Stellar public key format)
-- Must be exactly 56 characters long
-- Must contain only valid Stellar characters (A-Z, 2-7)
-
-### Signature Verification
-- Uses Stellar SDK's `Keypair.fromPublicKey().verify()`
-- Verifies the signature against the challenge message
-- Prevents replay attacks with timestamped challenges
-
-### JWT Token Security
-- Stored in HttpOnly cookies (web) or Authorization header (API)
-- Configurable expiration (default: 1 hour)
-- Contains user ID, wallet address, and role
-- Signed with server secret
-
-### Role-Based Access Control
-- **buyer**: Default role for new users
-- **seller**: Can manage products and orders
-- **admin**: Full system access
-
-## Frontend Integration
-
-### Challenge Generation
-```javascript
-// 1. Generate challenge
-const challengeResponse = await fetch('/api/v1/auth/challenge', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ walletAddress: userWalletAddress })
-});
-const { data: { challenge } } = await challengeResponse.json();
-
-// 2. Sign challenge with wallet
-const signature = await wallet.signMessage(challenge);
-
-// 3. Login or register
-const authResponse = await fetch('/api/v1/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    walletAddress: userWalletAddress,
-    signature: signature,
-    message: challenge
-  })
-});
-```
-
-### Making Authenticated Requests
-```javascript
-// Using cookies (automatic)
-const response = await fetch('/api/v1/auth/me');
-
-// Using Authorization header
-const response = await fetch('/api/v1/auth/me', {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-```
-
-## Error Handling
-
-### Common Error Responses
-
-```json
-{
-  "success": false,
-  "message": "Error description"
-}
-```
-
-### Error Codes
-- `400`: Validation error (invalid wallet address, missing fields)
-- `401`: Authentication error (invalid signature, user not found)
-- `403`: Authorization error (insufficient permissions)
-- `409`: Conflict (wallet address already registered)
-
-## Testing
-
-### Unit Tests
+### 1. Generate Challenge
 ```bash
-npm test src/modules/auth/tests/auth.service.spec.ts
+curl -X POST http://localhost:3000/api/v1/auth/challenge \
+  -H "Content-Type: application/json" \
+  -d '{
+    "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890"
+  }'
 ```
 
-### Integration Tests
+### 2. Login
 ```bash
-npm run test:e2e test/auth.e2e-spec.ts
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "walletAddress": "GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890",
+    "signature": "your-signature-here",
+    "message": "Please sign this message to authenticate: 1234567890"
+  }'
 ```
 
-### Manual Testing
-1. Use Stellar testnet wallet
-2. Generate challenge with valid wallet address
-3. Sign challenge with wallet
-4. Test login/register with signature
-5. Verify JWT token and user data
-
-## Configuration
-
-### Environment Variables
-```env
-JWT_SECRET=your-secret-key
-JWT_EXPIRATION_TIME=1h
-NODE_ENV=production
+### 3. Get Current User
+```bash
+curl -X GET http://localhost:3000/api/v1/auth/me \
+  -H "Authorization: Bearer your-jwt-token"
 ```
 
-### JWT Token Payload
-```json
-{
-  "id": 1,
-  "walletAddress": "GDRXE2BQUC3AZ6H4YOVGJK2D5SUKZMAWDVSTXWF3SZEUZ6FWERVC7ESE",
-  "role": "buyer",
-  "iat": 1234567890,
-  "exp": 1234571490
-}
-```
+## Security Notes
 
-## Security Considerations
-
-1. **Challenge uniqueness**: Each challenge includes timestamp to prevent replay
-2. **Signature verification**: Always verify signatures server-side
-3. **Token expiration**: Short-lived tokens reduce attack window
-4. **HttpOnly cookies**: Prevent XSS attacks on token storage
-5. **HTTPS only**: Use secure connections in production
-6. **Rate limiting**: Implement rate limiting on auth endpoints
-7. **Input validation**: Validate all wallet addresses and signatures
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Invalid signature**: Ensure challenge message matches exactly
-2. **Wallet format**: Verify wallet address follows Stellar format
-3. **Token expiration**: Check JWT expiration time
-4. **CORS issues**: Configure CORS for frontend domains
-5. **Cookie issues**: Ensure proper cookie settings for domain
-
-### Debug Mode
-Enable debug logging by setting `NODE_ENV=development` to see detailed authentication logs. 
+- JWT tokens are stored in HTTP-only cookies for security
+- Wallet addresses must follow Stellar format (G + 55 characters)
+- Signatures are verified cryptographically
+- All sensitive endpoints require authentication 

@@ -24,6 +24,12 @@ async function bootstrap(): Promise<void> {
     .setDescription('The StarShop e-commerce API with Stellar blockchain integration')
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'token',
+      description: 'JWT token stored in HTTP-only cookie'
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
