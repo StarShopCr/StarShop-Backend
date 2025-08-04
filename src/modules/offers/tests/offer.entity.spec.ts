@@ -10,13 +10,13 @@ describe('Offer Entity', () => {
     it('should create an offer with required fields', () => {
       const offer = new Offer();
       offer.requestId = 'test-request-id';
-      offer.sellerId = 1;
+      offer.sellerId = '1';
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
       offer.price = 100.50;
 
       expect(offer.requestId).toBe('test-request-id');
-      expect(offer.sellerId).toBe(1);
+      expect(offer.sellerId).toBe('1');
       expect(offer.title).toBe('Test Offer');
       expect(offer.description).toBe('Test offer description');
       expect(offer.price).toBe(100.50);
@@ -26,7 +26,7 @@ describe('Offer Entity', () => {
     it('should create an offer with optional product', () => {
       const offer = new Offer();
       offer.requestId = 'test-request-id';
-      offer.sellerId = 1;
+      offer.sellerId = '1';
       offer.productId = 123;
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
@@ -38,7 +38,7 @@ describe('Offer Entity', () => {
     it('should create an offer without product (null product_id)', () => {
       const offer = new Offer();
       offer.requestId = 'test-request-id';
-      offer.sellerId = 1;
+      offer.sellerId = '1';
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
       offer.price = 100.50;
@@ -90,10 +90,10 @@ describe('Offer Entity', () => {
       seller.id = 1;
       
       offer.seller = seller;
-      offer.sellerId = seller.id;
+      offer.sellerId = seller.id.toString();
       
       expect(offer.seller).toBe(seller);
-      expect(offer.sellerId).toBe(1);
+      expect(offer.sellerId).toBe('1');
     });
 
     it('should have optional relationship with Product', () => {
@@ -128,11 +128,11 @@ describe('Offer Entity', () => {
     it('should enforce foreign key constraints', () => {
       const offer = new Offer();
       offer.requestId = 'non-existent-request-id';
-      offer.sellerId = 999; // Non-existent user
+      offer.sellerId = '999'; // Non-existent user
 
       // In a real database with FK constraints, this would fail
       expect(offer.requestId).toBe('non-existent-request-id');
-      expect(offer.sellerId).toBe(999);
+      expect(offer.sellerId).toBe('999');
     });
 
     it('should allow null product_id', () => {

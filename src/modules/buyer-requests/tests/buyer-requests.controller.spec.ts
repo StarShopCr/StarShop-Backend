@@ -15,6 +15,8 @@ describe("BuyerRequestsController", () => {
     mockService = {
       create: jest.fn(),
       findAll: jest.fn(),
+      getSearchSuggestions: jest.fn(),
+      getPopularCategories: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
@@ -49,7 +51,7 @@ describe("BuyerRequestsController", () => {
       }
       const mockRequest = { user: { id: 1 } }
    const expectedResult = {
-  id: 1,
+  id: "1",
   title: createDto.title,
   description: createDto.description ?? "Default Description", // ensure it's defined
   budgetMin: createDto.budgetMin,
@@ -94,7 +96,7 @@ describe("BuyerRequestsController", () => {
   describe("findOne", () => {
     it("should return a buyer request by id", async () => {
       const expectedResult = {
-        id: 1,
+        id: "1",
         title: "Test Request",
         description: "Test Description",
         budgetMin: 100,
@@ -108,9 +110,9 @@ describe("BuyerRequestsController", () => {
 
       service.findOne.mockResolvedValue(expectedResult)
 
-      const result = await controller.findOne(1)
+      const result = await controller.findOne("1")
 
-      expect(service.findOne).toHaveBeenCalledWith(1)
+      expect(service.findOne).toHaveBeenCalledWith("1")
       expect(result).toEqual(expectedResult)
     })
   })
@@ -120,7 +122,7 @@ describe("BuyerRequestsController", () => {
       const updateDto: UpdateBuyerRequestDto = { title: "Updated Title" }
       const mockRequest = { user: { id: 1 } }
       const expectedResult = {
-        id: 1,
+        id: "1",
         title: "Updated Title",
         description: "Updated Description",
         budgetMin: 150,
@@ -134,9 +136,9 @@ describe("BuyerRequestsController", () => {
 
       service.update.mockResolvedValue(expectedResult)
 
-      const result = await controller.update(1, updateDto, mockRequest)
+      const result = await controller.update("1", updateDto, mockRequest)
 
-      expect(service.update).toHaveBeenCalledWith(1, updateDto, 1)
+      expect(service.update).toHaveBeenCalledWith("1", updateDto, 1)
       expect(result).toEqual(expectedResult)
     })
   })
@@ -147,9 +149,9 @@ describe("BuyerRequestsController", () => {
 
       service.remove.mockResolvedValue(undefined)
 
-      const result = await controller.remove(1, mockRequest)
+      const result = await controller.remove("1", mockRequest)
 
-      expect(service.remove).toHaveBeenCalledWith(1, 1)
+      expect(service.remove).toHaveBeenCalledWith("1", 1)
       expect(result).toBeUndefined()
     })
   })

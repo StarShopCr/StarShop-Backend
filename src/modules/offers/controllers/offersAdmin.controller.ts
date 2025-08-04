@@ -16,7 +16,7 @@ export class OffersAdminController {
   }
 
   @Patch(':id/block')
-  block(@Param('id') id: number, @Body() dto: BlockOfferDto) {
+  block(@Param('id') id: string, @Body() dto: BlockOfferDto) {
     return this.adminService.block(id, dto.isBlocked ?? true);
   }
 }

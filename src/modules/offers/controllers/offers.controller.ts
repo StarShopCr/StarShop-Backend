@@ -89,6 +89,19 @@ export class OffersController {
     return this.offersService.reject(id, String(req.user.id));
   }
 
+  /**
+   * Endpoint for a buyer to confirm purchase of an offer.
+   * Method: PATCH
+   * URL: /offers/:id/confirm-purchase
+   * Access: Buyer only
+   */
+  @Patch(":id/confirm-purchase")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUYER)
+  confirmPurchase(@Param('id') id: string, @Request() req: AuthRequest) {
+    return this.offersService.confirmPurchase(id, String(req.user.id));
+  }
+
   @Get("all")
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
