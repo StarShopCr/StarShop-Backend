@@ -15,7 +15,7 @@ describe('Offer Entity', () => {
       offer.price = 100.5;
 
       expect(offer.requestId).toBe('test-request-id');
-      expect(offer.sellerId).toBe(1);
+      expect(offer.sellerId).toBe('1');
       expect(offer.title).toBe('Test Offer');
       expect(offer.description).toBe('Test offer description');
       expect(offer.price).toBe(100.5);
@@ -90,9 +90,8 @@ describe('Offer Entity', () => {
 
       offer.seller = seller;
       offer.sellerId = seller.id;
-
       expect(offer.seller).toBe(seller);
-      expect(offer.sellerId).toBe(1);
+      expect(offer.sellerId).toBe('1');
     });
 
     it('should have optional relationship with Product', () => {
@@ -131,7 +130,7 @@ describe('Offer Entity', () => {
 
       // In a real database with FK constraints, this would fail
       expect(offer.requestId).toBe('non-existent-request-id');
-      expect(offer.sellerId).toBe(999);
+      expect(offer.sellerId).toBe('999');
     });
 
     it('should allow null product_id', () => {
