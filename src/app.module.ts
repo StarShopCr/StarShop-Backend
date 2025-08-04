@@ -15,6 +15,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
+import { SupabaseModule } from './modules/supabase/supabase.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -46,6 +47,8 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_DATABASE || 'starshop',
+      ssl:
+        process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
       entities: [
         User,
         Order,
@@ -81,6 +84,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     OrdersModule,
     BuyerRequestsModule,
     OffersModule,
+    SupabaseModule,
 
   ],
 })

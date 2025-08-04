@@ -94,7 +94,7 @@ StarShop Backend is a robust and scalable API built with NestJS that provides co
 
 - **Framework**: NestJS (Node.js)
 - **Language**: TypeScript
-- **Database**: PostgreSQL with TypeORM
+- **Database**: PostgreSQL with TypeORM (Supabase ready)
 - **Authentication**: JWT + Stellar SDK
 - **Storage**: AWS S3 + Cloudinary
 - **Notifications**: Pusher
@@ -103,6 +103,7 @@ StarShop Backend is a robust and scalable API built with NestJS that provides co
 - **Validation**: class-validator + class-transformer
 - **Rate Limiting**: express-rate-limit
 - **Logging**: Winston
+- **Supabase**: Supabase client for authentication, storage and other services
 
 ## 📦 Installation and Setup
 
