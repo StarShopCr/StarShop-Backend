@@ -66,8 +66,7 @@ export class UserController {
   ): Promise<AuthResponse> {
     const result = await this.authService.registerWithWallet({
       walletAddress: registerDto.walletAddress,
-      signature: registerDto.signature,
-      message: registerDto.message,
+      role: registerDto.role,
       name: registerDto.name,
       email: registerDto.email,
     });

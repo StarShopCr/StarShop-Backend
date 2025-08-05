@@ -38,7 +38,19 @@ describe('AuthService', () => {
 
     roleService = { findByName: jest.fn(), createRole: jest.fn(), deleteRole: jest.fn() } as any;
 
-    authService = new AuthService(userService, jwtService, roleService);
+    // Mock repositories
+    const mockUserRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
+    const mockRoleRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
+    const mockUserRoleRepository = { create: jest.fn(), save: jest.fn() } as any;
+
+    authService = new AuthService(
+      mockUserRepository,
+      mockRoleRepository,
+      mockUserRoleRepository,
+      userService,
+      jwtService,
+      roleService
+    );
   });
 
   describe('generateChallenge', () => {
@@ -118,33 +130,20 @@ describe('AuthService', () => {
       const mockUserRepository = { findOne: jest.fn().mockResolvedValue(mockUser) };
       (authService as any).userRepository = mockUserRepository;
 
-      const result = await authService.loginWithWallet(
-        mockWalletAddress,
-        mockSignature,
-        mockMessage
-      );
+      const result = await authService.loginWithWallet(mockWalletAddress);
 
       expect(result.user).toEqual(mockUser);
       expect(result.token).toBe('mock.jwt.token');
       expect(result.expiresIn).toBe(3600);
     });
 
-    it('should throw UnauthorizedError for invalid signature', async () => {
-      const mockKeypair = { verify: jest.fn().mockReturnValue(false) };
-      (Keypair.fromPublicKey as jest.Mock).mockReturnValue(mockKeypair);
-
-      await expect(
-        authService.loginWithWallet(mockWalletAddress, mockSignature, mockMessage)
-      ).rejects.toThrow(UnauthorizedError);
-    });
-
     it('should throw UnauthorizedError when user not found', async () => {
       const mockUserRepository = { findOne: jest.fn().mockResolvedValue(null) };
       (authService as any).userRepository = mockUserRepository;
 
-      await expect(
-        authService.loginWithWallet(mockWalletAddress, mockSignature, mockMessage)
-      ).rejects.toThrow(UnauthorizedError);
+      await expect(authService.loginWithWallet(mockWalletAddress)).rejects.toThrow(
+        UnauthorizedError
+      );
     });
   });
 
@@ -173,8 +172,7 @@ describe('AuthService', () => {
 
       const result = await authService.registerWithWallet({
         walletAddress: mockWalletAddress,
-        signature: mockSignature,
-        message: mockMessage,
+        role: 'buyer',
         name: 'New User',
         email: 'new@example.com',
       });
@@ -193,8 +191,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          signature: mockSignature,
-          message: mockMessage,
+          role: 'buyer',
           name: 'New User',
         })
       ).rejects.toThrow(BadRequestError);
@@ -207,8 +204,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          signature: mockSignature,
-          message: mockMessage,
+          role: 'buyer',
         })
       ).rejects.toThrow(UnauthorizedError);
     });
