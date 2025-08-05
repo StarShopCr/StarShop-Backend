@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
       type: 'apiKey',
       in: 'cookie',
       name: 'token',
-      description: 'JWT token stored in HTTP-only cookie'
+      description: 'JWT token stored in HTTP-only cookie',
     })
     .build();
 

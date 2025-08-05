@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "test:crypto": "node test-crypto.js",
     "docs:validate": "swagger-cli validate openapi.yaml",
     "docs:build": "redoc-cli build openapi.yaml -o static-docs.html",
     "typeorm": "typeorm",
