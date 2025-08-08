@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BuyerRequestSchedulerService } from './modules/buyer-requests/services/buyer-request-scheduler.service';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +17,12 @@ async function bootstrap(): Promise<void> {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
   );
+
+  // Global response interceptor
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // Global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Global prefix
   app.setGlobalPrefix('api/v1');

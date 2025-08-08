@@ -29,6 +29,7 @@ import {
   LogoutResponseDto,
 } from '../dto/auth-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { setToken, clearToken } from '../../../common/utils/response.utils';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -96,11 +97,8 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     const result = await this.authService.loginWithWallet(loginDto.walletAddress);
 
-    // Set JWT token in HttpOnly cookie
-    res.cookie('token', result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+    // Set JWT token using the helper function
+    setToken(res, result.token, {
       maxAge: result.expiresIn * 1000, // Convert to milliseconds
     });
 
@@ -155,11 +153,8 @@ export class AuthController {
       email: registerDto.email,
     });
 
-    // Set JWT token in HttpOnly cookie
-    res.cookie('token', result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+    // Set JWT token using the helper function
+    setToken(res, result.token, {
       maxAge: result.expiresIn * 1000, // Convert to milliseconds
     });
 
@@ -245,12 +240,8 @@ export class AuthController {
     description: 'User not authenticated',
   })
   async logout(@Res({ passthrough: true }) res: Response): Promise<LogoutResponseDto> {
-    // Clear the JWT cookie
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
+    // Clear the JWT token using the helper function
+    clearToken(res);
 
     return { success: true, message: 'Logged out successfully' };
   }
