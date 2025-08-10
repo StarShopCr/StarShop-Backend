@@ -12,6 +12,7 @@ export class UserService {
     name?: string;
     email?: string;
     role: 'buyer' | 'seller' | 'admin';
+    country?: string;
   }): Promise<User> {
     const existing = await this.userRepository.findOne({
       where: { walletAddress: data.walletAddress },

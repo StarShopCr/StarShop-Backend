@@ -154,6 +154,7 @@ describe('AuthService', () => {
       name: 'New User',
       email: 'new@example.com',
       userRoles: [{ role: { name: 'buyer' } }] as any,
+      country: 'US',
     };
 
     beforeEach(() => {

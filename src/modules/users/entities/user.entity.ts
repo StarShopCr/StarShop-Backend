@@ -10,6 +10,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
+import { CountryCode } from '../enums/country-code.enum';
 
 @Entity('users')
 export class User {
@@ -24,6 +25,9 @@ export class User {
 
   @Column({ unique: true })
   walletAddress: string;
+
+  @Column({ length: 2, nullable: true, enum: CountryCode })
+  country?: string;
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
