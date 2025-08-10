@@ -83,4 +83,4 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     SupabaseModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

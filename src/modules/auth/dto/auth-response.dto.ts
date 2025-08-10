@@ -95,8 +95,10 @@ export class UserResponseDto {
       name: 'John Doe',
       email: 'john.doe@example.com',
       role: 'buyer',
+      // Optional fields
+      country: 'US',
       createdAt: '2024-01-01T00:00:00.000Z',
-      updatedAt: '2024-01-01T00:00:00.000Z'
+      updatedAt: '2024-01-01T00:00:00.000Z',
     }
   })
   data: {
@@ -105,6 +107,7 @@ export class UserResponseDto {
     name: string;
     email: string;
     role: string;
+    country?: string | null;
     createdAt: Date;
     updatedAt: Date;
   };

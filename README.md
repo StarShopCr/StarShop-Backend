@@ -188,8 +188,19 @@ PORT=3000
 
 ```bash
 # Run migrations to create database tables
-npm run typeorm migration:run
+# dist/data-source.js is your file data-source in dist directory
+npm run typeorm migration:run -d dist/data-source.js
+
+# or
+
+# dist/data-source.js is your file data-source in dist directory
+# The --fake flag tells TypeORM to mark the migration as executed without actually running it.
+npm run typeorm migration:run -d dist/data-source.js --fake
 ```
+
+> [!WARNING]
+> Is important that you have dist file to use migrations
+
 
 ### 6. Start the Application
 

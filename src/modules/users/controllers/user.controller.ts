@@ -60,6 +60,7 @@ export class UserController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  
   async createUser(
     @Body() registerDto: RegisterUserDto,
     @Res({ passthrough: true }) res: Response
@@ -69,6 +70,7 @@ export class UserController {
       role: registerDto.role,
       name: registerDto.name,
       email: registerDto.email,
+      country: registerDto.country,
     });
 
     // Set JWT token in HttpOnly cookie

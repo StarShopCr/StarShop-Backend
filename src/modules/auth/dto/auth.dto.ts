@@ -1,5 +1,7 @@
-import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail } from 'class-validator';
+import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CountryCode } from '@/modules/users/enums/country-code.enum';
+import { Transform } from 'class-transformer';
 
 export class StellarWalletLoginDto {
   @ApiProperty({
@@ -49,6 +51,18 @@ export class RegisterUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiProperty({
+    description: "Country code of the buyer request",
+    example: "US",
+    enum: CountryCode,
+    enumName: 'CountryCode'
+  })
+  @Transform(({ value }) => value?.toUpperCase())
+  @IsOptional()
+  @IsString()
+  @IsEnum(CountryCode, { message: 'Country must be a valid ISO 3166-1 alpha-2 country code' })
+  country?: string;
 }
 
 export class UpdateUserDto {
