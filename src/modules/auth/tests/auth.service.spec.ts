@@ -169,13 +169,38 @@ describe('AuthService', () => {
         create: jest.fn().mockReturnValue(mockNewUser),
         save: jest.fn().mockResolvedValue(mockNewUser),
       };
+
+      const mockRoleRepository = {
+        findOne: jest.fn().mockResolvedValue({
+          id: 1,
+          name: 'buyer'
+        }),
+      };
+
+      // Add mock for userRoleRepository
+      const mockUserRoleRepository = {
+        create: jest.fn().mockReturnValue({
+          id: 1,
+          userId: 1,
+          roleId: 1
+        }),
+        save: jest.fn().mockResolvedValue({
+          id: 1,
+          userId: 1,
+          roleId: 1
+        }),
+      };
+
       (authService as any).userRepository = mockUserRepository;
+      (authService as any).roleRepository = mockRoleRepository;
+      (authService as any).userRoleRepository = mockUserRoleRepository;
 
       const result = await authService.registerWithWallet({
         walletAddress: mockWalletAddress,
         role: 'buyer',
         name: 'New User',
         email: 'new@example.com',
+        country: 'CR'
       });
 
       expect(result.user).toEqual(mockNewUser);
@@ -206,8 +231,9 @@ describe('AuthService', () => {
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
           role: 'buyer',
+          country: 'Costa Rica',
         })
-      ).rejects.toThrow(UnauthorizedError);
+      ).rejects.toThrow(BadRequestError);
     });
   });
 

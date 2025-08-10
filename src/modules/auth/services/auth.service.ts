@@ -11,7 +11,7 @@ import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
 import { Keypair } from 'stellar-sdk';
-import { CountryCode } from '@/modules/users/enums/country-code.enum';
+import { CountryCode } from '../../../modules/users/enums/country-code.enum';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
