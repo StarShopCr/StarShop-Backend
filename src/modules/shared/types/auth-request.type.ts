@@ -7,7 +7,11 @@ export interface AuthenticatedRequest extends Request {
     walletAddress: string;
     name?: string;
     email?: string;
-    role: Role[];
+    role: Role;
+    location?: string;
+    country?: string;
+    buyerData?: any;
+    sellerData?: any;
     createdAt?: Date;
     updatedAt?: Date;
   };

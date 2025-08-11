@@ -28,6 +28,10 @@ interface UserResponse {
   name: string;
   email: string;
   role: string;
+  location?: string;
+  country?: string;
+  buyerData?: any;
+  sellerData?: any;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -69,6 +73,10 @@ export class UserController {
       role: registerDto.role,
       name: registerDto.name,
       email: registerDto.email,
+      location: registerDto.location,
+      country: registerDto.country,
+      buyerData: registerDto.buyerData,
+      sellerData: registerDto.sellerData,
     });
 
     // Set JWT token in HttpOnly cookie
@@ -88,6 +96,10 @@ export class UserController {
           name: result.user.name,
           email: result.user.email,
           role: result.user.userRoles?.[0]?.role?.name || 'buyer',
+          location: result.user.location,
+          country: result.user.country,
+          buyerData: result.user.buyerData,
+          sellerData: result.user.sellerData,
         },
         expiresIn: result.expiresIn,
       },
@@ -124,6 +136,10 @@ export class UserController {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.userRoles?.[0]?.role?.name || 'buyer',
+        location: updatedUser.location,
+        country: updatedUser.country,
+        buyerData: updatedUser.buyerData,
+        sellerData: updatedUser.sellerData,
         updatedAt: updatedUser.updatedAt,
       },
     };
@@ -158,6 +174,10 @@ export class UserController {
         name: user.name,
         email: user.email,
         role: user.userRoles?.[0]?.role?.name || 'buyer',
+        location: user.location,
+        country: user.country,
+        buyerData: user.buyerData,
+        sellerData: user.sellerData,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -182,7 +202,11 @@ export class UserController {
         walletAddress: user.walletAddress,
         name: user.name,
         email: user.email,
-        role: user.userRoles?.[0]?.role?.name || 'buyer',
+        role: user.role,
+        location: user.location,
+        country: user.country,
+        buyerData: user.buyerData,
+        sellerData: user.sellerData,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })),

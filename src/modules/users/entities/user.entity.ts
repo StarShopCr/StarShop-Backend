@@ -25,6 +25,18 @@ export class User {
   @Column({ unique: true })
   walletAddress: string;
 
+  @Column({ nullable: true })
+  location?: string;
+
+  @Column({ nullable: true })
+  country?: string;
+
+  @Column({ type: 'json', nullable: true })
+  buyerData?: any;
+
+  @Column({ type: 'json', nullable: true })
+  sellerData?: any;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

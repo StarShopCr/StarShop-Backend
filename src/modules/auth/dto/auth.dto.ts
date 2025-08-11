@@ -1,4 +1,4 @@
-import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail } from 'class-validator';
+import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class StellarWalletLoginDto {
@@ -49,6 +49,38 @@ export class RegisterUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiPropertyOptional({
+    description: 'User location',
+    example: 'New York',
+  })
+  @IsString()
+  @IsOptional()
+  location?: string;
+
+  @ApiPropertyOptional({
+    description: 'User country',
+    example: 'United States',
+  })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buyer-specific data (only required if role is buyer)',
+    example: { preferences: ['electronics', 'books'] },
+  })
+  @IsObject()
+  @IsOptional()
+  buyerData?: any;
+
+  @ApiPropertyOptional({
+    description: 'Seller-specific data (only required if role is seller)',
+    example: { businessName: 'Tech Store', categories: ['electronics'], rating: 4.5 },
+  })
+  @IsObject()
+  @IsOptional()
+  sellerData?: any;
 }
 
 export class UpdateUserDto {
@@ -67,6 +99,38 @@ export class UpdateUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiPropertyOptional({
+    description: 'User location',
+    example: 'New York',
+  })
+  @IsString()
+  @IsOptional()
+  location?: string;
+
+  @ApiPropertyOptional({
+    description: 'User country',
+    example: 'United States',
+  })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buyer-specific data',
+    example: { preferences: ['electronics', 'books'] },
+  })
+  @IsObject()
+  @IsOptional()
+  buyerData?: any;
+
+  @ApiPropertyOptional({
+    description: 'Seller-specific data',
+    example: { businessName: 'Tech Store', categories: ['electronics'], rating: 4.5 },
+  })
+  @IsObject()
+  @IsOptional()
+  sellerData?: any;
 }
 
 export class ChallengeDto {

@@ -9,7 +9,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
 export const requireRole = (roleName: Role) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !req.user.role.includes(roleName)) {
+    if (!req.user || req.user.role !== roleName) {
       return res.status(403).json({ message: 'Forbidden' });
     }
     next();

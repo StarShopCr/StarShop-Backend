@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Keypair } from 'stellar-sdk';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { User } from '../../users/entities/user.entity';
+import { Role as UserRoleEnum } from '../../../types/role';
 
 // Mock dependencies
 jest.mock('../../users/services/user.service');
@@ -116,6 +117,10 @@ describe('AuthService', () => {
       walletAddress: mockWalletAddress,
       name: 'Test User',
       email: 'test@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
     };
 
@@ -153,6 +158,10 @@ describe('AuthService', () => {
       walletAddress: mockWalletAddress,
       name: 'New User',
       email: 'new@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
     };
 
@@ -172,7 +181,7 @@ describe('AuthService', () => {
 
       const result = await authService.registerWithWallet({
         walletAddress: mockWalletAddress,
-        role: 'buyer',
+        role: UserRoleEnum.BUYER,
         name: 'New User',
         email: 'new@example.com',
       });
@@ -191,7 +200,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
+          role: UserRoleEnum.BUYER,
           name: 'New User',
         })
       ).rejects.toThrow(BadRequestError);
@@ -204,7 +213,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
+          role: UserRoleEnum.BUYER,
         })
       ).rejects.toThrow(UnauthorizedError);
     });

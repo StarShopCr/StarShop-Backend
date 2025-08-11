@@ -72,6 +72,10 @@ export class AuthService {
     role: 'buyer' | 'seller';
     name?: string;
     email?: string;
+    location?: string;
+    country?: string;
+    buyerData?: any;
+    sellerData?: any;
   }): Promise<{ user: User; token: string; expiresIn: number }> {
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -83,6 +87,10 @@ export class AuthService {
       // Update existing user instead of throwing error
       existingUser.name = data.name || existingUser.name;
       existingUser.email = data.email || existingUser.email;
+      existingUser.location = data.location || existingUser.location;
+      existingUser.country = data.country || existingUser.country;
+      existingUser.buyerData = data.buyerData || existingUser.buyerData;
+      existingUser.sellerData = data.sellerData || existingUser.sellerData;
 
       const updatedUser = await this.userRepository.save(existingUser);
 
@@ -104,11 +112,15 @@ export class AuthService {
       walletAddress: data.walletAddress,
       name: data.name,
       email: data.email,
+      location: data.location,
+      country: data.country,
+      buyerData: data.buyerData,
+      sellerData: data.sellerData,
     });
 
     const savedUser = await this.userRepository.save(user);
 
-    // Assign user role
+    // Assign user role to user_roles table
     const userRole = await this.roleRepository.findOne({ where: { name: data.role } });
     if (userRole) {
       const userRoleEntity = this.userRoleRepository.create({
@@ -176,7 +188,14 @@ export class AuthService {
   /**
    * Update user information
    */
-  async updateUser(userId: number, updateData: { name?: string; email?: string }): Promise<User> {
+  async updateUser(userId: number, updateData: { 
+    name?: string; 
+    email?: string; 
+    location?: string; 
+    country?: string; 
+    buyerData?: any; 
+    sellerData?: any; 
+  }): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {
