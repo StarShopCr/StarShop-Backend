@@ -11,6 +11,7 @@ import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
 import { Keypair } from 'stellar-sdk';
+import { StoreService } from '../../stores/services/store.service';
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
@@ -28,7 +29,8 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly roleService: RoleService
+    private readonly roleService: RoleService,
+    private readonly storeService: StoreService
   ) {}
 
   /**
@@ -138,6 +140,16 @@ export class AuthService {
         role: userRole,
       });
       await this.userRoleRepository.save(userRoleEntity);
+    }
+
+    // Create default store for sellers
+    if (data.role === 'seller') {
+      try {
+        await this.storeService.createDefaultStore(savedUser.id, data.sellerData);
+      } catch (error) {
+        console.error('Failed to create default store for seller:', error);
+        // Don't fail the registration if store creation fails
+      }
     }
 
     // Generate JWT token

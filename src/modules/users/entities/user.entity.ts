@@ -10,6 +10,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
+import { Store } from '../../stores/entities/store.entity';
 
 @Entity('users')
 export class User {
@@ -48,6 +49,9 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
+
+  @OneToMany(() => Store, (store) => store.seller)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

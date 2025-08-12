@@ -43,6 +43,7 @@ describe('AuthService', () => {
     const mockUserRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockRoleRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockUserRoleRepository = { create: jest.fn(), save: jest.fn() } as any;
+    const mockStoreService = { createDefaultStore: jest.fn() } as any;
 
     authService = new AuthService(
       mockUserRepository,
@@ -50,7 +51,8 @@ describe('AuthService', () => {
       mockUserRoleRepository,
       userService,
       jwtService,
-      roleService
+      roleService,
+      mockStoreService
     );
   });
 

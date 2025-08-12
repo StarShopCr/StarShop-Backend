@@ -60,6 +60,7 @@ describe('FileService', () => {
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -120,6 +121,7 @@ describe('FileService', () => {
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -182,6 +184,7 @@ describe('FileService', () => {
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -237,6 +240,7 @@ describe('FileService', () => {
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
