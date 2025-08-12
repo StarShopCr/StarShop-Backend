@@ -32,6 +32,14 @@ export class UserService {
       throw new BadRequestError('Seller data is required for seller role');
     }
 
+    // Validate that buyers can't have seller data and sellers can't have buyer data
+    if (data.role === 'buyer' && data.sellerData !== undefined) {
+      throw new BadRequestError('Buyers cannot have seller data');
+    }
+    if (data.role === 'seller' && data.buyerData !== undefined) {
+      throw new BadRequestError('Sellers cannot have buyer data');
+    }
+
     const user = this.userRepository.create({
       walletAddress: data.walletAddress,
       name: data.name,

@@ -17,8 +17,15 @@ The user registration endpoint allows users to register as either a buyer or sel
 - `email` (string): User email address
 - `location` (string): User location (e.g., "New York")
 - `country` (string): User country (e.g., "United States")
-- `buyerData` (object): Buyer-specific data (required if role is "buyer")
-- `sellerData` (object): Seller-specific data (required if role is "seller")
+- `buyerData` (object): Buyer-specific data (only allowed if role is "buyer")
+- `sellerData` (object): Seller-specific data (only allowed if role is "seller")
+
+### Validation Rules
+- **Buyers**: Can only have `buyerData`, cannot have `sellerData`
+- **Sellers**: Can only have `sellerData`, cannot have `buyerData`
+- **buyerData**: Required for buyer role, must be an object
+- **sellerData**: Required for seller role, must be an object
+- **Cross-role data**: Will cause the entire request to be rejected with a 400 error
 
 ## Examples
 
@@ -94,6 +101,14 @@ The user registration endpoint allows users to register as either a buyer or sel
 }
 ```
 
+#### 400 Bad Request - Invalid Role Data
+```json
+{
+  "success": false,
+  "message": "buyerData is only allowed for buyers"
+}
+```
+
 #### 400 Bad Request - Duplicate Wallet Address
 ```json
 {
@@ -104,17 +119,18 @@ The user registration endpoint allows users to register as either a buyer or sel
 
 ## Notes
 
-1. **Role-specific Data**: 
-   - Buyers must provide `buyerData`
-   - Sellers must provide `sellerData`
-   - The data structure is flexible and can be customized based on your needs
+1. **Role-specific Data Validation**: 
+   - Buyers can only provide `buyerData` (required)
+   - Sellers can only provide `sellerData` (required)
+   - Cross-role data is strictly forbidden and will result in validation errors
+   - **Validation happens at the DTO level** - requests with forbidden data will be rejected entirely
 
 2. **Authentication**: 
    - A JWT token is automatically generated and set as an HttpOnly cookie
    - The token expires in 1 hour by default
 
 3. **Database**: 
-   - The role is stored both in the user entity and in the user_roles table for backward compatibility
+   - The role is stored in the user_roles table as before
    - Location and country are stored as strings
    - Buyer and seller data are stored as JSONB for flexibility
 
@@ -122,4 +138,5 @@ The user registration endpoint allows users to register as either a buyer or sel
    - Wallet address must be a valid Stellar address format
    - Email must be a valid email format
    - Role must be either "buyer" or "seller"
+   - Role-specific data validation prevents data mixing at the DTO level
    - All optional fields have reasonable length limits

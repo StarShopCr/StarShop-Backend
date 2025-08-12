@@ -77,6 +77,14 @@ export class AuthService {
     buyerData?: any;
     sellerData?: any;
   }): Promise<{ user: User; token: string; expiresIn: number }> {
+    // Validate that buyers can't have seller data and sellers can't have buyer data
+    if (data.role === 'buyer' && data.sellerData !== undefined) {
+      throw new BadRequestError('Buyers cannot have seller data');
+    }
+    if (data.role === 'seller' && data.buyerData !== undefined) {
+      throw new BadRequestError('Sellers cannot have buyer data');
+    }
+
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
       where: { walletAddress: data.walletAddress },
