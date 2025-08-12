@@ -21,7 +21,7 @@ declare module 'express-serve-static-core' {
       walletAddress: string;
       name?: string;
       email?: string;
-      role: Role;
+      role: Role[];
       location?: string;
       country?: string;
       buyerData?: any;
@@ -41,7 +41,7 @@ declare global {
       walletAddress: string;
       name?: string;
       email?: string;
-      role: Role;
+      role: Role[];
       location?: string;
       country?: string;
       buyerData?: any;

@@ -202,7 +202,7 @@ export class UserController {
         walletAddress: user.walletAddress,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: user.userRoles?.[0]?.role?.name || 'buyer',
         location: user.location,
         country: user.country,
         buyerData: user.buyerData,
