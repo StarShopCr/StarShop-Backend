@@ -16,8 +16,8 @@ export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'userId' })
-  userId: number;
+  @Column({ name: 'userId', type: 'uuid' })
+  userId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })

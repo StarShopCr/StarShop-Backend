@@ -5,6 +5,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
@@ -13,8 +14,8 @@ import { Wishlist } from '../../wishlist/entities/wishlist.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true, nullable: true })
   email?: string;
@@ -23,6 +24,7 @@ export class User {
   name?: string;
 
   @Column({ unique: true })
+  @Index()
   walletAddress: string;
 
   @OneToMany(() => Order, (order) => order.user)

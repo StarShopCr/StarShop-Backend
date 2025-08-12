@@ -10,7 +10,6 @@ import {
   UseGuards,
   HttpStatus,
   HttpCode,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
@@ -23,7 +22,6 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../../types/role';
 
 interface UserResponse {
-  id: number;
   walletAddress: string;
   name: string;
   email: string;
@@ -83,7 +81,6 @@ export class UserController {
       success: true,
       data: {
         user: {
-          id: result.user.id,
           walletAddress: result.user.walletAddress,
           name: result.user.name,
           email: result.user.email,
@@ -96,30 +93,29 @@ export class UserController {
 
   /**
    * Update user information
-   * PUT /users/update/:id
+   * PUT /users/update/:walletAddress
    */
-  @Put('update/:id')
+  @Put('update/:walletAddress')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async updateUser(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('walletAddress') walletAddress: string,
     @Body() updateDto: UpdateUserDto,
     @Req() req: Request
   ): Promise<UserUpdateResponse> {
-    const currentUserId = req.user?.id;
+    const currentUserWalletAddress = req.user?.walletAddress;
     const currentUserRole = req.user?.role?.[0];
 
     // Check if user is updating their own profile or is admin
-    if (userId !== currentUserId && currentUserRole !== 'admin') {
+    if (walletAddress !== currentUserWalletAddress && currentUserRole !== 'admin') {
       throw new UnauthorizedError('You can only update your own profile');
     }
 
-    const updatedUser = await this.authService.updateUser(userId, updateDto);
+    const updatedUser = await this.userService.updateUser(walletAddress, updateDto);
 
     return {
       success: true,
       data: {
-        id: updatedUser.id,
         walletAddress: updatedUser.walletAddress,
         name: updatedUser.name,
         email: updatedUser.email,
@@ -130,30 +126,29 @@ export class UserController {
   }
 
   /**
-   * Get user by ID (admin only or own profile)
-   * GET /users/:id
+   * Get user by wallet address (admin only or own profile)
+   * GET /users/:walletAddress
    */
-  @Get(':id')
+  @Get(':walletAddress')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async getUserById(
-    @Param('id', ParseIntPipe) userId: number,
+  async getUserByWalletAddress(
+    @Param('walletAddress') walletAddress: string,
     @Req() req: Request
   ): Promise<UserUpdateResponse> {
-    const currentUserId = req.user?.id;
+    const currentUserWalletAddress = req.user?.walletAddress;
     const currentUserRole = req.user?.role?.[0];
 
     // Check if user is accessing their own profile or is admin
-    if (userId !== currentUserId && currentUserRole !== 'admin') {
+    if (walletAddress !== currentUserWalletAddress && currentUserRole !== 'admin') {
       throw new UnauthorizedError('Access denied');
     }
 
-    const user = await this.userService.getUserById(String(userId));
+    const user = await this.userService.getUserByWalletAddress(walletAddress);
 
     return {
       success: true,
       data: {
-        id: user.id,
         walletAddress: user.walletAddress,
         name: user.name,
         email: user.email,
@@ -178,7 +173,6 @@ export class UserController {
     return {
       success: true,
       data: users.map((user) => ({
-        id: user.id,
         walletAddress: user.walletAddress,
         name: user.name,
         email: user.email,

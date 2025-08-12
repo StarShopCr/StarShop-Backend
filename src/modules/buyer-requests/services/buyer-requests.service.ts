@@ -24,7 +24,7 @@ export class BuyerRequestsService {
 
   async create(
     createBuyerRequestDto: CreateBuyerRequestDto,
-    userId: number
+    userId: string
   ): Promise<BuyerRequestResponseDto> {
     const { budgetMin, budgetMax, expiresAt } = createBuyerRequestDto;
 
@@ -135,7 +135,7 @@ export class BuyerRequestsService {
   async update(
     id: number,
     updateBuyerRequestDto: UpdateBuyerRequestDto,
-    userId: number
+    userId: string
   ): Promise<BuyerRequestResponseDto> {
     const buyerRequest = await this.buyerRequestRepository.findOne({
       where: { id },
@@ -186,7 +186,7 @@ export class BuyerRequestsService {
     return this.mapToResponseDto(updated);
   }
 
-  async remove(id: number, userId: number): Promise<void> {
+  async remove(id: number, userId: string): Promise<void> {
     const buyerRequest = await this.buyerRequestRepository.findOne({
       where: { id },
     });
@@ -286,7 +286,7 @@ export class BuyerRequestsService {
   /**
    * Manually close a buyer request (buyer-only access)
    */
-  async closeRequest(id: number, userId: number): Promise<BuyerRequestResponseDto> {
+  async closeRequest(id: number, userId: string): Promise<BuyerRequestResponseDto> {
     const buyerRequest = await this.buyerRequestRepository.findOne({
       where: { id },
       relations: ['user'],

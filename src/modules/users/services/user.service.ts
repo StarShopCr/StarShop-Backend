@@ -43,9 +43,20 @@ export class UserService {
     return saved;
   }
 
+  async getUserByWalletAddress(walletAddress: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    return user;
+  }
+
   async getUserById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: parseInt(id) },
+      where: { id },
       relations: ['userRoles', 'userRoles.role'],
     });
     if (!user) {
@@ -58,8 +69,8 @@ export class UserService {
     return this.userRepository.find({ relations: ['userRoles', 'userRoles.role'] });
   }
 
-  async updateUser(id: string, data: { name?: string; email?: string }): Promise<User> {
-    const user = await this.getUserById(id);
+  async updateUser(walletAddress: string, data: { name?: string; email?: string }): Promise<User> {
+    const user = await this.getUserByWalletAddress(walletAddress);
 
     if (data.email) {
       const existingUser = await this.userRepository.findOne({ where: { email: data.email } });
@@ -76,9 +87,9 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async getUserOrders(id: string): Promise<any[]> {
+  async getUserOrders(walletAddress: string): Promise<any[]> {
     const user = await this.userRepository.findOne({
-      where: { id: parseInt(id) },
+      where: { walletAddress },
       relations: ['orders'],
     });
 
@@ -89,9 +100,9 @@ export class UserService {
     return user.orders;
   }
 
-  async getUserWishlist(id: string): Promise<any[]> {
+  async getUserWishlist(walletAddress: string): Promise<any[]> {
     const user = await this.userRepository.findOne({
-      where: { id: parseInt(id) },
+      where: { walletAddress },
       relations: ['wishlist'],
     });
 
