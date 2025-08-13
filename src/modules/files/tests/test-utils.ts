@@ -4,6 +4,10 @@ export const mockUser = {
   walletAddress: '0x123456789abcdef',
   name: 'Test User',
   email: 'test@example.com',
+  location: 'Test City',
+  country: 'Test Country',
+  buyerData: {},
+  sellerData: null,
 };
 
 // Helper function to create mock file objects for testing

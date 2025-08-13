@@ -8,6 +8,10 @@ export interface AuthRequest extends Request {
     name?: string;
     email?: string;
     role: Role[];
+    location?: string;
+    country?: string;
+    buyerData?: any;
+    sellerData?: any;
     createdAt?: Date;
     updatedAt?: Date;
   };

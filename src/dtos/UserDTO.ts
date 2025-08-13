@@ -6,7 +6,55 @@ import {
   Matches,
   MinLength,
   MaxLength,
+  IsObject,
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
 } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+// Custom validator to ensure role-specific data rules
+function IsRoleSpecificData(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isRoleSpecificData',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const obj = args.object as any;
+          const role = obj.role;
+          
+          if (propertyName === 'buyerData') {
+            // buyerData is only allowed for buyers
+            if (role !== 'buyer' && value !== undefined) {
+              return false;
+            }
+          }
+          
+          if (propertyName === 'sellerData') {
+            // sellerData is only allowed for sellers
+            if (role !== 'seller' && value !== undefined) {
+              return false;
+            }
+          }
+          
+          return true;
+        },
+        defaultMessage(args: ValidationArguments) {
+          if (args.property === 'buyerData') {
+            return 'buyerData is only allowed for buyers';
+          }
+          if (args.property === 'sellerData') {
+            return 'sellerData is only allowed for sellers';
+          }
+          return 'Invalid role-specific data';
+        }
+      }
+    });
+  };
+}
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -25,6 +73,32 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsEnum(['buyer', 'seller', 'admin'], { message: 'Role must be buyer, seller, or admin' })
   role: 'buyer' | 'seller' | 'admin';
+
+  @IsOptional()
+  @MaxLength(100, { message: 'Location is too long' })
+  location?: string;
+
+  @IsOptional()
+  @MaxLength(100, { message: 'Country is too long' })
+  country?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buyer-specific data (only allowed if role is buyer)',
+    example: { preferences: ['electronics', 'books'] },
+  })
+  @IsRoleSpecificData({ message: 'buyerData is only allowed for buyers' })
+  @IsObject({ message: 'Buyer data must be an object' })
+  @IsOptional()
+  buyerData?: any;
+
+  @ApiPropertyOptional({
+    description: 'Seller-specific data (only allowed if role is seller)',
+    example: { businessName: 'Tech Store', categories: ['electronics'] },
+  })
+  @IsRoleSpecificData({ message: 'sellerData is only allowed for sellers' })
+  @IsObject({ message: 'Seller data must be an object' })
+  @IsOptional()
+  sellerData?: any;
 }
 
 export class UpdateUserDto {
