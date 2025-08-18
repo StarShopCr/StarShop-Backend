@@ -17,6 +17,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { CommentsModule } from './modules/comments/comments.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -81,6 +82,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}
