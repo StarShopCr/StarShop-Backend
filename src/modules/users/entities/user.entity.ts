@@ -10,6 +10,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
+import { Comment } from '@/modules/comments/entities/comment.entity';
 
 @Entity('users')
 export class User {
@@ -36,6 +37,9 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 
   @CreateDateColumn()
   createdAt: Date;
