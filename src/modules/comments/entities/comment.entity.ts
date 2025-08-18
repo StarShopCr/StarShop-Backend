@@ -4,14 +4,14 @@ import { User } from '@/modules/users/entities/user.entity';
 
 @Entity('comments')
 export class Comment {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-    @Column({ type: 'uuid' })
-    requestId: string;
+    @Column()
+    buyerRequestId: number;
 
-    @Column({ type: 'uuid' })
-    userId: string;
+    @Column()
+    userId: number;
 
     @Column({ type: 'text' })
     text: string;
@@ -20,10 +20,10 @@ export class Comment {
     createdAt: Date;
 
     @ManyToOne(() => BuyerRequest, (buyerRequest) => buyerRequest.comments, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'requestId' })
+    @JoinColumn({ name: 'buyerRequestId' })
     buyerRequest: BuyerRequest;
 
-    @ManyToOne(() => User, (user) => user.comments, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, (user) => user.comments, { onDelete: 'CASCADE', eager: true })
     @JoinColumn({ name: 'userId' })
     user: User;
 }
