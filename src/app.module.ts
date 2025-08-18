@@ -37,6 +37,7 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { Comment } from './modules/comments/entities/comment.entity';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
         BuyerRequest,
         Offer,
         OfferAttachment,
+        Comment,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
