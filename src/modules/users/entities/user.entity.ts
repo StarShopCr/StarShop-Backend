@@ -11,6 +11,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
+import { Store } from '../../stores/entities/store.entity';
 
 @Entity('users')
 export class User {
@@ -27,6 +28,18 @@ export class User {
   @Index()
   walletAddress: string;
 
+  @Column({ nullable: true })
+  location?: string;
+
+  @Column({ nullable: true })
+  country?: string;
+
+  @Column({ type: 'json', nullable: true })
+  buyerData?: any;
+
+  @Column({ type: 'json', nullable: true })
+  sellerData?: any;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
@@ -38,6 +51,9 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
+
+  @OneToMany(() => Store, (store) => store.seller)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;
