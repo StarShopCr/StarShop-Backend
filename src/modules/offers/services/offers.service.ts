@@ -10,6 +10,7 @@ import { Offer, OfferStatus } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
 import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
+import { NotificationService } from '../../notifications/services/notification.service';
 
 @Injectable()
 export class OffersService {
@@ -20,7 +21,8 @@ export class OffersService {
     @InjectRepository(BuyerRequest)
     private buyerRequestRepository: Repository<BuyerRequest>,
 
-    private dataSource: DataSource
+    private dataSource: DataSource,
+    private readonly notificationService: NotificationService, // ✅ Inyectado
   ) {}
 
   async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
@@ -58,7 +60,7 @@ export class OffersService {
   async accept(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ['buyerRequest'],
+      relations: ['buyerRequest', 'seller'], // ✅ Incluir seller para notificación
     });
 
     if (!offer) {
@@ -84,25 +86,37 @@ export class OffersService {
       throw new BadRequestException('Another offer has already been accepted for this request');
     }
 
+    // ✅ 1. Aceptar la oferta actual
     offer.status = OfferStatus.ACCEPTED;
     const acceptedOffer = await this.offerRepository.save(offer);
 
-    await this.offerRepository.update(
-      {
+    // ✅ 2. Notificar al seller que su oferta fue aceptada
+    await this.notifyOfferStatusChange(acceptedOffer, 'accepted');
+
+    // ✅ 3. Obtener todas las otras ofertas pendientes para notificarlas individualmente
+    const pendingOffers = await this.offerRepository.find({
+      where: {
         buyerRequestId: offer.buyerRequestId,
         status: OfferStatus.PENDING,
       },
-      { status: OfferStatus.REJECTED }
-    );
+      relations: ['buyerRequest', 'seller'],
+    });
 
-    console.log(`Offer #${offerId} accepted by buyer #${buyerId}. Other pending offers rejected.`);
+    // ✅ 4. Rechazar y notificar cada oferta pendiente individualmente
+    for (const pendingOffer of pendingOffers) {
+      pendingOffer.status = OfferStatus.REJECTED;
+      await this.offerRepository.save(pendingOffer);
+      await this.notifyOfferStatusChange(pendingOffer, 'rejected');
+    }
+
+    console.log(`Offer #${offerId} accepted by buyer #${buyerId}. ${pendingOffers.length} other pending offers rejected.`);
     return acceptedOffer;
   }
 
   async reject(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ['buyerRequest'],
+      relations: ['buyerRequest', 'seller'], // ✅ Incluir seller para notificación
     });
 
     if (!offer) {
@@ -118,10 +132,45 @@ export class OffersService {
     }
 
     offer.status = OfferStatus.REJECTED;
+    const rejectedOffer = await this.offerRepository.save(offer);
+
+    // ✅ Notificar al seller que su oferta fue rechazada
+    await this.notifyOfferStatusChange(rejectedOffer, 'rejected');
+
     console.log(`Offer #${offerId} rejected by buyer #${buyerId}.`);
-    return this.offerRepository.save(offer);
+    return rejectedOffer;
   }
 
+  /**
+   * ✅ Método privado para manejar notificaciones de cambio de estado
+   */
+  private async notifyOfferStatusChange(offer: Offer, status: 'accepted' | 'rejected'): Promise<void> {
+    try {
+      const notificationType = status === 'accepted' ? 'offer_accepted' : 'offer_rejected';
+      const message = status === 'accepted' 
+        ? `Your offer for "${offer.buyerRequest.title}" has been accepted!`
+        : `Your offer for "${offer.buyerRequest.title}" has been rejected.`;
+
+      await this.notificationService.createAndSendNotificationToUser({
+        userId: offer.sellerId.toString(), // Convertir number a string
+        title: status === 'accepted' ? 'Offer Accepted!' : 'Offer Rejected',
+        message,
+        type: notificationType,
+        payload: {
+          offerId: offer.id,
+          requestTitle: offer.buyerRequest.title,
+        },
+        entityId: offer.id, // ✅ Para deduplicación
+      });
+
+      console.log(`✅ Notification sent to seller ${offer.sellerId} for offer ${offer.id} (${status})`);
+    } catch (error) {
+      console.error(`❌ Failed to send notification for offer ${offer.id}:`, error);
+      // No relanzamos el error para no afectar el flujo principal
+    }
+  }
+
+  // ... resto de métodos sin cambios
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       relations: ['seller', 'buyerRequest', 'attachments'],
