@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Offer } from '../../offers/entities/offer.entity';
-import { Comment } from '@/modules/comments/entities/comment.entity';
 
 export enum BuyerRequestStatus {
   OPEN = 'open',
@@ -66,9 +65,6 @@ export class BuyerRequest {
 
   @OneToMany(() => Offer, (offer: Offer) => offer.buyerRequest)
   offers: Offer[];
-
-  @OneToMany(() => Comment, (comment: Comment) => comment.buyerRequest)
-  comments: Comment[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
