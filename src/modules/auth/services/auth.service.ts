@@ -30,7 +30,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly roleService: RoleService,
-    private readonly storeService: StoreService
+    private readonly storeService: StoreService,
   ) {}
 
   /**
@@ -51,6 +51,7 @@ export class AuthService {
         process.env.NODE_ENV === 'development' &&
         signature === 'base64-encoded-signature-string-here'
       ) {
+        // eslint-disable-next-line no-console
         console.log('Development mode: Bypassing signature verification for testing');
         return true;
       }
@@ -61,6 +62,7 @@ export class AuthService {
 
       return keypair.verify(messageBuffer, signatureBuffer);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Signature verification error:', error);
       return false;
     }
@@ -111,7 +113,7 @@ export class AuthService {
         config.jwtSecret,
         {
           expiresIn: '1h',
-        }
+        },
       );
 
       return { user: updatedUser, token, expiresIn: 3600 };
@@ -147,6 +149,7 @@ export class AuthService {
       try {
         await this.storeService.createDefaultStore(savedUser.id, data.sellerData);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Failed to create default store for seller:', error);
         // Don't fail the registration if store creation fails
       }
@@ -158,7 +161,7 @@ export class AuthService {
       config.jwtSecret,
       {
         expiresIn: '1h',
-      }
+      },
     );
 
     return { user: savedUser, token, expiresIn: 3600 };
@@ -168,7 +171,7 @@ export class AuthService {
    * Login with Stellar wallet (no signature required)
    */
   async loginWithWallet(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<{ user: User; token: string; expiresIn: number }> {
     // Find user
     const user = await this.userRepository.findOne({
@@ -194,7 +197,7 @@ export class AuthService {
    */
   async getUserById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
       relations: ['userRoles', 'userRoles.role'],
     });
 
@@ -206,17 +209,21 @@ export class AuthService {
   }
 
   /**
-   * Update user information
+   * Update user information (usar walletAddress como identificador primario)
+   * Mantiene todo lo de develop (location, country, buyerData, sellerData, etc.)
    */
-  async updateUser(userId: number, updateData: { 
-    name?: string; 
-    email?: string; 
-    location?: string; 
-    country?: string; 
-    buyerData?: any; 
-    sellerData?: any; 
-  }): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  async updateUser(
+    walletAddress: string,
+    updateData: {
+      name?: string;
+      email?: string;
+      location?: string;
+      country?: string;
+      buyerData?: any;
+      sellerData?: any;
+    },
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { walletAddress } });
 
     if (!user) {
       throw new BadRequestError('User not found');
@@ -226,7 +233,42 @@ export class AuthService {
     Object.assign(user, updateData);
     await this.userRepository.save(user);
 
-    return this.getUserById(String(userId));
+    return this.getUserByWalletAddress(walletAddress);
+  }
+
+  /**
+   * (Compat) Update user by numeric ID — conserva compatibilidad con develop
+   * Preferir updateUser(walletAddress, …)
+   */
+  async updateUserById(
+    userId: number,
+    updateData: {
+      name?: string;
+      email?: string;
+      location?: string;
+      country?: string;
+      buyerData?: any;
+      sellerData?: any;
+    },
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    Object.assign(user, updateData);
+    await this.userRepository.save(user);
+    return this.getUserByWalletAddress(user.walletAddress);
+  }
+
+  async getUserByWalletAddress(walletAddress: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    return user;
   }
 
   async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
@@ -272,8 +314,8 @@ export class AuthService {
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  async assignRole(userId: number, roleName: RoleName): Promise<User> {
-    const user = await this.userService.getUserById(String(userId));
+  async assignRole(walletAddress: string, roleName: RoleName): Promise<User> {
+    const user = await this.userService.getUserByWalletAddress(walletAddress);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -284,7 +326,7 @@ export class AuthService {
     }
 
     // Remove existing roles
-    await this.userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId: user.id });
 
     // Create new user role relationship
     const userRole = this.userRoleRepository.create({
@@ -295,17 +337,17 @@ export class AuthService {
     });
     await this.userRoleRepository.save(userRole);
 
-    return this.userService.getUserById(String(userId));
+    return this.userService.getUserByWalletAddress(walletAddress);
   }
 
-  async removeRole(userId: number): Promise<User> {
-    const user = await this.userService.getUserById(String(userId));
+  async removeRole(walletAddress: string): Promise<User> {
+    const user = await this.userService.getUserByWalletAddress(walletAddress);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    await this.userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId: user.id });
 
-    return this.userService.getUserById(String(userId));
+    return this.userService.getUserByWalletAddress(walletAddress);
   }
 }

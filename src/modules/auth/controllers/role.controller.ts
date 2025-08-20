@@ -9,10 +9,10 @@ export class RoleController {
   @Post('assign')
   @UseGuards(JwtAuthGuard)
   async assignRole(
-    @Body() body: { userId: number; roleName: number }
+    @Body() body: { walletAddress: string; roleName: string }
   ): Promise<{ success: boolean }> {
-    const { userId, roleName } = body;
-    await this.roleService.assignRoleToUser(userId.toString(), roleName.toString());
+    const { walletAddress, roleName } = body;
+    await this.roleService.assignRoleToUser(walletAddress, roleName);
     return { success: true };
   }
 
