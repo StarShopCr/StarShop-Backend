@@ -17,7 +17,6 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
-import { CommentsModule } from './modules/comments/comments.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -37,7 +36,6 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
-import { Comment } from './modules/comments/entities/comment.entity';
 
 @Module({
   imports: [
@@ -65,7 +63,6 @@ import { Comment } from './modules/comments/entities/comment.entity';
         BuyerRequest,
         Offer,
         OfferAttachment,
-        Comment,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -84,7 +81,6 @@ import { Comment } from './modules/comments/entities/comment.entity';
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
-    CommentsModule,
   ],
 })
 export class AppModule {}
