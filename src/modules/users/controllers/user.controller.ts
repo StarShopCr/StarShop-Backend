@@ -62,6 +62,7 @@ export class UserController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  
   async createUser(
     @Body() registerDto: RegisterUserDto,
     @Res({ passthrough: true }) res: Response

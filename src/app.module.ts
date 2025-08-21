@@ -87,4 +87,4 @@ import { Store } from './modules/stores/entities/store.entity';
     StoresModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

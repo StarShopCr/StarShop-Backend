@@ -150,6 +150,7 @@ export class AuthController {
       role: registerDto.role,
       name: registerDto.name,
       email: registerDto.email,
+      country: registerDto.country?.toUpperCase(),
     });
 
     // Set JWT token using the helper function
@@ -208,6 +209,7 @@ export class AuthController {
         name: user.name,
         email: user.email,
         role: user.userRoles?.[0]?.role?.name || 'buyer',
+        country: user?.country || null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },

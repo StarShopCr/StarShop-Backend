@@ -11,6 +11,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
+import { CountryCode } from '../enums/country-code.enum';
 import { Store } from '../../stores/entities/store.entity';
 
 @Entity('users')
@@ -28,6 +29,10 @@ export class User {
   @Index()
   walletAddress: string;
 
+
+  @Column({ length: 2, nullable: true, enum: CountryCode })
+  country?: string;
+  
   @Column({ nullable: true })
   location?: string;
 

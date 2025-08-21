@@ -11,7 +11,9 @@ import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
 import { Keypair } from 'stellar-sdk';
+import { CountryCode } from '../../../modules/users/enums/country-code.enum';
 import { StoreService } from '../../stores/services/store.service';
+
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
@@ -95,6 +97,11 @@ export class AuthService {
       relations: ['userRoles', 'userRoles.role'],
     });
 
+    // If user is not a buyer made country validations 
+    if (!this.isBuyer(data)) {
+      data.country = null;
+    }
+
     if (existingUser) {
       // Update existing user instead of throwing error
       existingUser.name = data.name || existingUser.name;
@@ -104,17 +111,18 @@ export class AuthService {
       existingUser.buyerData = data.buyerData || existingUser.buyerData;
       existingUser.sellerData = data.sellerData || existingUser.sellerData;
 
+      const dataToValidate = { role: data.role, country: data.country };
+      if(!this.isBuyer(dataToValidate)){
+        existingUser.country = null;
+      }
+
+      existingUser.country = data.country || existingUser.country;
+
       const updatedUser = await this.userRepository.save(existingUser);
 
-      // Generate JWT token
       const role = updatedUser.userRoles?.[0]?.role?.name || 'buyer';
-      const token = sign(
-        { id: updatedUser.id, walletAddress: updatedUser.walletAddress, role },
-        config.jwtSecret,
-        {
-          expiresIn: '1h',
-        },
-      );
+      // Generate JWT token
+      const token = this.generateJwtToken(updatedUser, role);
 
       return { user: updatedUser, token, expiresIn: 3600 };
     }
@@ -124,6 +132,7 @@ export class AuthService {
       walletAddress: data.walletAddress,
       name: data.name,
       email: data.email,
+      country: data?.country || null,
       location: data.location,
       country: data.country,
       buyerData: data.buyerData,
@@ -134,15 +143,16 @@ export class AuthService {
 
     // Assign user role to user_roles table
     const userRole = await this.roleRepository.findOne({ where: { name: data.role } });
-    if (userRole) {
-      const userRoleEntity = this.userRoleRepository.create({
-        userId: savedUser.id,
-        roleId: userRole.id,
-        user: savedUser,
-        role: userRole,
-      });
-      await this.userRoleRepository.save(userRoleEntity);
+    if (!userRole) {
+      throw new BadRequestError(`Role ${data.role} does not exist`);
     }
+    const userRoleEntity = this.userRoleRepository.create({
+      userId: savedUser.id,
+      roleId: userRole.id,
+      user: savedUser,
+      role: userRole,
+    });
+    await this.userRoleRepository.save(userRoleEntity);
 
     // Create default store for sellers
     if (data.role === 'seller') {
@@ -156,15 +166,44 @@ export class AuthService {
     }
 
     // Generate JWT token
-    const token = sign(
-      { id: savedUser.id, walletAddress: savedUser.walletAddress, role: data.role },
+    const token = this.generateJwtToken(savedUser, userRole.name);
+
+    return { user: savedUser, token, expiresIn: 3600 };
+  }
+
+  /**
+   * Generate JWT token for user
+   */
+  private generateJwtToken(user: User, role: string): string {
+    return sign(
+      { id: user.id, walletAddress: user.walletAddress, role },
       config.jwtSecret,
       {
         expiresIn: '1h',
       },
     );
+  }
 
-    return { user: savedUser, token, expiresIn: 3600 };
+  /**
+   * Check if the user is a buyer and validate fields of buyer registration
+   */
+  private isBuyer(data: {
+    role: 'buyer' | 'seller';
+    country?: string;
+  }) {
+    if (data.role !== 'buyer') {
+      return false;
+    }
+
+    if (!data.country) {
+      throw new BadRequestError('Country is required for buyer registration');
+    }
+
+    if (!Object.values(CountryCode).includes(data.country as CountryCode)) {
+      throw new BadRequestError('Country must be a valid ISO 3166-1 alpha-2 country code');
+    }
+
+    return true;
   }
 
   /**

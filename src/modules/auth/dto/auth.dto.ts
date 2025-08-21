@@ -1,6 +1,19 @@
-import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail, IsObject, Validate, registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
+import { 
+  IsString, 
+  IsOptional, 
+  Matches, 
+  IsNotEmpty, 
+  IsEmail, 
+  IsObject, 
+  IsEnum, 
+  Validate, 
+  registerDecorator, 
+  ValidationOptions, 
+  ValidationArguments 
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+import { CountryCode } from '@/modules/users/enums/country-code.enum';
 
 // Custom validator to ensure role-specific data rules
 function IsRoleSpecificData(validationOptions?: ValidationOptions) {
@@ -94,6 +107,18 @@ export class RegisterUserDto {
   @IsOptional()
   email?: string;
 
+  @ApiProperty({
+    description: "Country code of the buyer request",
+    example: "US",
+    enum: CountryCode,
+    enumName: 'CountryCode'
+  })
+  @Transform(({ value }) => value?.toUpperCase())
+  @IsOptional()
+  @IsString()
+  @IsEnum(CountryCode, { message: 'Country must be a valid ISO 3166-1 alpha-2 country code' })
+  country?: string;
+
   @ApiPropertyOptional({
     description: 'User location',
     example: 'New York',
@@ -101,14 +126,6 @@ export class RegisterUserDto {
   @IsString()
   @IsOptional()
   location?: string;
-
-  @ApiPropertyOptional({
-    description: 'User country',
-    example: 'United States',
-  })
-  @IsString()
-  @IsOptional()
-  country?: string;
 
   @ApiPropertyOptional({
     description: 'Buyer-specific data (only allowed if role is buyer)',
@@ -155,11 +172,15 @@ export class UpdateUserDto {
   location?: string;
 
   @ApiPropertyOptional({
-    description: 'User country',
-    example: 'United States',
+    description: "Country code of the buyer request",
+    example: "US",
+    enum: CountryCode,
+    enumName: 'CountryCode'
   })
-  @IsString()
+  @Transform(({ value }) => value?.toUpperCase())
   @IsOptional()
+  @IsString()
+  @IsEnum(CountryCode, { message: 'Country must be a valid ISO 3166-1 alpha-2 country code' })
   country?: string;
 
   @ApiPropertyOptional({
