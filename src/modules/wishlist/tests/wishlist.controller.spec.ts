@@ -82,7 +82,7 @@ describe('WishlistController', () => {
         user: {
           id: userId,
           walletAddress: 'test-wallet',
-          role: [Role.USER],
+          role: [Role.BUYER],
         },
       }) as unknown as AuthRequest;
 
@@ -99,7 +99,7 @@ describe('WishlistController', () => {
         user: {
           id: userId,
           walletAddress: 'test-wallet',
-          role: [Role.USER],
+          role: [Role.BUYER],
         },
       }) as unknown as AuthRequest;
 
@@ -119,7 +119,7 @@ describe('WishlistController', () => {
         user: {
           id: userId,
           walletAddress: 'test-wallet',
-          role: [Role.USER],
+          role: [Role.BUYER],
         },
       }) as unknown as AuthRequest;
 
@@ -137,7 +137,7 @@ describe('WishlistController', () => {
         user: {
           id: userId,
           walletAddress: 'test-wallet',
-          role: [Role.USER],
+          role: [Role.BUYER],
         },
       }) as unknown as AuthRequest;
       const wishlistItems = [new Wishlist()];

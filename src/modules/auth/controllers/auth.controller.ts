@@ -106,7 +106,6 @@ export class AuthController {
       success: true,
       data: {
         user: {
-          id: result.user.id,
           walletAddress: result.user.walletAddress,
           name: result.user.name,
           email: result.user.email,
@@ -163,7 +162,6 @@ export class AuthController {
       success: true,
       data: {
         user: {
-          id: result.user.id,
           walletAddress: result.user.walletAddress,
           name: result.user.name,
           email: result.user.email,
@@ -207,7 +205,6 @@ export class AuthController {
     return {
       success: true,
       data: {
-        id: user.id,
         walletAddress: user.walletAddress,
         name: user.name,
         email: user.email,

@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Keypair } from 'stellar-sdk';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { User } from '../../users/entities/user.entity';
+import { Role as UserRoleEnum } from '../../../types/role';
 
 // Mock dependencies
 jest.mock('../../users/services/user.service');
@@ -42,6 +43,7 @@ describe('AuthService', () => {
     const mockUserRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockRoleRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockUserRoleRepository = { create: jest.fn(), save: jest.fn() } as any;
+    const mockStoreService = { createDefaultStore: jest.fn() } as any;
 
     authService = new AuthService(
       mockUserRepository,
@@ -49,7 +51,8 @@ describe('AuthService', () => {
       mockUserRoleRepository,
       userService,
       jwtService,
-      roleService
+      roleService,
+      mockStoreService
     );
   });
 
@@ -116,6 +119,10 @@ describe('AuthService', () => {
       walletAddress: mockWalletAddress,
       name: 'Test User',
       email: 'test@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
     };
 
@@ -153,6 +160,10 @@ describe('AuthService', () => {
       walletAddress: mockWalletAddress,
       name: 'New User',
       email: 'new@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
       country: 'US',
     };
@@ -197,7 +208,7 @@ describe('AuthService', () => {
 
       const result = await authService.registerWithWallet({
         walletAddress: mockWalletAddress,
-        role: 'buyer',
+        role: UserRoleEnum.BUYER,
         name: 'New User',
         email: 'new@example.com',
         country: 'CR'
@@ -217,7 +228,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
+          role: UserRoleEnum.BUYER,
           name: 'New User',
         })
       ).rejects.toThrow(BadRequestError);
@@ -230,8 +241,8 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
-          country: 'Costa Rica',
+          country: 'CR',
+          role: UserRoleEnum.BUYER,
         })
       ).rejects.toThrow(BadRequestError);
     });

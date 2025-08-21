@@ -12,6 +12,8 @@ import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
 import { Keypair } from 'stellar-sdk';
 import { CountryCode } from '../../../modules/users/enums/country-code.enum';
+import { StoreService } from '../../stores/services/store.service';
+
 
 type RoleName = 'buyer' | 'seller' | 'admin';
 
@@ -29,8 +31,9 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly roleService: RoleService
-  ) { }
+    private readonly roleService: RoleService,
+    private readonly storeService: StoreService,
+  ) {}
 
   /**
    * Generate a challenge message for wallet authentication
@@ -50,6 +53,7 @@ export class AuthService {
         process.env.NODE_ENV === 'development' &&
         signature === 'base64-encoded-signature-string-here'
       ) {
+        // eslint-disable-next-line no-console
         console.log('Development mode: Bypassing signature verification for testing');
         return true;
       }
@@ -60,6 +64,7 @@ export class AuthService {
 
       return keypair.verify(messageBuffer, signatureBuffer);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Signature verification error:', error);
       return false;
     }
@@ -73,8 +78,19 @@ export class AuthService {
     role: 'buyer' | 'seller';
     name?: string;
     email?: string;
+    location?: string;
     country?: string;
+    buyerData?: any;
+    sellerData?: any;
   }): Promise<{ user: User; token: string; expiresIn: number }> {
+    // Validate that buyers can't have seller data and sellers can't have buyer data
+    if (data.role === 'buyer' && data.sellerData !== undefined) {
+      throw new BadRequestError('Buyers cannot have seller data');
+    }
+    if (data.role === 'seller' && data.buyerData !== undefined) {
+      throw new BadRequestError('Sellers cannot have buyer data');
+    }
+
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
       where: { walletAddress: data.walletAddress },
@@ -90,6 +106,10 @@ export class AuthService {
       // Update existing user instead of throwing error
       existingUser.name = data.name || existingUser.name;
       existingUser.email = data.email || existingUser.email;
+      existingUser.location = data.location || existingUser.location;
+      existingUser.country = data.country || existingUser.country;
+      existingUser.buyerData = data.buyerData || existingUser.buyerData;
+      existingUser.sellerData = data.sellerData || existingUser.sellerData;
 
       const dataToValidate = { role: data.role, country: data.country };
       if(!this.isBuyer(dataToValidate)){
@@ -101,7 +121,6 @@ export class AuthService {
       const updatedUser = await this.userRepository.save(existingUser);
 
       const role = updatedUser.userRoles?.[0]?.role?.name || 'buyer';
-      
       // Generate JWT token
       const token = this.generateJwtToken(updatedUser, role);
 
@@ -114,11 +133,15 @@ export class AuthService {
       name: data.name,
       email: data.email,
       country: data?.country || null,
+      location: data.location,
+      country: data.country,
+      buyerData: data.buyerData,
+      sellerData: data.sellerData,
     });
 
     const savedUser = await this.userRepository.save(user);
 
-    // Assign user role
+    // Assign user role to user_roles table
     const userRole = await this.roleRepository.findOne({ where: { name: data.role } });
     if (!userRole) {
       throw new BadRequestError(`Role ${data.role} does not exist`);
@@ -130,6 +153,17 @@ export class AuthService {
       role: userRole,
     });
     await this.userRoleRepository.save(userRoleEntity);
+
+    // Create default store for sellers
+    if (data.role === 'seller') {
+      try {
+        await this.storeService.createDefaultStore(savedUser.id, data.sellerData);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to create default store for seller:', error);
+        // Don't fail the registration if store creation fails
+      }
+    }
 
     // Generate JWT token
     const token = this.generateJwtToken(savedUser, userRole.name);
@@ -144,7 +178,9 @@ export class AuthService {
     return sign(
       { id: user.id, walletAddress: user.walletAddress, role },
       config.jwtSecret,
-      { expiresIn: '1h' }
+      {
+        expiresIn: '1h',
+      },
     );
   }
 
@@ -174,7 +210,7 @@ export class AuthService {
    * Login with Stellar wallet (no signature required)
    */
   async loginWithWallet(
-    walletAddress: string
+    walletAddress: string,
   ): Promise<{ user: User; token: string; expiresIn: number }> {
     // Find user
     const user = await this.userRepository.findOne({
@@ -200,7 +236,7 @@ export class AuthService {
    */
   async getUserById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: Number(id) },
+      where: { id },
       relations: ['userRoles', 'userRoles.role'],
     });
 
@@ -212,10 +248,21 @@ export class AuthService {
   }
 
   /**
-   * Update user information
+   * Update user information (usar walletAddress como identificador primario)
+   * Mantiene todo lo de develop (location, country, buyerData, sellerData, etc.)
    */
-  async updateUser(userId: number, updateData: { name?: string; email?: string }): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  async updateUser(
+    walletAddress: string,
+    updateData: {
+      name?: string;
+      email?: string;
+      location?: string;
+      country?: string;
+      buyerData?: any;
+      sellerData?: any;
+    },
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { walletAddress } });
 
     if (!user) {
       throw new BadRequestError('User not found');
@@ -225,7 +272,42 @@ export class AuthService {
     Object.assign(user, updateData);
     await this.userRepository.save(user);
 
-    return this.getUserById(String(userId));
+    return this.getUserByWalletAddress(walletAddress);
+  }
+
+  /**
+   * (Compat) Update user by numeric ID — conserva compatibilidad con develop
+   * Preferir updateUser(walletAddress, …)
+   */
+  async updateUserById(
+    userId: number,
+    updateData: {
+      name?: string;
+      email?: string;
+      location?: string;
+      country?: string;
+      buyerData?: any;
+      sellerData?: any;
+    },
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    Object.assign(user, updateData);
+    await this.userRepository.save(user);
+    return this.getUserByWalletAddress(user.walletAddress);
+  }
+
+  async getUserByWalletAddress(walletAddress: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { walletAddress },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    return user;
   }
 
   async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
@@ -271,8 +353,8 @@ export class AuthService {
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  async assignRole(userId: number, roleName: RoleName): Promise<User> {
-    const user = await this.userService.getUserById(String(userId));
+  async assignRole(walletAddress: string, roleName: RoleName): Promise<User> {
+    const user = await this.userService.getUserByWalletAddress(walletAddress);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -283,7 +365,7 @@ export class AuthService {
     }
 
     // Remove existing roles
-    await this.userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId: user.id });
 
     // Create new user role relationship
     const userRole = this.userRoleRepository.create({
@@ -294,17 +376,17 @@ export class AuthService {
     });
     await this.userRoleRepository.save(userRole);
 
-    return this.userService.getUserById(String(userId));
+    return this.userService.getUserByWalletAddress(walletAddress);
   }
 
-  async removeRole(userId: number): Promise<User> {
-    const user = await this.userService.getUserById(String(userId));
+  async removeRole(walletAddress: string): Promise<User> {
+    const user = await this.userService.getUserByWalletAddress(walletAddress);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    await this.userRoleRepository.delete({ userId });
+    await this.userRoleRepository.delete({ userId: user.id });
 
-    return this.userService.getUserById(String(userId));
+    return this.userService.getUserByWalletAddress(walletAddress);
   }
 }

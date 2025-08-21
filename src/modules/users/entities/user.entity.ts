@@ -5,17 +5,19 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { UserRole } from '../../auth/entities/user-role.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 import { Wishlist } from '../../wishlist/entities/wishlist.entity';
 import { CountryCode } from '../enums/country-code.enum';
+import { Store } from '../../stores/entities/store.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true, nullable: true })
   email?: string;
@@ -24,10 +26,24 @@ export class User {
   name?: string;
 
   @Column({ unique: true })
+  @Index()
   walletAddress: string;
+
 
   @Column({ length: 2, nullable: true, enum: CountryCode })
   country?: string;
+  
+  @Column({ nullable: true })
+  location?: string;
+
+  @Column({ nullable: true })
+  country?: string;
+
+  @Column({ type: 'json', nullable: true })
+  buyerData?: any;
+
+  @Column({ type: 'json', nullable: true })
+  sellerData?: any;
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
@@ -40,6 +56,9 @@ export class User {
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
+
+  @OneToMany(() => Store, (store) => store.seller)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;
