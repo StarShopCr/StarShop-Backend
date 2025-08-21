@@ -10,6 +10,8 @@ import { Offer, OfferStatus } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
 import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
+import { Product } from '../../products/entities/product.entity';
+
 
 @Injectable()
 export class OffersService {
@@ -20,8 +22,11 @@ export class OffersService {
     @InjectRepository(BuyerRequest)
     private buyerRequestRepository: Repository<BuyerRequest>,
 
+    @InjectRepository(Product) // 2️⃣ Inyectar el repositorio
+    private productRepository: Repository<Product>,
+
     private dataSource: DataSource
-  ) {}
+  ) { }
 
   async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
     const buyerRequest = await this.buyerRequestRepository.findOne({
@@ -46,10 +51,33 @@ export class OffersService {
     if (existingOffer) {
       throw new BadRequestException('You already have an offer for this buyer request');
     }
+    // --- NUEVA LÓGICA PARA PRODUCTO ---
+    let linkedProduct: Product = null;
+    if (createOfferDto.productId) {
+      linkedProduct = await this.productRepository.findOne({
+        where: { id: createOfferDto.productId },
+      });
+
+      if (!linkedProduct) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (linkedProduct.sellerId !== sellerId) {
+        throw new ForbiddenException('You cannot link a product you do not own');
+      }
+
+      // Opcional: validar categoría si es necesario
+      // if (linkedProduct.categoryId !== buyerRequest.categoryId) { ... }
+    }
+    // --- FIN NUEVA LÓGICA ---
+
+
 
     const offer = this.offerRepository.create({
       ...createOfferDto,
       sellerId,
+      product: linkedProduct, // 🔗 asignamos el producto
+
     });
 
     return this.offerRepository.save(offer);
