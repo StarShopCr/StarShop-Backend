@@ -85,10 +85,10 @@ describe('Offer Entity', () => {
     it('should have relationship with User (seller)', () => {
       const offer = new Offer();
       const seller = new User();
-      seller.id = 1;
+      seller.id = '1';
 
       offer.seller = seller;
-      offer.sellerId = seller.id;
+      offer.sellerId = 1;
 
       expect(offer.seller).toBe(seller);
       expect(offer.sellerId).toBe(1);

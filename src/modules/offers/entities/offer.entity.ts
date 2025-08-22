@@ -75,6 +75,9 @@ export class Offer {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ name: 'expires_at', type: 'timestamp', nullable: false })
+  expiresAt: Date;
+
   @OneToMany(() => OfferAttachment, (attachment) => attachment.offer, {
     cascade: true,
   })

@@ -32,7 +32,7 @@ describe('OffersService', () => {
     status: BuyerRequestStatus.OPEN,
     createdAt: new Date(),
     updatedAt: new Date(),
-  } as BuyerRequest;
+  } as any;
 
   const mockClosedBuyerRequest = {
     id: mockBuyerRequestId,
@@ -45,7 +45,7 @@ describe('OffersService', () => {
     status: BuyerRequestStatus.CLOSED,
     createdAt: new Date(),
     updatedAt: new Date(),
-  } as BuyerRequest;
+  } as any;
 
   const createMockPendingOffer = () =>
     ({
