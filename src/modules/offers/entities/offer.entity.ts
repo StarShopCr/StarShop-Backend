@@ -43,7 +43,7 @@ export class Offer {
   @Column({ name: 'product_id', nullable: true })
   productId?: number;
 
-  @ManyToOne(() => Product, { nullable: true })
+  @ManyToOne(() => Product, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'product_id' })
   product?: Product;
 

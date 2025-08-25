@@ -17,6 +17,10 @@ export class CreateOfferDto {
   @Transform(({ value }) => Number.parseInt(value))
   buyerRequestId: number;
 
+  @ApiPropertyOptional({ description: 'Product being offered (optional)' })
+  @IsOptional()
+  product?: Object;
+
   @ApiPropertyOptional({ description: 'ID of the product being offered (optional)' })
   @IsOptional()
   @IsNumber()
