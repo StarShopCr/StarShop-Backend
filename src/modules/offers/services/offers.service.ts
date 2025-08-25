@@ -12,7 +12,6 @@ import { UpdateOfferDto } from '../dto/update-offer.dto';
 import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
 import { Product } from '../../products/entities/product.entity';
 
-
 @Injectable()
 export class OffersService {
   constructor(
@@ -26,7 +25,7 @@ export class OffersService {
     private productRepository: Repository<Product>,
 
     private dataSource: DataSource
-  ) {}
+  ) { }
 
   async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
     const buyerRequest = await this.buyerRequestRepository.findOne({
