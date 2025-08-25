@@ -10,6 +10,8 @@ import { Offer, OfferStatus } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
 import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
+import { Product } from '../../products/entities/product.entity';
+
 
 @Injectable()
 export class OffersService {
@@ -19,6 +21,9 @@ export class OffersService {
 
     @InjectRepository(BuyerRequest)
     private buyerRequestRepository: Repository<BuyerRequest>,
+
+    @InjectRepository(Product) 
+    private productRepository: Repository<Product>,
 
     private dataSource: DataSource
   ) {}
@@ -47,9 +52,27 @@ export class OffersService {
       throw new BadRequestException('You already have an offer for this buyer request');
     }
 
+    let linkedProduct: Product = null;
+    if (createOfferDto.productId) {
+      linkedProduct = await this.productRepository.findOne({
+        where: { id: createOfferDto.productId },
+      });
+
+      if (!linkedProduct) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (linkedProduct.sellerId !== sellerId) {
+        throw new ForbiddenException('You cannot link a product you do not own');
+      }
+
+    }
+
     const offer = this.offerRepository.create({
       ...createOfferDto,
       sellerId,
+      product: linkedProduct,
+
     });
 
     return this.offerRepository.save(offer);
@@ -124,7 +147,7 @@ export class OffersService {
 
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
-      relations: ['seller', 'buyerRequest', 'attachments'],
+      relations: ['seller', 'buyerRequest', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -136,7 +159,7 @@ export class OffersService {
   async findOne(id: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id },
-      relations: ['seller', 'buyerRequest', 'attachments'],
+      relations: ['seller', 'buyerRequest', 'attachments', 'product'],
     });
 
     if (!offer) {
@@ -178,7 +201,7 @@ export class OffersService {
   async findByBuyerRequest(buyerRequestId: number): Promise<Offer[]> {
     return this.offerRepository.find({
       where: { buyerRequestId },
-      relations: ['seller', 'attachments'],
+      relations: ['seller', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -190,7 +213,7 @@ export class OffersService {
   ): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       where: { sellerId },
-      relations: ['buyerRequest', 'attachments'],
+      relations: ['buyerRequest', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
