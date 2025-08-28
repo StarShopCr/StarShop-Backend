@@ -6,12 +6,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BuyerRequestSchedulerService } from './modules/buyer-requests/services/buyer-request-scheduler.service';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
   app.enableCors();
+
+  app.use(cookieParser());
 
   // Global validation pipe
   app.useGlobalPipes(
