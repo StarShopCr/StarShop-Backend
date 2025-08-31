@@ -27,7 +27,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { AuthRequest } from '@/modules/wishlist/common/types/auth-request.type';
-import { Role } from '@/types/role';
+import { Role } from '../../../types/role';
 
 @Controller('offers')
 export class OffersController {

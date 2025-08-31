@@ -10,6 +10,8 @@ import { Offer, OfferStatus } from '../entities/offer.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
 import { BuyerRequest, BuyerRequestStatus } from '../../buyer-requests/entities/buyer-request.entity';
+import { NotificationService } from '../../notifications/services/notification.service';
+import { Product } from '../../products/entities/product.entity';
 
 @Injectable()
 export class OffersService {
@@ -20,7 +22,11 @@ export class OffersService {
     @InjectRepository(BuyerRequest)
     private buyerRequestRepository: Repository<BuyerRequest>,
 
-    private dataSource: DataSource
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+
+    private dataSource: DataSource,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createOfferDto: CreateOfferDto, sellerId: number): Promise<Offer> {
@@ -47,9 +53,25 @@ export class OffersService {
       throw new BadRequestException('You already have an offer for this buyer request');
     }
 
+    let linkedProduct: Product = null;
+    if (createOfferDto.productId) {
+      linkedProduct = await this.productRepository.findOne({
+        where: { id: createOfferDto.productId },
+      });
+
+      if (!linkedProduct) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (linkedProduct.sellerId !== sellerId) {
+        throw new ForbiddenException('You cannot link a product you do not own');
+      }
+    }
+
     const offer = this.offerRepository.create({
       ...createOfferDto,
       sellerId,
+      product: linkedProduct,
     });
 
     return this.offerRepository.save(offer);
@@ -58,7 +80,7 @@ export class OffersService {
   async accept(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ['buyerRequest'],
+      relations: ['buyerRequest', 'seller'],
     });
 
     if (!offer) {
@@ -84,25 +106,39 @@ export class OffersService {
       throw new BadRequestException('Another offer has already been accepted for this request');
     }
 
+    // 1) Aceptar la oferta actual
     offer.status = OfferStatus.ACCEPTED;
     const acceptedOffer = await this.offerRepository.save(offer);
 
-    await this.offerRepository.update(
-      {
+    // 2) Notificar al seller que su oferta fue aceptada
+    await this.notifyOfferStatusChange(acceptedOffer, 'accepted');
+
+    // 3) Obtener ofertas pendientes para notificarlas y rechazarlas
+    const pendingOffers = await this.offerRepository.find({
+      where: {
         buyerRequestId: offer.buyerRequestId,
         status: OfferStatus.PENDING,
       },
-      { status: OfferStatus.REJECTED }
-    );
+      relations: ['buyerRequest', 'seller'],
+    });
 
-    console.log(`Offer #${offerId} accepted by buyer #${buyerId}. Other pending offers rejected.`);
+    // 4) Rechazar y notificar cada oferta pendiente
+    for (const pendingOffer of pendingOffers) {
+      pendingOffer.status = OfferStatus.REJECTED;
+      await this.offerRepository.save(pendingOffer);
+      await this.notifyOfferStatusChange(pendingOffer, 'rejected');
+    }
+
+    console.log(
+      `Offer #${offerId} accepted by buyer #${buyerId}. ${pendingOffers.length} other pending offers rejected.`,
+    );
     return acceptedOffer;
   }
 
   async reject(offerId: string, buyerId: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId },
-      relations: ['buyerRequest'],
+      relations: ['buyerRequest', 'seller'],
     });
 
     if (!offer) {
@@ -118,13 +154,51 @@ export class OffersService {
     }
 
     offer.status = OfferStatus.REJECTED;
+    const rejectedOffer = await this.offerRepository.save(offer);
+
+    // Notificar al seller que su oferta fue rechazada
+    await this.notifyOfferStatusChange(rejectedOffer, 'rejected');
+
     console.log(`Offer #${offerId} rejected by buyer #${buyerId}.`);
-    return this.offerRepository.save(offer);
+    return rejectedOffer;
+  }
+
+  /**
+   * Maneja notificaciones de cambio de estado de oferta
+   */
+  private async notifyOfferStatusChange(
+    offer: Offer,
+    status: 'accepted' | 'rejected',
+  ): Promise<void> {
+    try {
+      const notificationType = status === 'accepted' ? 'offer_accepted' : 'offer_rejected';
+      const message =
+        status === 'accepted'
+          ? `Your offer for "${offer.buyerRequest.title}" has been accepted!`
+          : `Your offer for "${offer.buyerRequest.title}" has been rejected.`;
+
+      await this.notificationService.createAndSendNotificationToUser({
+        userId: offer.sellerId.toString(),
+        title: status === 'accepted' ? 'Offer Accepted!' : 'Offer Rejected',
+        message,
+        type: notificationType,
+        payload: {
+          offerId: offer.id,
+          requestTitle: offer.buyerRequest.title,
+        },
+        entityId: offer.id,
+      });
+
+      console.log(`✅ Notification sent to seller ${offer.sellerId} for offer ${offer.id} (${status})`);
+    } catch (error) {
+      console.error(`❌ Failed to send notification for offer ${offer.id}:`, error);
+      // No relanzamos el error para no afectar el flujo principal
+    }
   }
 
   async findAll(page = 1, limit = 10): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
-      relations: ['seller', 'buyerRequest', 'attachments'],
+      relations: ['seller', 'buyerRequest', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -136,7 +210,7 @@ export class OffersService {
   async findOne(id: string): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id },
-      relations: ['seller', 'buyerRequest', 'attachments'],
+      relations: ['seller', 'buyerRequest', 'attachments', 'product'],
     });
 
     if (!offer) {
@@ -178,7 +252,7 @@ export class OffersService {
   async findByBuyerRequest(buyerRequestId: number): Promise<Offer[]> {
     return this.offerRepository.find({
       where: { buyerRequestId },
-      relations: ['seller', 'attachments'],
+      relations: ['seller', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -186,11 +260,11 @@ export class OffersService {
   async findBySeller(
     sellerId: number,
     page = 1,
-    limit = 10
+    limit = 10,
   ): Promise<{ offers: Offer[]; total: number }> {
     const [offers, total] = await this.offerRepository.findAndCount({
       where: { sellerId },
-      relations: ['buyerRequest', 'attachments'],
+      relations: ['buyerRequest', 'attachments', 'product'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
