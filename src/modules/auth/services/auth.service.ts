@@ -10,6 +10,7 @@ import { Role } from '../entities/role.entity';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../../config';
+import { jwtSecret, jwtExpiresIn } from '../../../config/jwt';
 import { Keypair } from 'stellar-sdk';
 import { StoreService } from '../../stores/services/store.service';
 
@@ -32,7 +33,6 @@ export class AuthService {
     private readonly roleService: RoleService,
     private readonly storeService: StoreService,
   ) {}
-
   /**
    * Generate a challenge message for wallet authentication
    */

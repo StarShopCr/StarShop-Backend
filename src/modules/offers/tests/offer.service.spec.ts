@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Repository, DataSource } from 'typeorm';
+import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { OffersService } from '../services/offers.service';
 import { Offer } from '../entities/offer.entity';
 import { OfferStatus } from '../enums/offer-status.enum';
@@ -10,16 +10,22 @@ import {
   BuyerRequestStatus,
 } from '../../buyer-requests/entities/buyer-request.entity';
 import { CreateOfferDto } from '../dto/create-offer.dto';
+import { Product } from '../../products/entities/product.entity';
 
 describe('OffersService', () => {
   let service: OffersService;
   let offerRepository: jest.Mocked<Repository<Offer>>;
   let buyerRequestRepository: jest.Mocked<Repository<BuyerRequest>>;
+  let productRepository: jest.Mocked<Repository<Product>>;
+  let dataSource: jest.Mocked<DataSource>;
 
   const mockSellerId = 1;
   const mockBuyerId = 1;
   const mockBuyerRequestId = 123;
   const mockOfferId = 'offer-uuid-1';
+  const mockProductId = 5;
+  const mockProductIdNotFound = 999;
+  const mockSellerIdNotFound = 999;
 
   const mockOpenBuyerRequest = {
     id: mockBuyerRequestId,
@@ -65,6 +71,11 @@ describe('OffersService', () => {
 
   const mockPendingOffer = createMockPendingOffer();
 
+  const mockProduct = {
+    id: mockProductId,
+    sellerId: mockSellerId,
+  } as unknown as Product;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -87,12 +98,36 @@ describe('OffersService', () => {
             findOne: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(Product),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            createQueryRunner: jest.fn().mockReturnValue({
+              connect: jest.fn(),
+              startTransaction: jest.fn(),
+              commitTransaction: jest.fn(),
+              rollbackTransaction: jest.fn(),
+              release: jest.fn(),
+              manager: {
+                save: jest.fn(),
+                findOne: jest.fn(),
+              },
+            }),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<OffersService>(OffersService);
     offerRepository = module.get(getRepositoryToken(Offer));
     buyerRequestRepository = module.get(getRepositoryToken(BuyerRequest));
+    productRepository = module.get(getRepositoryToken(Product));
+    dataSource = module.get(DataSource);
   });
 
   afterEach(() => {
@@ -123,8 +158,81 @@ describe('OffersService', () => {
       expect(offerRepository.create).toHaveBeenCalledWith({
         ...createOfferDto,
         sellerId: mockSellerId,
+        product: null,
       });
       expect(offerRepository.save).toHaveBeenCalledWith(mockPendingOffer);
+    });
+
+  });
+
+  describe('Product linking feature', () => {
+    it('should create offer WITH product successfully', async () => {
+      const createOfferDto: CreateOfferDto = {
+        buyerRequestId: mockBuyerRequestId,
+        productId: mockProductId,
+        title: 'Offer with product',
+        description: 'Description',
+        price: 150.0,
+        deliveryDays: 5,
+      };
+
+      buyerRequestRepository.findOne.mockResolvedValue(mockOpenBuyerRequest);
+      offerRepository.findOne.mockResolvedValue(null);
+      productRepository.findOne.mockResolvedValue(mockProduct);
+      
+      const expectedOffer = { ...mockPendingOffer, product: mockProduct };
+      offerRepository.create.mockReturnValue(expectedOffer);
+      offerRepository.save.mockResolvedValue(expectedOffer);
+
+      const result = await service.create(createOfferDto, mockSellerId);
+
+      expect(productRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockProductId }
+      });
+      expect(offerRepository.create).toHaveBeenCalledWith({
+        ...createOfferDto,
+        sellerId: mockSellerId,
+        product: mockProduct,
+      });
+      expect(result.product).toEqual(mockProduct);
+    });
+
+    it('should fail when product does not exist', async () => {
+      const createOfferDto: CreateOfferDto = {
+        buyerRequestId: mockBuyerRequestId,
+        productId: mockProductIdNotFound,
+        title: 'Offer with product',
+        description: 'Description',
+        price: 150.0,
+      };
+
+      buyerRequestRepository.findOne.mockResolvedValue(mockOpenBuyerRequest);
+      offerRepository.findOne.mockResolvedValue(null);
+      productRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.create(createOfferDto, mockSellerId))
+        .rejects
+        .toThrow(NotFoundException);
+    });
+
+    it('should fail when product belongs to another seller', async () => {
+      const createOfferDto: CreateOfferDto = {
+        buyerRequestId: mockBuyerRequestId,
+        productId: mockProductId,
+        title: 'Offer with product',
+        description: 'Description',
+        price: 150.0,
+      };
+
+      const otherSellerProduct = { ...mockProduct, sellerId: mockSellerIdNotFound };
+
+      buyerRequestRepository.findOne.mockResolvedValue(mockOpenBuyerRequest);
+      offerRepository.findOne.mockResolvedValue(null);
+      productRepository.findOne.mockResolvedValue(otherSellerProduct);
+
+      await expect(service.create(createOfferDto, mockSellerId))
+        .rejects
+        .toThrow(ForbiddenException);
     });
   });
 
