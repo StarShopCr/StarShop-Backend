@@ -46,7 +46,7 @@ export class RoleService {
     if (!role) {
       throw new Error(`Role ${roleName} not found`);
     }
-    await this.userRoleRepository.save({ userId: parseInt(userId), roleId: role.id });
+    await this.userRoleRepository.save({ userId: parseInt(userId), roleId: role.id } as any);
   }
 
   async removeRoleFromUser(userId: number, roleId: number): Promise<void> {
