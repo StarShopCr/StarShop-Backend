@@ -1,9 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator, MemoryHealthIndicator, DiskHealthIndicator } from '@nestjs/terminus';
 import { PrismaClient } from '@prisma/client';
 import { createClient } from 'redis';
+import { HealthAllowlistGuard } from '../middleware/healthAllowlist.guard';
 
 @Controller('health')
+@UseGuards(HealthAllowlistGuard)
 export class HealthController {
   private prisma = new PrismaClient();
   private redis = process.env.REDIS_URL ? createClient({ url: process.env.REDIS_URL }) : null;
