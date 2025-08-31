@@ -18,6 +18,7 @@ import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.mod
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 import { StoresModule } from './modules/stores/stores.module';
+import { HealthModule } from './health/health.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -85,6 +86,7 @@ import { Store } from './modules/stores/entities/store.entity';
     OffersModule,
     SupabaseModule,
     StoresModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
