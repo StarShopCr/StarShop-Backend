@@ -20,7 +20,7 @@ export function setToken(
     httpOnly = true,
     secure = process.env.NODE_ENV === 'production',
     sameSite = 'strict',
-    maxAge = 24 * 60 * 60 * 1000, // 24 hours default
+    maxAge = 7 * 24 * 60 * 60 * 1000, // 7 days default
   } = options;
 
   // Set token in cookie
