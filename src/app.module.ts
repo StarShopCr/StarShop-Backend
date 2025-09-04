@@ -17,6 +17,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { AppCacheModule } from './cache/cache.module';
 import { StoresModule } from './modules/stores/stores.module';
 
 // Entities
@@ -43,6 +44,7 @@ import { Store } from './modules/stores/entities/store.entity';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    AppCacheModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
