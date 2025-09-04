@@ -17,6 +17,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { AppCacheModule } from './cache/cache.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -41,6 +42,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    AppCacheModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
