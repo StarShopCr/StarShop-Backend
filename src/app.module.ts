@@ -18,6 +18,7 @@ import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.mod
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 import { StoresModule } from './modules/stores/stores.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { HealthModule } from './health/health.module';
 
 // Entities
@@ -39,6 +40,8 @@ import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.en
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
 import { Store } from './modules/stores/entities/store.entity';
+import { Review } from './modules/reviews/entities/review.entity';
+import { SellerReview } from './modules/reviews/entities/seller-review.entity';
 
 @Module({
   imports: [
@@ -67,6 +70,8 @@ import { Store } from './modules/stores/entities/store.entity';
         Offer,
         OfferAttachment,
         Store,
+        Review,
+        SellerReview,
       ],
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',
@@ -86,6 +91,7 @@ import { Store } from './modules/stores/entities/store.entity';
     OffersModule,
     SupabaseModule,
     StoresModule,
+    ReviewsModule,
     HealthModule,
   ],
 })

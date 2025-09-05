@@ -55,6 +55,12 @@ export class User {
   @OneToMany(() => Store, (store) => store.seller)
   stores: Store[];
 
+  @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
+  averageSellerRating: number;
+
+  @Column({ type: 'int', default: 0 })
+  totalSellerReviews: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
