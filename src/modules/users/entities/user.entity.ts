@@ -15,15 +15,21 @@ import { Wishlist } from '../../wishlist/entities/wishlist.entity';
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
-
+  
   @Column({ unique: true, nullable: true })
   email?: string;
-
+  
   @Column({ nullable: true })
   name?: string;
-
+  
   @Column({ unique: true })
   walletAddress: string;
+  
+  @Column({ unique: true, nullable: true })
+  payoutWallet?: string;
+
+  @Column({ default: false })
+  sellerOnchainRegistered: boolean;
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
