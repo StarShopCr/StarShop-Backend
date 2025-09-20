@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BuyerRequest, BuyerRequestStatus } from '../entities/buyer-request.entity';
+import { User } from '../../users/entities/user.entity';
 import { CreateBuyerRequestDto } from '../dto/create-buyer-request.dto';
 import { UpdateBuyerRequestDto } from '../dto/update-buyer-request.dto';
 import { GetBuyerRequestsQueryDto } from '../dto/get-buyer-requests-query.dto';
@@ -19,13 +20,71 @@ import {
 export class BuyerRequestsService {
   constructor(
     @InjectRepository(BuyerRequest)
-    private readonly buyerRequestRepository: Repository<BuyerRequest>
+    private readonly buyerRequestRepository: Repository<BuyerRequest>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) {}
+
+  /**
+   * Validates that the user's wallet address exists for buyer operations.
+   * This is crucial for preventing unauthorized contract calls.
+   */
+  private async validateBuyerWalletOwnership(userId: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    if (!user.walletAddress) {
+      throw new ForbiddenException('User wallet address not found');
+    }
+  }
+
+  /**
+   * Validates that a user can only modify buyer requests they own (wallet ownership validation).
+   */
+  private async validateBuyerRequestOwnership(
+    requestId: number,
+    userId: number
+  ): Promise<BuyerRequest> {
+    const buyerRequest = await this.buyerRequestRepository.findOne({
+      where: { id: requestId },
+      relations: ['user'],
+    });
+
+    if (!buyerRequest) {
+      throw new NotFoundException('Buyer request not found');
+    }
+
+    if (buyerRequest.userId !== userId) {
+      throw new ForbiddenException('You can only modify your own buyer requests');
+    }
+
+    // Additional wallet validation to prevent contract call issues
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    if (buyerRequest.user.walletAddress !== user.walletAddress) {
+      throw new ForbiddenException(
+        'Wallet ownership mismatch: This buyer request belongs to a different wallet'
+      );
+    }
+
+    return buyerRequest;
+  }
 
   async create(
     createBuyerRequestDto: CreateBuyerRequestDto,
     userId: number
   ): Promise<BuyerRequestResponseDto> {
+    // Validate buyer wallet ownership to prevent unauthorized contract calls
+    await this.validateBuyerWalletOwnership(userId);
+
     const { budgetMin, budgetMax, expiresAt } = createBuyerRequestDto;
 
     // Validate budget range
@@ -137,18 +196,8 @@ export class BuyerRequestsService {
     updateBuyerRequestDto: UpdateBuyerRequestDto,
     userId: number
   ): Promise<BuyerRequestResponseDto> {
-    const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id },
-    });
-
-    if (!buyerRequest) {
-      throw new NotFoundException('Buyer request not found');
-    }
-
-    // Check ownership
-    if (buyerRequest.userId !== userId) {
-      throw new ForbiddenException('You can only update your own buyer requests');
-    }
+    // Validate wallet ownership before allowing updates that could trigger contract calls
+    const buyerRequest = await this.validateBuyerRequestOwnership(id, userId);
 
     // Check if request is still open
     if (buyerRequest.status !== BuyerRequestStatus.OPEN) {
@@ -187,18 +236,8 @@ export class BuyerRequestsService {
   }
 
   async remove(id: number, userId: number): Promise<void> {
-    const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id },
-    });
-
-    if (!buyerRequest) {
-      throw new NotFoundException('Buyer request not found');
-    }
-
-    // Check ownership
-    if (buyerRequest.userId !== userId) {
-      throw new ForbiddenException('You can only delete your own buyer requests');
-    }
+    // Validate wallet ownership before allowing deletions that could affect contracts
+    const buyerRequest = await this.validateBuyerRequestOwnership(id, userId);
 
     await this.buyerRequestRepository.remove(buyerRequest);
   }
@@ -287,19 +326,8 @@ export class BuyerRequestsService {
    * Manually close a buyer request (buyer-only access)
    */
   async closeRequest(id: number, userId: number): Promise<BuyerRequestResponseDto> {
-    const buyerRequest = await this.buyerRequestRepository.findOne({
-      where: { id },
-      relations: ['user'],
-    });
-
-    if (!buyerRequest) {
-      throw new NotFoundException('Buyer request not found');
-    }
-
-    // Only the buyer who created the request can close it
-    if (buyerRequest.userId !== userId) {
-      throw new ForbiddenException('You can only close your own buyer requests');
-    }
+    // Validate wallet ownership before allowing close operations that could trigger contract calls
+    const buyerRequest = await this.validateBuyerRequestOwnership(id, userId);
 
     // Check if already closed
     if (buyerRequest.status === BuyerRequestStatus.CLOSED) {
