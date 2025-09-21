@@ -1,17 +1,20 @@
+// dto/escrow.dto.ts
 import {
   IsString,
   IsNotEmpty,
   IsOptional,
   IsNumber,
-  IsEthereumAddress,
-  Min,
   IsPositive,
+  IsEnum,
+  Matches,
+  Min,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateEscrowDto {
+export class InitializeEscrowDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.toString())
   amount: string;
 
   @IsString()
@@ -19,55 +22,97 @@ export class CreateEscrowDto {
   token: string;
 
   @IsString()
-  @IsEthereumAddress()
   @IsNotEmpty()
+  @Matches(/^G[A-Z0-9]{55}$/, {
+    message: 'Recipient must be a valid Stellar public key',
+  })
   recipient: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
-  @IsNumber()
   @IsOptional()
+  @IsNumber()
   @IsPositive()
+  @Min(Date.now() + 3600000, { // At least 1 hour from now
+    message: 'Deadline must be at least 1 hour in the future',
+  })
   @Transform(({ value }) => parseInt(value))
   deadline?: number;
-}
 
-export class EscrowParamsDto {
   @IsString()
   @IsNotEmpty()
-  id: string;
+  @Matches(/^G[A-Z0-9]{55}$/, {
+    message: 'Seller public key must be a valid Stellar public key',
+  })
+  sellerPublicKey: string;
+
+  @IsOptional()
+  @IsEnum(['draft', 'deploy'])
+  type?: 'draft' | 'deploy' = 'deploy';
 }
 
-export class EscrowResponseDto {
-  id: string;
-  status: string;
+export class CheckSellerDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^G[A-Z0-9]{55}$/, {
+    message: 'Public key must be a valid Stellar public key',
+  })
+  publicKey: string;
+}
+
+export class ConfirmEscrowDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-f0-9]{64}$/, {
+    message: 'Transaction hash must be a valid hex string',
+  })
+  transactionHash: string;
+
+  @IsString()
+  @IsNotEmpty()
+  contractId: string;
+}
+
+export class EscrowStatusDto {
+  @IsString()
+  @IsNotEmpty()
+  contractId: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  
+  @IsString()
+  @IsNotEmpty()
   amount: string;
+  
+  @IsString()
+  @IsNotEmpty()
   token: string;
-  creator: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  seller: string;
+  
+  @IsString()
+  @IsNotEmpty()
   recipient: string;
+  
+  @IsOptional()
+  @IsString()
   description?: string;
-  createdAt: string;
+  
+  @IsOptional()
+  @IsNumber()
   deadline?: number;
+  
+  @IsString()
+  @IsNotEmpty()
+  createdAt: string;
+  
+  @IsOptional()
+  @IsString()
   transactionHash?: string;
-}
-
-export class OperationResultDto {
-  success: boolean;
-  transactionHash?: string;
-  message?: string;
-  timestamp: string;
-}
-
-export class HealthCheckResponseDto {
-  status: string;
-  timestamp: string;
-  environment: string;
-}
-
-export class ConfigResponseDto {
-  baseURL: string;
-  environment: string;
-  // Note: We don't expose the API key for security reasons
 }
