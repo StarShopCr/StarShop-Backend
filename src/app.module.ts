@@ -36,10 +36,14 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { TrustlessWorkModule } from './modules/trustlessWork/trustless-work.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env'],
+    }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -81,6 +85,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
+    TrustlessWorkModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
