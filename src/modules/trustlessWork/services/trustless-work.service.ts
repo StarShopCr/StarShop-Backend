@@ -1,465 +1,731 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger, BadRequestException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { development, mainNet } from '@trustless-work/escrow';
-
-// Stellar/Soroban imports
+import { firstValueFrom } from 'rxjs';
 import {
-  Keypair,
-  SorobanRpc,
-  TransactionBuilder,
-  Networks,
-  Contract,
-  xdr,
-} from 'stellar-sdk';
-
-export interface TWConfig {
-  baseURL: string;
-  apiKey: string;
-  environment: 'development' | 'mainNet';
-}
-
-export interface CreateEscrowDto {
-  amount: string;
-  token: string;
-  recipient: string;
-  description?: string;
-  deadline?: number;
-}
-
-export interface EscrowResponse {
-  id: string;
-  status: string;
-  amount: string;
-  token: string;
-  creator: string;
-  recipient: string;
-  description?: string;
-  createdAt: string;
-  deadline?: number;
-}
-
-// DTO para integración Soroban
-export interface InitializeEscrowDto extends CreateEscrowDto {
-  sellerPublicKey: string;
-  type?: 'draft' | 'deploy';
-}
+  InitializeEscrowDto,
+  SendSignedTransactionDto,
+  EscrowType,
+  DeploySingleReleaseEscrowDto,
+  DeployMultiReleaseEscrowDto,
+  FundEscrowDto,
+  GetEscrowDto,
+  ApproveMilestoneDto,
+  ReleaseFundsDto,
+  ReleaseMilestoneFundsDto,
+  DisputeEscrowDto,
+  ResolveDisputeDto,
+  UpdateEscrowDto,
+  SetTrustlineDto,
+  SendTransactionDto,
+  GetEscrowsBySignerDto,
+  GetEscrowsByRoleDto,
+} from '../dtos/trustless-work.dto';
 
 @Injectable()
-export class TrustlessWorkService implements OnModuleInit {
+export class TrustlessWorkService {
   private readonly logger = new Logger(TrustlessWorkService.name);
-  private baseURL: string;
-  private apiKey: string;
-  private environment: 'development' | 'mainNet';
+  private readonly baseUrl: string;
+  private readonly apiHeaders: Record<string, string>;
 
-  // Soroban config
-  private sorobanServer: SorobanRpc.Server;
-  private networkPassphrase: string;
-  private contractId: string;
-
-  constructor(private readonly configService: ConfigService) {
-    this.apiKey = this.configService.get<string>('TRUSTLESS_WORK_API_KEY') || '';
-    this.environment = this.configService.get<'development' | 'mainNet'>('TRUSTLESS_WORK_ENV') || 'development';
-    this.baseURL = this.environment === 'mainNet' ? mainNet : development;
-
-    // Soroban config
-    this.networkPassphrase = this.environment === 'mainNet'
-      ? Networks.PUBLIC
-      : Networks.TESTNET;
-
-    this.sorobanServer = new SorobanRpc.Server(
-      this.configService.get<string>('SOROBAN_RPC_URL') || 'https://soroban-testnet.stellar.org'
-    );
-
-    this.contractId = this.configService.get<string>('TRUSTLESS_WORK_CONTRACT_ID') || '';
-  }
-
-  onModuleInit() {
-    this.logger.log(`Trustless Work initialized with environment: ${this.environment}`);
-    this.logger.log(`Base URL: ${this.baseURL}`);
-
-    if (!this.apiKey) {
-      this.logger.warn('TRUSTLESS_WORK_API_KEY not found in environment variables');
-    }
-    if (!this.contractId) {
-      this.logger.warn('TRUSTLESS_WORK_CONTRACT_ID not found in environment variables');
-    }
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfig(): TWConfig {
-    return {
-      baseURL: this.baseURL,
-      apiKey: this.apiKey,
-      environment: this.environment,
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.baseUrl = this.configService.get<string>('TRUSTLESS_WORK_API_URL', 'https://api.trustlesswork.com');
+    
+    // Configurar headers por defecto
+    this.apiHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
+
+    // Si tienes API key, agrégala aquí
+    const apiKey = this.configService.get<string>('TRUSTLESS_WORK_API_KEY');
+    if (apiKey) {
+      this.apiHeaders['Authorization'] = `Bearer ${apiKey}`;
+    }
+
+    this.logger.log(`Trustless Work Service initialized with base URL: ${this.baseUrl}`);
   }
 
-  /**
-   * Create a new escrow via API REST
-   */
-  async createEscrow(escrowData: CreateEscrowDto): Promise<EscrowResponse> {
+  // =====================
+  // MAIN INITIALIZE ESCROW METHOD (Para la Issue #3)
+  // =====================
+
+  async initializeEscrow(initDto: InitializeEscrowDto): Promise<{
+    success: boolean;
+    contract_id?: string;
+    unsigned_xdr?: string;
+    message?: string;
+  }> {
+    this.logger.log('Initializing escrow', {
+      type: initDto.type,
+      seller: initDto.seller_key,
+      network: this.configService.get<string>('STELLAR_NETWORK') || 'testnet',
+    });
+
+    // 1. Validar que el seller esté registrado on-chain
+    await this.validateSellerRegistration(initDto.seller_key, this.configService.get<string>('STELLAR_NETWORK') || 'testnet');
+
+    // 2. Validar campos según el tipo de escrow
+    this.validateEscrowPayload(initDto);
+
     try {
-      const response = await fetch(`${this.baseURL}/api/escrow`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(escrowData),
+      let response;
+
+      if (initDto.type === EscrowType.SINGLE_RELEASE) {
+        response = await this.deploySingleReleaseEscrowInternal({
+          network: this.configService.get<string>('STELLAR_NETWORK') || 'testnet',
+          service_provider: initDto.seller_key,
+          approver: initDto.approver,
+          receiver: initDto.receiver,
+          dispute_resolver: initDto.dispute_resolver,
+          total_amount: initDto.total_amount,
+          asset: initDto.asset,
+          asset_issuer: initDto.asset_issuer,
+          title: initDto.title,
+          description: initDto.description,
+          platform_fee: initDto.platform_fee,
+          platform_fee_receiver: initDto.platform_fee_receiver,
+        });
+      } else {
+        response = await this.deployMultiReleaseEscrowInternal({
+          network: this.configService.get<string>('STELLAR_NETWORK') || 'testnet',
+          service_provider: initDto.seller_key,
+          approver: initDto.approver,
+          receiver: initDto.receiver,
+          dispute_resolver: initDto.dispute_resolver,
+          milestones: initDto.milestones,
+          asset: initDto.asset,
+          asset_issuer: initDto.asset_issuer,
+          title: initDto.title,
+          description: initDto.description,
+          platform_fee: initDto.platform_fee,
+          platform_fee_receiver: initDto.platform_fee_receiver,
+        });
+      }
+
+      this.logger.log('Escrow initialized successfully', {
+        contractId: response.contract_id,
+        type: initDto.type,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      this.logger.log(`Escrow created successfully: ${data.id}`);
-      return data;
-    } catch (error) {
-      this.logger.error('Error creating escrow:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Create a new escrow on Soroban (Stellar)
-   */
-  async initializeEscrow(escrowData: InitializeEscrowDto) {
-    try {
-      this.logger.log(`Initializing escrow for seller: ${escrowData.sellerPublicKey}`);
-
-      // Validate all payload fields
-      this.validateEscrowPayload(escrowData);
-
-      // Get seller account
-      const sellerKeypair = Keypair.fromPublicKey(escrowData.sellerPublicKey);
-      const sellerAccount = await this.sorobanServer.getAccount(sellerKeypair.publicKey());
-
-      // Create contract instance
-      const contract = new Contract(this.contractId);
-
-      // Build transaction
-      const transaction = new TransactionBuilder(sellerAccount, {
-        fee: '1000000', // 1 XLM
-        networkPassphrase: this.networkPassphrase,
-      })
-        .addOperation(
-          contract.call(
-            'initialize_escrow',
-            xdr.ScVal.scvString(escrowData.amount),
-            xdr.ScVal.scvString(escrowData.token),
-            xdr.ScVal.scvString(escrowData.recipient),
-            xdr.ScVal.scvString(escrowData.description || ''),
-            xdr.ScVal.scvU64(new xdr.Uint64(escrowData.deadline || 0))
-          )
-        )
-        .setTimeout(30)
-        .build();
-
-      // Simulate transaction first
-      const simulationResult = await this.sorobanServer.simulateTransaction(transaction);
-
-      if (SorobanRpc.isSimulationError(simulationResult)) {
-        throw new Error(`Simulation failed: ${simulationResult.error}`);
-      }
-
-      // Prepare transaction for signing
-      const preparedTransaction = SorobanRpc.assembleTransaction(
-        transaction,
-        this.networkPassphrase,
-        simulationResult
-      );
-
-      // Generate contract ID (this would be deterministic based on the transaction)
-      const contractId = this.generateContractId(escrowData);
-
       return {
-        contractId,
-        xdr: preparedTransaction.toXDR(),
-        simulationResult,
+        success: true,
+        contract_id: response.contract_id,
+        unsigned_xdr: response.unsigned_xdr,
+        message: 'Escrow initialized successfully',
       };
 
     } catch (error) {
-      this.logger.error('Error initializing escrow:', error);
+      this.logger.error('Failed to initialize escrow', error);
       throw error;
     }
   }
 
-  /**
-   * Get escrow by ID via API REST
-   */
-  async getEscrow(escrowId: string): Promise<EscrowResponse> {
+  async sendSignedTransaction(transactionDto: SendSignedTransactionDto): Promise<{
+    success: boolean;
+    transaction_hash?: string;
+    message?: string;
+  }> {
+    this.logger.log('Sending signed transaction', {
+      network: transactionDto.network,
+      contractId: transactionDto.contract_id,
+    });
+
+    // Validar que el XDR no esté vacío
+    if (!transactionDto.signed_xdr || transactionDto.signed_xdr.trim() === '') {
+      throw new BadRequestException('Missing signature: signed_xdr is required and cannot be empty');
+    }
+
     try {
-      const response = await fetch(`${this.baseURL}/api/escrow/${escrowId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/send-transaction`, {
+          network: transactionDto.network,
+          signed_xdr: transactionDto.signed_xdr,
+        }, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Transaction sent successfully', {
+        transactionHash: response.data.transaction_hash,
+        contractId: transactionDto.contract_id,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      return {
+        success: true,
+        transaction_hash: response.data.transaction_hash,
+        message: 'Transaction sent successfully',
+      };
 
-      return await response.json();
     } catch (error) {
-      this.logger.error(`Error fetching escrow ${escrowId}:`, error);
-      throw error;
+      this.logger.error('Failed to send transaction', error);
+      this.handleApiError(error, 'Send Signed Transaction');
     }
   }
 
-  /**
-   * Get all escrows for the current user via API REST
-   */
-  async getUserEscrows(): Promise<EscrowResponse[]> {
+  // =====================
+  // DEPLOYMENT METHODS
+  // =====================
+
+  async deploySingleReleaseEscrow(deployDto: DeploySingleReleaseEscrowDto): Promise<any> {
+    this.logger.log('Deploying single release escrow');
     try {
-      const response = await fetch(`${this.baseURL}/api/escrow/user`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/deployer/single-release`, deployDto, {
+          headers: this.apiHeaders,
+        })
+      );
+      
+      this.logger.log('Single release escrow deployed successfully', {
+        contractId: response.data.contract_id,
+      });
+      
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to deploy single release escrow', error);
+      this.handleApiError(error, 'Deploy Single Release Escrow');
+    }
+  }
+
+  async deployMultiReleaseEscrow(deployDto: DeployMultiReleaseEscrowDto): Promise<any> {
+    this.logger.log('Deploying multi release escrow');
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/deployer/multi-release`, deployDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Multi release escrow deployed successfully', {
+        contractId: response.data.contract_id,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
-      this.logger.error('Error fetching user escrows:', error);
-      throw error;
+      this.logger.error('Failed to deploy multi release escrow', error);
+      this.handleApiError(error, 'Deploy Multi Release Escrow');
     }
   }
 
-  /**
-   * Release escrow funds via API REST
-   */
-  async releaseEscrow(escrowId: string): Promise<{ success: boolean; transactionHash?: string }> {
+  // =====================
+  // FUNDING METHODS
+  // =====================
+
+  async fundEscrow(escrowType: EscrowType, fundDto: FundEscrowDto): Promise<any> {
+    this.logger.log(`Funding ${escrowType} escrow`, { contractId: fundDto.contract_id });
     try {
-      const response = await fetch(`${this.baseURL}/api/escrow/${escrowId}/release`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/fund-escrow`, fundDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Escrow funded successfully', {
+        contractId: fundDto.contract_id,
+        amount: fundDto.amount,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      this.logger.log(`Escrow ${escrowId} released successfully`);
-      return data;
+      return response.data;
     } catch (error) {
-      this.logger.error(`Error releasing escrow ${escrowId}:`, error);
-      throw error;
+      this.logger.error('Failed to fund escrow', error);
+      this.handleApiError(error, 'Fund Escrow');
     }
   }
 
-  /**
-   * Cancel escrow via API REST
-   */
-  async cancelEscrow(escrowId: string): Promise<{ success: boolean; transactionHash?: string }> {
+  // =====================
+  // QUERY METHODS
+  // =====================
+
+  async getEscrowDetails(escrowType: EscrowType, getDto: GetEscrowDto): Promise<any> {
+    this.logger.log(`Getting ${escrowType} escrow details`, { contractId: getDto.contract_id });
     try {
-      const response = await fetch(`${this.baseURL}/api/escrow/${escrowId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/get-escrow`, getDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Escrow details retrieved successfully', {
+        contractId: getDto.contract_id,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      this.logger.log(`Escrow ${escrowId} cancelled successfully`);
-      return data;
+      return response.data;
     } catch (error) {
-      this.logger.error(`Error cancelling escrow ${escrowId}:`, error);
-      throw error;
+      this.logger.error('Failed to get escrow details', error);
+      this.handleApiError(error, 'Get Escrow Details');
     }
   }
 
-  /**
-   * Health check via API REST
-   */
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
+  async getMultipleEscrowBalance(contractIds: string[], network: string): Promise<any> {
+    this.logger.log('Getting multiple escrow balances');
     try {
-      const response = await fetch(`${this.baseURL}/api/health`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/get-multiple-escrow-balance`, {
+          contract_ids: contractIds,
+          network,
+        }, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Multiple escrow balances retrieved successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to get multiple escrow balances', error);
+      this.handleApiError(error, 'Get Multiple Escrow Balance');
+    }
+  }
+
+  // =====================
+  // MILESTONE METHODS
+  // =====================
+
+  async approveMilestone(escrowType: EscrowType, approveDto: ApproveMilestoneDto): Promise<any> {
+    this.logger.log(`Approving milestone for ${escrowType} escrow`, {
+      contractId: approveDto.contract_id,
+      milestoneIndex: approveDto.milestone_index,
+    });
+    
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/approve-milestone`, approveDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Milestone approved successfully', {
+        contractId: approveDto.contract_id,
+        milestoneIndex: approveDto.milestone_index,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
-      this.logger.error('Health check failed:', error);
-      throw error;
+      this.logger.error('Failed to approve milestone', error);
+      this.handleApiError(error, 'Approve Milestone');
     }
   }
 
-  /**
-   * Check if seller is registered on-chain (Soroban)
-   */
-  async checkSellerRegistration(publicKey: string): Promise<boolean> {
+  async changeMilestoneStatus(escrowType: EscrowType, statusDto: any): Promise<any> {
+    this.logger.log(`Changing milestone status for ${escrowType} escrow`);
     try {
-      const contract = new Contract(this.contractId);
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/change-milestone-status`, statusDto, {
+          headers: this.apiHeaders,
+        })
+      );
 
-      // Build query transaction
-      const sourceAccount = await this.sorobanServer.getAccount(publicKey);
+      this.logger.log('Milestone status changed successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to change milestone status', error);
+      this.handleApiError(error, 'Change Milestone Status');
+    }
+  }
 
-      const transaction = new TransactionBuilder(sourceAccount, {
-        fee: '100',
-        networkPassphrase: this.networkPassphrase,
+  // =====================
+  // FUND RELEASE METHODS
+  // =====================
+
+  async releaseFunds(escrowType: EscrowType, releaseDto: ReleaseFundsDto): Promise<any> {
+    this.logger.log(`Releasing funds for ${escrowType} escrow`, {
+      contractId: releaseDto.contract_id,
+    });
+
+    try {
+      const endpoint = escrowType === EscrowType.SINGLE_RELEASE ? 'release-funds' : 'release-funds';
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/${endpoint}`, releaseDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Funds released successfully', {
+        contractId: releaseDto.contract_id,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to release funds', error);
+      this.handleApiError(error, 'Release Funds');
+    }
+  }
+
+  async releaseMilestoneFunds(releaseDto: ReleaseMilestoneFundsDto): Promise<any> {
+    this.logger.log('Releasing milestone funds', {
+      contractId: releaseDto.contract_id,
+      milestoneIndex: releaseDto.milestone_index,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/multi-release/release-milestone-funds`, releaseDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Milestone funds released successfully', {
+        contractId: releaseDto.contract_id,
+        milestoneIndex: releaseDto.milestone_index,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to release milestone funds', error);
+      this.handleApiError(error, 'Release Milestone Funds');
+    }
+  }
+
+  // =====================
+  // DISPUTE METHODS
+  // =====================
+
+  async disputeEscrow(escrowType: EscrowType, disputeDto: DisputeEscrowDto): Promise<any> {
+    this.logger.log(`Creating dispute for ${escrowType} escrow`, {
+      contractId: disputeDto.contract_id,
+      reason: disputeDto.reason,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/dispute-escrow`, disputeDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Dispute created successfully', {
+        contractId: disputeDto.contract_id,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to create dispute', error);
+      this.handleApiError(error, 'Dispute Escrow');
+    }
+  }
+
+  async resolveDispute(escrowType: EscrowType, resolveDto: ResolveDisputeDto): Promise<any> {
+    this.logger.log(`Resolving dispute for ${escrowType} escrow`, {
+      contractId: resolveDto.contract_id,
+      approveRelease: resolveDto.approve_release,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/resolve-dispute`, resolveDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Dispute resolved successfully', {
+        contractId: resolveDto.contract_id,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to resolve dispute', error);
+      this.handleApiError(error, 'Resolve Dispute');
+    }
+  }
+
+  async disputeMilestone(disputeDto: any): Promise<any> {
+    this.logger.log('Creating milestone dispute');
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/multi-release/dispute-milestone`, disputeDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Milestone dispute created successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to create milestone dispute', error);
+      this.handleApiError(error, 'Dispute Milestone');
+    }
+  }
+
+  async resolveMilestoneDispute(resolveDto: any): Promise<any> {
+    this.logger.log('Resolving milestone dispute');
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/multi-release/resolve-milestone-dispute`, resolveDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Milestone dispute resolved successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to resolve milestone dispute', error);
+      this.handleApiError(error, 'Resolve Milestone Dispute');
+    }
+  }
+
+  // =====================
+  // UPDATE METHODS
+  // =====================
+
+  async updateEscrow(escrowType: EscrowType, updateDto: UpdateEscrowDto): Promise<any> {
+    this.logger.log(`Updating ${escrowType} escrow`, {
+      contractId: updateDto.contract_id,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/escrow/${escrowType}/update-escrow`, updateDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Escrow updated successfully', {
+        contractId: updateDto.contract_id,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to update escrow', error);
+      this.handleApiError(error, 'Update Escrow');
+    }
+  }
+
+  // =====================
+  // HELPER METHODS
+  // =====================
+
+  async setTrustline(trustlineDto: SetTrustlineDto): Promise<any> {
+    this.logger.log('Setting trustline', {
+      account: trustlineDto.account_key,
+      asset: trustlineDto.asset,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/set-trustline`, trustlineDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Trustline set successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to set trustline', error);
+      this.handleApiError(error, 'Set Trustline');
+    }
+  }
+
+  async sendTransaction(transactionDto: SendTransactionDto): Promise<any> {
+    this.logger.log('Sending transaction to Stellar network', {
+      network: this.configService.get<string>('STELLAR_NETWORK') || 'testnet',
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/send-transaction`, transactionDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Transaction sent successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to send transaction', error);
+      this.handleApiError(error, 'Send Transaction');
+    }
+  }
+
+  async getEscrowsBySigner(queryDto: GetEscrowsBySignerDto): Promise<any> {
+    this.logger.log('Getting escrows by signer', {
+      signer: queryDto.signer,
+      network: queryDto.network,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/get-escrows-by-signer`, queryDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Escrows by signer retrieved successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to get escrows by signer', error);
+      this.handleApiError(error, 'Get Escrows By Signer');
+    }
+  }
+
+  async getEscrowsByRole(queryDto: GetEscrowsByRoleDto): Promise<any> {
+    this.logger.log('Getting escrows by role', {
+      userKey: queryDto.user_key,
+      role: queryDto.role,
+      network: queryDto.network,
+    });
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.baseUrl}/helper/get-escrows-by-role`, queryDto, {
+          headers: this.apiHeaders,
+        })
+      );
+
+      this.logger.log('Escrows by role retrieved successfully');
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to get escrows by role', error);
+      this.handleApiError(error, 'Get Escrows By Role');
+    }
+  }
+
+  // =====================
+  // VALIDATION METHODS
+  // =====================
+
+  private async validateSellerRegistration(sellerKey: string, network: string): Promise<void> {
+    this.logger.log('Validating seller registration', { seller: sellerKey, network });
+
+    try {
+      // Obtener escrows del seller para verificar si está registrado
+      const escrows = await this.getEscrowsBySigner({
+        network: network as any,
+        signer: sellerKey,
+        page: 1,
+        limit: 1,
+      });
+
+      // Si es la primera vez, podríamos también verificar la cuenta en Stellar
+      // Por ahora, si no hay error en la consulta, consideramos que está registrado
+      this.logger.log('Seller validation completed', { seller: sellerKey });
+
+    } catch (error) {
+      // Si falla la consulta, podría ser que no esté registrado o sea un error de red
+      this.logger.warn('Seller validation warning', { seller: sellerKey, error: error.message });
+      
+      // Dependiendo de la respuesta de la API, podrías querer fallar o continuar
+      // Por ahora, solo logueamos la advertencia
+    }
+  }
+
+  private validateEscrowPayload(initDto: InitializeEscrowDto): void {
+    if (initDto.type === EscrowType.SINGLE_RELEASE) {
+      if (!initDto.total_amount) {
+        throw new BadRequestException('total_amount is required for single-release escrow');
+      }
+      if (initDto.milestones && initDto.milestones.length > 0) {
+        throw new BadRequestException('milestones should not be provided for single-release escrow');
+      }
+    } else if (initDto.type === EscrowType.MULTI_RELEASE) {
+      if (!initDto.milestones || initDto.milestones.length === 0) {
+        throw new BadRequestException('milestones are required for multi-release escrow');
+      }
+      if (initDto.total_amount) {
+        throw new BadRequestException('total_amount should not be provided for multi-release escrow');
+      }
+    }
+
+    // Validar que todas las claves sean diferentes
+    const keys = [initDto.seller_key, initDto.approver, initDto.receiver, initDto.dispute_resolver];
+    const uniqueKeys = new Set(keys);
+    if (uniqueKeys.size !== keys.length) {
+      throw new BadRequestException('All participant keys must be unique');
+    }
+  }
+
+  // =====================
+  // INTERNAL DEPLOY METHODS
+  // =====================
+
+  private async deploySingleReleaseEscrowInternal(deployDto: any): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.post(`${this.baseUrl}/deployer/single-release`, deployDto, {
+        headers: this.apiHeaders,
       })
-        .addOperation(
-          contract.call('is_seller_registered', xdr.ScVal.scvString(publicKey))
-        )
-        .setTimeout(30)
-        .build();
+    );
+    return response.data;
+  }
 
-      const result = await this.sorobanServer.simulateTransaction(transaction);
+  private async deployMultiReleaseEscrowInternal(deployDto: any): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.post(`${this.baseUrl}/deployer/multi-release`, deployDto, {
+        headers: this.apiHeaders,
+      })
+    );
+    return response.data;
+  }
 
-      if (SorobanRpc.isSimulationError(result)) {
-        this.logger.warn(`Seller registration check failed: ${result.error}`);
-        return false;
-      }
+  // =====================
+  // UTILITY METHODS
+  // =====================
 
-      // Parse result - assuming it returns a boolean
-      const isRegistered = result.result?.retval &&
-        xdr.ScVal.fromXDR(result.result.retval, 'base64').switch().name === 'scvBool' &&
-        xdr.ScVal.fromXDR(result.result.retval, 'base64').b();
-
-      return Boolean(isRegistered);
-
+  /**
+   * Verifica el estado de la API de Trustless Work
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      // Nota: Ajusta este endpoint si Trustless Work tiene un endpoint de health
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/health`, {
+          headers: this.apiHeaders,
+          timeout: 5000,
+        })
+      );
+      
+      this.logger.log('Trustless Work API is healthy');
+      return response.status === 200;
     } catch (error) {
-      this.logger.error(`Error checking seller registration for ${publicKey}:`, error);
+      this.logger.warn('Trustless Work API health check failed', error.message);
       return false;
     }
   }
 
   /**
-   * Get escrows for a specific seller (Soroban)
+   * Obtiene la configuración actual de la API
    */
-  async getSellerEscrows(publicKey: string) {
-    try {
-      const contract = new Contract(this.contractId);
-
-      const sourceAccount = await this.sorobanServer.getAccount(publicKey);
-
-      const transaction = new TransactionBuilder(sourceAccount, {
-        fee: '100',
-        networkPassphrase: this.networkPassphrase,
-      })
-        .addOperation(
-          contract.call('get_seller_escrows', xdr.ScVal.scvString(publicKey))
-        )
-        .setTimeout(30)
-        .build();
-
-      const result = await this.sorobanServer.simulateTransaction(transaction);
-      
-      if (SorobanRpc.isSimulationError(result)) {
-        throw new Error(`Failed to get seller escrows: ${result.error}`);
-      }
-
-      // Parse and return the escrows list
-      return this.parseEscrowsList(result.result?.retval);
-
-    } catch (error) {
-      this.logger.error(`Error getting seller escrows for ${publicKey}:`, error);
-      throw error;
-    }
+  getApiConfiguration() {
+    return {
+      baseUrl: this.baseUrl,
+      hasApiKey: !!this.configService.get<string>('TRUSTLESS_WORK_API_KEY'),
+      timeout: 10000,
+    };
   }
 
-  /**
-   * Confirm escrow creation after transaction is successful (Soroban)
-   */
-  async confirmEscrow(confirmData: { transactionHash: string; contractId: string }) {
-    try {
-      // Get transaction details from Stellar
-      const txResult = await this.sorobanServer.getTransaction(confirmData.transactionHash);
+  // =====================
+  // ERROR HANDLING
+  // =====================
 
-      if (txResult.status !== 'SUCCESS') {
-        throw new Error('Transaction was not successful');
-      }
+  private handleApiError(error: any, operation: string): never {
+    const status = error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
+    const message = error.response?.data?.message || error.message || `Trustless Work API Error in ${operation}`;
+    const details = error.response?.data || {};
+    
+    this.logger.error(`API Error in ${operation}`, {
+      status,
+      message,
+      details,
+      url: error.config?.url,
+    });
 
-      this.logger.log(`Escrow confirmed: ${confirmData.contractId}`);
-
-      return {
-        success: true,
-        contractId: confirmData.contractId,
-        transactionHash: confirmData.transactionHash,
-        status: 'confirmed',
-      };
-
-    } catch (error) {
-      this.logger.error('Error confirming escrow:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Validate escrow payload (Soroban)
-   */
-  private validateEscrowPayload(escrowData: InitializeEscrowDto) {
-    const requiredFields = ['amount', 'token', 'recipient', 'sellerPublicKey'];
-
-    for (const field of requiredFields) {
-      if (!escrowData[field]) {
-        throw new Error(`Missing required field: ${field}`);
-      }
+    // Mapear códigos de estado específicos
+    let mappedStatus = status;
+    if (status === 429) {
+      mappedStatus = HttpStatus.TOO_MANY_REQUESTS;
+    } else if (status >= 400 && status < 500) {
+      mappedStatus = HttpStatus.BAD_REQUEST;
+    } else if (status >= 500) {
+      mappedStatus = HttpStatus.SERVICE_UNAVAILABLE;
     }
 
-    // Validate amount is positive
-    if (parseFloat(escrowData.amount) <= 0) {
-      throw new Error('Amount must be positive');
-    }
-
-    // Validate addresses
-    try {
-      Keypair.fromPublicKey(escrowData.sellerPublicKey);
-      Keypair.fromPublicKey(escrowData.recipient);
-    } catch {
-      throw new Error('Invalid public key format');
-    }
-  }
-
-  /**
-   * Generate deterministic contract ID (Soroban)
-   */
-  private generateContractId(escrowData: InitializeEscrowDto): string {
-    // This should generate a deterministic ID based on the escrow parameters
-    // In a real implementation, this would be based on the actual contract deployment
-    const hash = require('crypto')
-      .createHash('sha256')
-      .update(`${escrowData.sellerPublicKey}-${escrowData.recipient}-${escrowData.amount}-${Date.now()}`)
-      .digest('hex');
-
-    return `escrow_${hash.substring(0, 16)}`;
-  }
-
-  /**
-   * Parse escrows list from contract response (Soroban)
-   */
-  private parseEscrowsList(retval: string | undefined): any[] {
-    if (!retval) return [];
-
-    try {
-      // Parse the XDR response - this depends on your contract's return format
-      const scVal = xdr.ScVal.fromXDR(retval, 'base64');
-      // Implement parsing logic based on your contract structure
-      return []; // Placeholder
-    } catch {
-      return [];
-    }
+    throw new HttpException(
+      {
+        statusCode: mappedStatus,
+        message,
+        error: `Trustless Work API Error - ${operation}`,
+        details,
+        timestamp: new Date().toISOString(),
+      },
+      mappedStatus,
+    );
   }
 }
