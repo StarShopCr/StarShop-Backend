@@ -16,6 +16,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
+import { EscrowModule } from './modules/escrow/escrow.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 
 // Entities
@@ -36,6 +37,8 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { EscrowAccount } from './modules/escrow/entities/escrow-account.entity';
+import { Milestone } from './modules/escrow/entities/milestone.entity';
 
 @Module({
   imports: [
@@ -63,6 +66,8 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
         BuyerRequest,
         Offer,
         OfferAttachment,
+        EscrowAccount,
+        Milestone,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -80,6 +85,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
     OrdersModule,
     BuyerRequestsModule,
     OffersModule,
+    EscrowModule,
     SupabaseModule,
   ],
 })
