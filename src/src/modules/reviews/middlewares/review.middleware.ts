@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { BadRequestError } from '../../../utils/errors';
+import { BadRequestError } from '../../../../utils/errors';
 import { AuthenticatedRequest } from '../../shared/types/auth-request.type';
 
 /**
