@@ -46,7 +46,6 @@ export class EscrowService {
       return milestone;
     });
   }
-
   /**
    * Seller changes milestone execution status (ready -> in_progress -> delivered).
    * Constraints:
