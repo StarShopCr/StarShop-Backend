@@ -37,9 +37,9 @@ export class AuthMiddleware implements NestMiddleware {
         return Role.SELLER;
       case 'buyer':
       case 'user':
-        return Role.USER;
+        return Role.BUYER;
       default:
-        return Role.USER;
+        return Role.BUYER;
     }
   }
 
@@ -61,7 +61,9 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       const userRoles = await this.roleService.getUserRoles(decoded.id);
-      req.user = { ...decoded, role: userRoles.map((role) => this.mapRoleToEnum(role.name)) };
+      // Map all user roles to Role enum values
+      const mappedRoles = userRoles.map(ur => this.mapRoleToEnum(ur.name));
+      req.user = { ...decoded, role: mappedRoles };
 
       next();
     } catch (error) {
@@ -80,7 +82,7 @@ export const requireRole = (
 ): ((req: AuthenticatedRequest, res: Response, next: NextFunction) => void) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const requiredRole = new AuthMiddleware(null, null).mapRoleToEnum(roleName);
-    if (!req.user || !req.user.role.includes(requiredRole)) {
+    if (!req.user || !req.user.role.some(role => role === requiredRole)) {
       throw new ReferenceError('Insufficient permissions');
     }
     next();
