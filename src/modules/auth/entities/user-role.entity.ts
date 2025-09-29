@@ -7,8 +7,8 @@ export class UserRole {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  userId: number;
+  @Column({ type: 'uuid' })
+  userId: string;
 
   @Column()
   roleId: number;
