@@ -8,12 +8,12 @@ export interface BuyerRequestResponseDto {
   budgetMax: number
   categoryId: number
   status: BuyerRequestStatus
-  userId: number
+  userId: string
   expiresAt?: Date
   createdAt: Date
   updatedAt: Date
   user?: {
-    id: number
+    id: string
     name: string
     walletAddress: string
   }

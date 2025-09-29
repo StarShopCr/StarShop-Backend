@@ -18,6 +18,8 @@ import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.mod
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 import { EscrowModule } from './modules/escrow/escrow.module';
+import { AppCacheModule } from './cache/cache.module';
+import { StoresModule } from './modules/stores/stores.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -39,11 +41,16 @@ import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
 import { Escrow } from './modules/escrow/entities/escrow.entity';
 import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.entity';
+import { Store } from './modules/stores/entities/store.entity';
+import { Escrow } from './modules/escrows/entities/escrow.entity';
+import { Milestone } from './modules/escrows/entities/milestone.entity';
+import { EscrowsModule } from './modules/escrows/escrows.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    AppCacheModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
@@ -68,8 +75,11 @@ import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.ent
         OfferAttachment,
   Escrow,
   EscrowFundingTx,
+        Store,
+  Escrow,
+  Milestone,
       ],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: false,
       logging: process.env.NODE_ENV === 'development',
     }),
     SharedModule,
@@ -87,6 +97,8 @@ import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.ent
     OffersModule,
     SupabaseModule,
   EscrowModule,
+    StoresModule,
+    EscrowsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
