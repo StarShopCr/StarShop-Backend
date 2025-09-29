@@ -15,7 +15,7 @@
       "@/*": ["src/*"]
     },
     "incremental": true,
-    "skipLibCheck": true,
+  "skipLibCheck": false,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
