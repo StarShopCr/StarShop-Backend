@@ -16,18 +16,24 @@ import { Store } from '../../stores/entities/store.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+  @PrimaryGeneratedColumn()
+  id: number;
+  
   @Column({ unique: true, nullable: true })
   email?: string;
-
+  
   @Column({ nullable: true })
   name?: string;
-
+  
   @Column({ unique: true })
   @Index()
   walletAddress: string;
+  
+  @Column({ unique: true, nullable: true })
+  payoutWallet?: string;
+
+  @Column({ default: false })
+  sellerOnchainRegistered: boolean;
 
 
   @Column({ length: 2, nullable: true, enum: CountryCode })
