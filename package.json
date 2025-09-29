@@ -49,6 +49,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/typeorm": "^11.0.0",
     "@supabase/supabase-js": "^2.46.1",
+    "@trustless-work/escrow": "^2.0.2",
     "@types/bcryptjs": "^2.4.6",
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.2",
