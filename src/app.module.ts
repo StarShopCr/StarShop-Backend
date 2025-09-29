@@ -17,6 +17,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { EscrowModule } from './modules/escrow/escrow.module';
 import { AppCacheModule } from './cache/cache.module';
 import { StoresModule } from './modules/stores/stores.module';
 
@@ -38,6 +39,8 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { Escrow } from './modules/escrow/entities/escrow.entity';
+import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.entity';
 import { Store } from './modules/stores/entities/store.entity';
 import { Escrow } from './modules/escrows/entities/escrow.entity';
 import { Milestone } from './modules/escrows/entities/milestone.entity';
@@ -70,6 +73,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         BuyerRequest,
         Offer,
         OfferAttachment,
+  Escrow,
+  EscrowFundingTx,
         Store,
   Escrow,
   Milestone,
@@ -91,6 +96,7 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
+  EscrowModule,
     StoresModule,
     EscrowsModule,
   ],
