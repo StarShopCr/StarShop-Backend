@@ -80,7 +80,7 @@ export class BuyerRequestsService {
 
   async create(
     createBuyerRequestDto: CreateBuyerRequestDto,
-    userId: number
+    userId: string
   ): Promise<BuyerRequestResponseDto> {
     // Validate buyer wallet ownership to prevent unauthorized contract calls
     await this.validateBuyerWalletOwnership(userId);
@@ -194,7 +194,7 @@ export class BuyerRequestsService {
   async update(
     id: number,
     updateBuyerRequestDto: UpdateBuyerRequestDto,
-    userId: number
+    userId: string
   ): Promise<BuyerRequestResponseDto> {
     // Validate wallet ownership before allowing updates that could trigger contract calls
     const buyerRequest = await this.validateBuyerRequestOwnership(id, userId);
@@ -325,9 +325,20 @@ export class BuyerRequestsService {
   /**
    * Manually close a buyer request (buyer-only access)
    */
-  async closeRequest(id: number, userId: number): Promise<BuyerRequestResponseDto> {
-    // Validate wallet ownership before allowing close operations that could trigger contract calls
-    const buyerRequest = await this.validateBuyerRequestOwnership(id, userId);
+  async closeRequest(id: number, userId: string): Promise<BuyerRequestResponseDto> {
+    const buyerRequest = await this.buyerRequestRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!buyerRequest) {
+      throw new NotFoundException('Buyer request not found');
+    }
+
+    // Only the buyer who created the request can close it
+    if (buyerRequest.userId !== userId) {
+      throw new ForbiddenException('You can only close your own buyer requests');
+    }
 
     // Check if already closed
     if (buyerRequest.status === BuyerRequestStatus.CLOSED) {

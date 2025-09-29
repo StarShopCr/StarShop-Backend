@@ -7,7 +7,7 @@ export const config = {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'password',
     name: process.env.DB_DATABASE || 'starshop',
-    synchronize: process.env.NODE_ENV !== 'production',
+    synchronize: false,
     logging: process.env.NODE_ENV !== 'production',
     ssl: process.env.DB_SSL === 'true',
   },
@@ -25,5 +25,8 @@ export const config = {
   supabase: {
     url: process.env.SUPABASE_URL,
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  },
+  featureFlags: {
+    sellerEscrows: process.env.FF_SELLER_ESCROWS === 'true',
   },
 };
