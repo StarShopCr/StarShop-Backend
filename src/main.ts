@@ -6,9 +6,17 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BuyerRequestSchedulerService } from './modules/buyer-requests/services/buyer-request-scheduler.service';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { RequestIdMiddleware } from './middleware/request-id.middleware';
+import { PinoLoggerService } from './common/logger/pino-logger.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+
+  // Request ID middleware
+  app.use(new RequestIdMiddleware().use);
+
+  // Get logger
+  const logger = app.get(PinoLoggerService);
 
   // Enable CORS
   app.enableCors();
@@ -48,15 +56,15 @@ async function bootstrap(): Promise<void> {
   try {
     const schedulerService = app.get(BuyerRequestSchedulerService);
     const closedCount = await schedulerService.closeExpiredRequests();
-    console.log(`Startup: Closed ${closedCount} expired buyer requests`);
+    logger.log(`Startup: Closed ${closedCount} expired buyer requests`, 'Bootstrap');
   } catch (error) {
-    console.error('Failed to close expired requests on startup:', error);
+    logger.error('Failed to close expired requests on startup', error.stack, 'Bootstrap');
   }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger documentation: http://localhost:${port}/docs`);
+  logger.log(`Application is running on: http://localhost:${port}`, 'Bootstrap');
+  logger.log(`Swagger documentation: http://localhost:${port}/docs`, 'Bootstrap');
 }
 
 bootstrap();

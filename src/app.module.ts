@@ -17,6 +17,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { LoggerModule } from './common/logger/logger.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -43,6 +45,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule,
+    MetricsModule,
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -66,8 +70,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         BuyerRequest,
         Offer,
         OfferAttachment,
-  Escrow,
-  Milestone,
+        Escrow,
+        Milestone,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -86,7 +90,7 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
-  EscrowsModule,
+    EscrowsModule,
   ],
 })
 export class AppModule {}
