@@ -1,3 +1,7 @@
 node_modules
 .env
 dist/
+
+# Implementation documentation (temporary development files)
+**/IMPLEMENTATION_*.md
+**/implementation_*.md

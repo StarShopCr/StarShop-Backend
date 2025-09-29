@@ -13,7 +13,7 @@ export class ReviewController {
 
   async createReview(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = Number(req.user.id);
+      const userId = req.user.id;
       if (!userId) {
         throw new BadRequestError('User ID is required');
       }
@@ -29,7 +29,7 @@ export class ReviewController {
         throw new BadRequestError('Rating is required');
       }
 
-      const review = await this.reviewService.createReview(userId, productId, rating, comment);
+      const review = await this.reviewService.createReview(userId.toString(), productId, rating, comment);
 
       res.status(201).json({
         success: true,
@@ -78,7 +78,7 @@ export class ReviewController {
 
   async deleteReview(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = Number(req.user.id);
+      const userId = req.user.id;
       if (!userId) {
         throw new BadRequestError('User ID is required');
       }
@@ -88,7 +88,7 @@ export class ReviewController {
         throw new BadRequestError('Review ID is required');
       }
 
-      const result = await this.reviewService.deleteReview(userId, reviewId);
+      const result = await this.reviewService.deleteReview(userId.toString(), reviewId);
 
       res.status(200).json({
         success: true,

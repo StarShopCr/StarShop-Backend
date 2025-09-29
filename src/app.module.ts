@@ -41,6 +41,7 @@ import { OfferAttachment } from './modules/offers/entities/offer-attachment.enti
 import { Escrow } from './modules/escrows/entities/escrow.entity';
 import { Milestone } from './modules/escrows/entities/milestone.entity';
 import { EscrowsModule } from './modules/escrows/escrows.module';
+import { Store } from './modules/stores/entities/store.entity';
 
 @Module({
   imports: [
@@ -72,8 +73,9 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         OfferAttachment,
         Escrow,
         Milestone,
+        Store,
       ],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: false,
       logging: process.env.NODE_ENV === 'development',
     }),
     SharedModule,
@@ -91,6 +93,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     OffersModule,
     SupabaseModule,
     EscrowsModule,
+    StoresModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

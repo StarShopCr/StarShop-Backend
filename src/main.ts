@@ -8,6 +8,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestIdMiddleware } from './middleware/request-id.middleware';
 import { PinoLoggerService } from './common/logger/pino-logger.service';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,8 @@ async function bootstrap(): Promise<void> {
 
   // Enable CORS
   app.enableCors();
+
+  app.use(cookieParser());
 
   // Global validation pipe
   app.useGlobalPipes(

@@ -18,6 +18,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { OffersService } from '../services/offers.service';
+import { OfferService } from '../services/offer.service';
 import { OfferAttachmentService } from '../services/offer-attachment.service';
 import { CreateOfferDto } from '../dto/create-offer.dto';
 import { UpdateOfferDto } from '../dto/update-offer.dto';
@@ -26,12 +27,13 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { AuthRequest } from '@/modules/wishlist/common/types/auth-request.type';
-import { Role } from '@/types/role';
+import { Role } from '../../../types/role';
 
 @Controller('offers')
 export class OffersController {
   constructor(
     private readonly offersService: OffersService,
+    private readonly offerService: OfferService,
     private readonly offerAttachmentService: OfferAttachmentService
   ) {}
 
@@ -150,5 +152,54 @@ export class OffersController {
   @Roles(Role.SELLER)
   deleteAttachment(@Param('attachmentId') attachmentId: string, @Request() req: AuthRequest) {
     return this.offerAttachmentService.deleteAttachment(attachmentId, Number(req.user.id));
+  }
+
+  /**
+   * Manual trigger for offer expiration (for testing purposes)
+   * This endpoint allows developers to manually trigger the expiration process
+   */
+  @Post('expire-manual')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async manuallyExpireOffers() {
+    const expiredCount = await this.offerService.expireOffers();
+    return {
+      message: 'Manual expiration completed',
+      expiredCount,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Check if a specific offer has expired
+   * Returns boolean indicating expiration status
+   */
+  @Get(':id/expired')
+  async checkOfferExpiration(@Param('id') id: string) {
+    const isExpired = await this.offerService.isOfferExpired(id);
+    return {
+      offerId: id,
+      isExpired,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get offers that are expiring soon (within next hour)
+   * Useful for monitoring and debugging
+   */
+  @Get('expiring-soon')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async getOffersExpiringSoon(
+    @Query('hours', new DefaultValuePipe(1), ParseIntPipe) hours: number
+  ) {
+    const expiringOffers = await this.offerService.getOffersExpiringSoon(hours);
+    return {
+      count: expiringOffers.length,
+      offers: expiringOffers,
+      hours,
+      timestamp: new Date().toISOString(),
+    };
   }
 }

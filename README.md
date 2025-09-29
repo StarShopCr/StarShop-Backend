@@ -318,6 +318,24 @@ All endpoints follow RESTful patterns and are versioned:
 }
 ```
 
+## 🏥 Health Checks
+
+### Endpoints
+- `GET /api/v1/health/live` → Always returns `{ status: "up" }` if the app is alive
+- `GET /api/v1/health/ready` → Runs DB, Redis, memory, and disk checks
+
+### Kubernetes Example
+```yaml
+livenessProbe:
+  httpGet:
+    path: /api/v1/health/live
+    port: 3000
+readinessProbe:
+  httpGet:
+    path: /api/v1/health/ready
+    port: 3000
+```
+
 ## 🔐 Authentication
 
 ### Authentication Flow

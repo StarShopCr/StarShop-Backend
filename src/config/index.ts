@@ -7,7 +7,7 @@ export const config = {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'password',
     name: process.env.DB_DATABASE || 'starshop',
-    synchronize: process.env.NODE_ENV !== 'production',
+    synchronize: true,
     logging: process.env.NODE_ENV !== 'production',
     ssl: process.env.DB_SSL === 'true',
   },
