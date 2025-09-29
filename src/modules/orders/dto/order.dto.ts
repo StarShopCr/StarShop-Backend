@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { OrderStatus } from '../entities/order.entity';
+import { OrderStatus, OnchainStatus } from '../entities/order.entity';
 
 export class OrderItemDto {
   @Expose()
@@ -27,6 +27,15 @@ export class OrderDto {
 
   @Expose()
   total_price: number;
+
+  @Expose()
+  escrow_contract_id?: string;
+
+  @Expose()
+  payment_tx_hash?: string;
+
+  @Expose()
+  onchain_status?: OnchainStatus;
 
   @Expose()
   created_at: Date;

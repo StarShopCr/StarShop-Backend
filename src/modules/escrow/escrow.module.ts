@@ -14,6 +14,3 @@ import { AuthModule } from '../auth/auth.module';
   ],
   controllers: [EscrowController],
   providers: [EscrowService],
-  exports: [EscrowService],
-})
-export class EscrowModule {}

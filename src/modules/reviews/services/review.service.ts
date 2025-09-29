@@ -18,7 +18,7 @@ export class ReviewService {
   }
 
   async createReview(
-    userId: number,
+    userId: string,
     productId: number,
     rating: number,
     comment?: string
@@ -33,7 +33,7 @@ export class ReviewService {
     }
 
     try {
-      await this.userService.getUserById(String(userId));
+      await this.userService.getUserById(userId);
     } catch (error) {
       throw new NotFoundError(`User with ID ${userId} not found`);
     }
@@ -92,7 +92,7 @@ export class ReviewService {
     };
   }
 
-  async deleteReview(userId: number, reviewId: string): Promise<boolean> {
+  async deleteReview(userId: string, reviewId: string): Promise<boolean> {
     const review = await this.repository.findOne({
       where: { id: reviewId },
     });

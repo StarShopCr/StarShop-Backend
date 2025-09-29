@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run linting
+echo "📝 Running ESLint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint failed. Please fix the issues before committing."
+  exit 1
+fi
+
+# Run formatting check
+echo "🎨 Checking code formatting..."
+npm run format:check
+if [ $? -ne 0 ]; then
+  echo "❌ Code formatting check failed. Run 'npm run format' to fix."
+  exit 1
+fi
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test:ci
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix the issues before committing."
+  exit 1
+fi
+
+# Check for direct process.env usage
+echo "🔍 Checking for direct process.env usage..."
+if grep -r "process\.env\." src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.test.ts"; then
+  echo "❌ Direct process.env usage detected. Use centralized config instead."
+  echo "   Import from 'src/config/env' and use the config object."
+  exit 1
+fi
+
+# Check for console.log statements
+echo "🔍 Checking for console.log statements..."
+if grep -r "console\.log" src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.test.ts"; then
+  echo "❌ console.log statements detected. Remove them before committing."
+  exit 1
+fi
+
+# Check for TODO/FIXME comments
+echo "🔍 Checking for TODO/FIXME comments..."
+if grep -r "TODO\|FIXME" src/ --exclude-dir=node_modules --exclude="*.spec.ts" --exclude="*.test.ts"; then
+  echo "⚠️  TODO/FIXME comments detected. Consider addressing them."
+  # Don't fail the commit, just warn
+fi
+
+echo "✅ All pre-commit checks passed!"
