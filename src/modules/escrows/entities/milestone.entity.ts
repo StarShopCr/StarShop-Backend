@@ -4,6 +4,9 @@ import { Escrow } from './escrow.entity';
 export enum MilestoneStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
+  READY = 'ready',          // Seller marked as ready to start
+  IN_PROGRESS = 'in_progress', // Work is in progress
+  DELIVERED = 'delivered',  // Seller delivered work for buyer approval
 }
 
 @Entity('escrow_milestones')
