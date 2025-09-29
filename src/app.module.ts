@@ -17,8 +17,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
-import { StoresModule } from './modules/stores/stores.module';
-import { HealthModule } from './health/health.module';
+import { LoggerModule } from './common/logger/logger.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -38,11 +38,16 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { Escrow } from './modules/escrows/entities/escrow.entity';
+import { Milestone } from './modules/escrows/entities/milestone.entity';
+import { EscrowsModule } from './modules/escrows/escrows.module';
 import { Store } from './modules/stores/entities/store.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule,
+    MetricsModule,
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -66,6 +71,8 @@ import { Store } from './modules/stores/entities/store.entity';
         BuyerRequest,
         Offer,
         OfferAttachment,
+        Escrow,
+        Milestone,
         Store,
       ],
       synchronize: false,
@@ -85,6 +92,7 @@ import { Store } from './modules/stores/entities/store.entity';
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
+    EscrowsModule,
     StoresModule,
     HealthModule,
   ],
