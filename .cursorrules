@@ -1,0 +1,270 @@
+# Cursor AI Rules for StarShop Backend
+
+## 🚨 CRITICAL RULES - NEVER VIOLATE
+
+### 1. Environment Variables
+- **NEVER** use `process.env.*` directly
+- **ALWAYS** import from `src/config/env` and use the `config` object
+- **ALWAYS** validate environment variables with Zod schema
+
+```typescript
+// ❌ FORBIDDEN
+const dbHost = process.env.DB_HOST;
+
+// ✅ REQUIRED
+import { config } from '../config/env';
+const dbHost = config.database.host;
+```
+
+### 2. TypeScript Types
+- **ALWAYS** provide explicit return types for functions
+- **NEVER** use `any` type (use `unknown` if necessary)
+- **ALWAYS** create interfaces for complex objects
+- **ALWAYS** type all function parameters
+
+```typescript
+// ❌ FORBIDDEN
+function getUser(id) {
+  return userRepository.findOne(id);
+}
+
+// ✅ REQUIRED
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+}
+
+async function getUser(id: string): Promise<UserResponse | null> {
+  return userRepository.findOne(id);
+}
+```
+
+### 3. Code Quality
+- **NEVER** include `console.log` statements
+- **NEVER** leave unused imports
+- **NEVER** leave commented-out code
+- **ALWAYS** follow ESLint and Prettier rules
+
+### 4. Testing Requirements
+- **ALWAYS** create tests for new features
+- **ALWAYS** mock external dependencies
+- **ALWAYS** test both success and error cases
+- **ALWAYS** ensure tests are deterministic
+
+### 5. Architecture Patterns
+- **ALWAYS** follow NestJS module structure
+- **ALWAYS** use DTOs for data validation
+- **ALWAYS** use services for business logic
+- **ALWAYS** use controllers for HTTP handling
+
+## 📋 Code Generation Guidelines
+
+### When generating code, ensure:
+
+1. **Environment Access**: Use centralized config
+2. **Type Safety**: Explicit types everywhere
+3. **Error Handling**: Proper try-catch blocks
+4. **Validation**: Use class-validator decorators
+5. **Testing**: Include corresponding test files
+6. **Documentation**: Add JSDoc comments
+7. **Logging**: Use proper logging instead of console.log
+
+### Example Service Generation:
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { config } from '../config/env';
+
+interface CreateUserRequest {
+  name: string;
+  email: string;
+  walletAddress: string;
+}
+
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  walletAddress: string;
+  createdAt: Date;
+}
+
+@Injectable()
+export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  async createUser(data: CreateUserRequest): Promise<UserResponse> {
+    try {
+      this.logger.log(`Creating user with email: ${data.email}`);
+      
+      const user = this.userRepository.create({
+        ...data,
+        // Add any additional logic here
+      });
+
+      const savedUser = await this.userRepository.save(user);
+      
+      this.logger.log(`User created successfully with ID: ${savedUser.id}`);
+      
+      return {
+        id: savedUser.id,
+        name: savedUser.name,
+        email: savedUser.email,
+        walletAddress: savedUser.walletAddress,
+        createdAt: savedUser.createdAt,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to create user: ${error.message}`, error.stack);
+      throw new Error('Failed to create user');
+    }
+  }
+}
+```
+
+### Example Test Generation:
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserService } from './user.service';
+import { User } from './entities/user.entity';
+
+describe('UserService', () => {
+  let service: UserService;
+  let repository: Repository<User>;
+
+  const mockRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+    find: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UserService,
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockRepository,
+        },
+      ],
+    }).compile();
+
+    service = module.get<UserService>(UserService);
+    repository = module.get<Repository<User>>(getRepositoryToken(User));
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('createUser', () => {
+    it('should create a user successfully', async () => {
+      // Arrange
+      const userData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        walletAddress: 'GD123...',
+      };
+      
+      const expectedUser = {
+        id: '1',
+        ...userData,
+        createdAt: new Date(),
+      };
+
+      mockRepository.create.mockReturnValue(expectedUser);
+      mockRepository.save.mockResolvedValue(expectedUser);
+
+      // Act
+      const result = await service.createUser(userData);
+
+      // Assert
+      expect(mockRepository.create).toHaveBeenCalledWith(userData);
+      expect(mockRepository.save).toHaveBeenCalledWith(expectedUser);
+      expect(result).toEqual({
+        id: expectedUser.id,
+        name: expectedUser.name,
+        email: expectedUser.email,
+        walletAddress: expectedUser.walletAddress,
+        createdAt: expectedUser.createdAt,
+      });
+    });
+
+    it('should throw error when user creation fails', async () => {
+      // Arrange
+      const userData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        walletAddress: 'GD123...',
+      };
+
+      mockRepository.create.mockReturnValue(userData);
+      mockRepository.save.mockRejectedValue(new Error('Database error'));
+
+      // Act & Assert
+      await expect(service.createUser(userData)).rejects.toThrow('Failed to create user');
+    });
+  });
+});
+```
+
+## 🔧 File Structure Requirements
+
+When creating new modules, follow this structure:
+
+```
+src/modules/[module-name]/
+├── controllers/
+│   └── [module].controller.ts
+├── services/
+│   └── [module].service.ts
+├── entities/
+│   └── [module].entity.ts
+├── dto/
+│   ├── create-[module].dto.ts
+│   ├── update-[module].dto.ts
+│   └── [module].response.dto.ts
+├── tests/
+│   ├── [module].controller.spec.ts
+│   ├── [module].service.spec.ts
+│   └── [module].integration.spec.ts
+└── [module].module.ts
+```
+
+## 🚫 Common Mistakes to Avoid
+
+1. **Direct process.env access** - Always use centralized config
+2. **Missing return types** - Always specify function return types
+3. **No error handling** - Always wrap in try-catch blocks
+4. **Missing tests** - Always create corresponding test files
+5. **console.log usage** - Use proper logging instead
+6. **any types** - Use specific types or unknown
+7. **Missing validation** - Always validate input data
+8. **No documentation** - Add JSDoc comments for complex logic
+
+## ✅ Quality Checklist
+
+Before suggesting code, ensure:
+- [ ] Uses centralized environment config
+- [ ] Has explicit TypeScript types
+- [ ] Includes proper error handling
+- [ ] Follows NestJS patterns
+- [ ] Includes corresponding tests
+- [ ] Uses proper logging
+- [ ] Validates input data
+- [ ] Has JSDoc documentation
+- [ ] Follows ESLint/Prettier rules
+- [ ] Is production-ready

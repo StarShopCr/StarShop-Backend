@@ -17,6 +17,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { AppCacheModule } from './cache/cache.module';
+import { StoresModule } from './modules/stores/stores.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -36,6 +38,7 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
+import { Store } from './modules/stores/entities/store.entity';
 import { Escrow } from './modules/escrows/entities/escrow.entity';
 import { Milestone } from './modules/escrows/entities/milestone.entity';
 import { EscrowsModule } from './modules/escrows/escrows.module';
@@ -44,6 +47,7 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    AppCacheModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
@@ -66,10 +70,11 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         BuyerRequest,
         Offer,
         OfferAttachment,
+        Store,
   Escrow,
   Milestone,
       ],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: false,
       logging: process.env.NODE_ENV === 'development',
     }),
     SharedModule,
@@ -86,7 +91,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     BuyerRequestsModule,
     OffersModule,
     SupabaseModule,
-  EscrowsModule,
+    StoresModule,
+    EscrowsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
