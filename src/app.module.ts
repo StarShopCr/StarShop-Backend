@@ -39,6 +39,9 @@ import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.en
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
 import { Store } from './modules/stores/entities/store.entity';
+import { Escrow } from './modules/escrows/entities/escrow.entity';
+import { Milestone } from './modules/escrows/entities/milestone.entity';
+import { EscrowsModule } from './modules/escrows/escrows.module';
 
 @Module({
   imports: [
@@ -68,6 +71,8 @@ import { Store } from './modules/stores/entities/store.entity';
         Offer,
         OfferAttachment,
         Store,
+  Escrow,
+  Milestone,
       ],
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',
@@ -87,6 +92,7 @@ import { Store } from './modules/stores/entities/store.entity';
     OffersModule,
     SupabaseModule,
     StoresModule,
+    EscrowsModule,
   ],
 })
 export class AppModule { }
