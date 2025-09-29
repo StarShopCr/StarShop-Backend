@@ -10,6 +10,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  // Middleware to track request start time for latency
+  app.use((req, res, next) => {
+    req._startTime = Date.now();
+    next();
+  });
+
   // Enable CORS
   app.enableCors();
 
