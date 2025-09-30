@@ -17,7 +17,7 @@ export class CacheController {
   @ApiOperation({ summary: 'Get cache statistics' })
   @ApiResponse({ status: 200, description: 'Cache statistics retrieved successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async getStats() {
+  async getStats(): Promise<Record<string, unknown>> {
     return await this.cacheService.getStats();
   }
 
@@ -27,7 +27,7 @@ export class CacheController {
   @ApiOperation({ summary: 'Clear entire cache' })
   @ApiResponse({ status: 200, description: 'Cache cleared successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async resetCache() {
+  async resetCache(): Promise<{ message: string }> {
     await this.cacheService.reset();
     return { message: 'Cache cleared successfully' };
   }
@@ -38,7 +38,7 @@ export class CacheController {
   @ApiOperation({ summary: 'Invalidate cache for specific entity' })
   @ApiResponse({ status: 200, description: 'Entity cache invalidated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async invalidateEntity(entity: string) {
+  async invalidateEntity(entity: string): Promise<{ message: string }> {
     await this.cacheService.invalidateEntity(entity);
     return { message: `Cache invalidated for entity: ${entity}` };
   }
@@ -49,7 +49,7 @@ export class CacheController {
   @ApiOperation({ summary: 'Invalidate cache for specific entity action' })
   @ApiResponse({ status: 200, description: 'Entity action cache invalidated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async invalidateAction(entity: string, action: string) {
+  async invalidateAction(entity: string, action: string): Promise<{ message: string }> {
     await this.cacheService.invalidateAction(entity, action);
     return { message: `Cache invalidated for entity: ${entity}, action: ${action}` };
   }

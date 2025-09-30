@@ -4,12 +4,10 @@ import { s3Upload } from '../config/s3.config';
 import { FileType } from '../entities/file.entity';
 
 // Interface to extend Express Request
-declare global {
-  namespace Express {
-    interface Request {
-      fileProvider?: 'cloudinary' | 's3';
-      fileType?: FileType;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    fileProvider?: 'cloudinary' | 's3';
+    fileType?: FileType;
   }
 }
 

@@ -320,32 +320,3 @@ export class OffersService {
     });
   }
 }
-}
-    return this.dataSource.transaction(async (manager) => {
-      const offer = await manager.findOne(Offer, {
-        where: { id: offerId },
-        relations: ['buyerRequest'],
-      });
-
-      if (!offer) throw new NotFoundException('Offer not found');
-
-      if (offer.buyerRequest.userId.toString() !== buyerId) {
-        throw new ForbiddenException('You are not authorized to confirm this offer');
-      }
-
-      if (offer.wasPurchased) {
-        throw new BadRequestException('This offer has already been confirmed as purchased');
-      }
-
-      offer.wasPurchased = true;
-      await manager.save(offer);
-
-      if (offer.buyerRequest.status !== BuyerRequestStatus.FULFILLED) {
-        offer.buyerRequest.status = BuyerRequestStatus.FULFILLED;
-        await manager.save(offer.buyerRequest);
-      }
-
-      return offer;
-    });
-  }
-}

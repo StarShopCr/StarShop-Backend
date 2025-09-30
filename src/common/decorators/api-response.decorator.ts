@@ -12,9 +12,9 @@ import { GlobalSuccessResponse, GlobalErrorResponse } from '../../types/global-r
 export function ApiSuccessResponse(
   status: number,
   description: string,
-  model?: Type<any>,
+  model?: Type<unknown>,
   isArray = false
-) {
+): MethodDecorator {
   const schema = model
     ? {
         allOf: [
@@ -47,7 +47,7 @@ export function ApiSuccessResponse(
  * @param status - HTTP status code
  * @param description - Error description
  */
-export function ApiErrorResponse(status: number, description: string) {
+export function ApiErrorResponse(status: number, description: string): MethodDecorator {
   return applyDecorators(
     ApiResponse({
       status,
@@ -66,8 +66,8 @@ export function ApiErrorResponse(status: number, description: string) {
 export function ApiAuthResponse(
   status: number,
   description: string,
-  model: Type<any>
-) {
+  model: Type<unknown>
+): MethodDecorator {
   return applyDecorators(
     ApiResponse({
       status,

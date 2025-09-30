@@ -24,7 +24,7 @@ import { CacheController } from './controllers/cache.controller';
           url: redisUrl,
           ttl,
           prefix,
-          retryStrategy: (times: number) => {
+          retryStrategy: (times: number): number => {
             const delay = Math.min(times * 50, 2000);
             return delay;
           },

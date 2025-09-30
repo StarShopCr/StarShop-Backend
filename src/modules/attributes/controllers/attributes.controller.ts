@@ -18,8 +18,6 @@ import { GetAttributesQueryDto } from "../dto/get-attributes-query.dto"
 import { AttributeResponseDto, PaginatedAttributesResponseDto } from "../dto/attribute-response.dto"
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard"
 import { RolesGuard } from "../../auth/guards/roles.guard"
-import { Roles } from "../../auth/decorators/roles.decorator"
-import { UserRole } from "../../auth/enums/user-role.enum"
 import { AttributeService } from "../services/attributes.service"
 
 @ApiTags("Attributes")
@@ -46,7 +44,7 @@ export class AttributeController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input data',
   })
-  async create(@Body() createAttributeDto: CreateAttributeDto) {
+  async create(@Body() createAttributeDto: CreateAttributeDto): Promise<AttributeResponseDto> {
     return this.attributeService.create(createAttributeDto);
   }
 
@@ -60,7 +58,7 @@ export class AttributeController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  async findAll(@Query() query: GetAttributesQueryDto) {
+  async findAll(@Query() query: GetAttributesQueryDto): Promise<PaginatedAttributesResponseDto> {
     return this.attributeService.findAll(query);
   }
 
@@ -76,7 +74,7 @@ export class AttributeController {
     status: HttpStatus.NOT_FOUND,
     description: 'Attribute not found',
   })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<AttributeResponseDto> {
     return this.attributeService.findOne(id);
   }
 
@@ -98,7 +96,7 @@ export class AttributeController {
     status: HttpStatus.CONFLICT,
     description: "Attribute with this name already exists",
   })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateAttributeDto: UpdateAttributeDto) {
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateAttributeDto: UpdateAttributeDto): Promise<AttributeResponseDto> {
     return this.attributeService.update(id, updateAttributeDto)
   }
 
@@ -115,7 +113,7 @@ export class AttributeController {
     status: HttpStatus.NOT_FOUND,
     description: 'Attribute not found',
   })
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.attributeService.remove(id);
   }
 
@@ -136,7 +134,7 @@ export class AttributeController {
     status: HttpStatus.CONFLICT,
     description: "Value already exists for this attribute",
   })
-  async addValue(@Param('id', ParseIntPipe) id: number, @Body('value') value: string) {
+  async addValue(@Param('id', ParseIntPipe) id: number, @Body('value') value: string): Promise<AttributeResponseDto> {
     return this.attributeService.addValue(id, value)
   }
 
@@ -151,7 +149,7 @@ export class AttributeController {
     status: HttpStatus.NOT_FOUND,
     description: 'Attribute not found',
   })
-  async getValues(@Param('id', ParseIntPipe) id: number) {
+  async getValues(@Param('id', ParseIntPipe) id: number): Promise<AttributeResponseDto> {
     return this.attributeService.getAttributeValues(id);
   }
 
@@ -169,7 +167,7 @@ export class AttributeController {
     status: HttpStatus.NOT_FOUND,
     description: "Attribute or value not found",
   })
-  async removeValue(@Param('id', ParseIntPipe) id: number, @Param('valueId', ParseIntPipe) valueId: number) {
+  async removeValue(@Param('id', ParseIntPipe) id: number, @Param('valueId', ParseIntPipe) valueId: number): Promise<{ message: string }> {
     await this.attributeService.removeValue(id, valueId)
   }
 }

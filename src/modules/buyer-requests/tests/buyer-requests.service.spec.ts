@@ -8,7 +8,6 @@ import { jest } from '@jest/globals';
 
 describe('BuyerRequestsService', () => {
   let service: BuyerRequestsService;
-  let repository: jest.Mocked<Repository<BuyerRequest>>;
 
   const mockQueryBuilder = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -47,7 +46,7 @@ describe('BuyerRequestsService', () => {
       id: 1,
       name: 'Test User',
       walletAddress: '0x123',
-    } as any,
+    } as Record<string, unknown>,
     offers: [],
     createdAt: new Date(),
     updatedAt: new Date(),

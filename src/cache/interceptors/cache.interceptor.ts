@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -21,7 +21,7 @@ export class CacheInterceptor implements NestInterceptor {
     private cacheService: CacheService,
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const request = context.switchToHttp().getRequest();
     const handler = context.getHandler();
     
@@ -51,7 +51,7 @@ export class CacheInterceptor implements NestInterceptor {
     );
   }
 
-  private generateCacheKey(metadata: any, request: any): string {
+  private generateCacheKey(metadata: unknown, request: unknown): string {
     const { key, entity, action } = metadata;
     
     // Extract parameters from request

@@ -11,7 +11,7 @@ import { Response } from 'express';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<Record<string, unknown>> {
     const ctx = context.switchToHttp();
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest();
@@ -40,7 +40,7 @@ export class ResponseInterceptor implements NestInterceptor {
         const token = res?.locals?.token;
 
         // Format response with global standard
-        const formattedResponse: any = {
+        const formattedResponse: Record<string, unknown> = {
           success: true,
           data,
         };

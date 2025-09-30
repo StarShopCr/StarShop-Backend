@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EscrowService } from '../escrow/services/escrow.service';
-import { OfferStatus } from './entities/offer.entity';
 
 /**
  * Example integration between Offers and Escrow modules
@@ -96,7 +95,7 @@ export class OffersEscrowIntegrationService {
   ): Promise<{ approved: boolean; released?: boolean; data?: any }> {
     try {
       // Step 1: Buyer approves/rejects milestone
-      const approvalResult = await this.escrowService.approveMilestone(
+      await this.escrowService.approveMilestone(
         {
           milestoneId,
           approved: buyerApproval,

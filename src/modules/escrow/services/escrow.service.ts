@@ -8,20 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { EscrowAccount } from '../entities/escrow-account.entity';
 import { Milestone } from '../entities/milestone.entity';
-import { ReleaseFundsDto, ReleaseFundsType } from '../dto/release-funds.dto';
+import { ReleaseFundsDto } from '../dto/release-funds.dto';
 import { ApproveMilestoneDto } from '../dto/approve-milestone.dto';
 import { ReleaseFundsResponseDto, EscrowAccountDto, MilestoneDto } from '../dto/release-funds-response.dto';
 import { EscrowStatus } from '../enums/escrow-status.enum';
 import { MilestoneStatus } from '../enums/milestone-status.enum';
 import { Offer } from '../../offers/entities/offer.entity';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Escrow } from '../entities/escrow.entity';
-import { EscrowFundingTx } from '../entities/escrow-funding-tx.entity';
 import { FundEscrowDto } from '../dto/fund-escrow.dto';
 import { ForbiddenError, NotFoundError } from '../../../middleware/error.classes';
-import { BlockchainService } from './blockchain.service';
 
 @Injectable()
 export class EscrowService {
@@ -45,7 +39,7 @@ export class EscrowService {
     releaseFundsDto: ReleaseFundsDto,
     userId: number,
   ): Promise<ReleaseFundsResponseDto> {
-    const { milestoneId, type, notes } = releaseFundsDto;
+    const { milestoneId } = releaseFundsDto;
 
     return this.dataSource.transaction(async (manager) => {
       // Find the milestone with escrow account and offer details
@@ -114,7 +108,7 @@ export class EscrowService {
     approveMilestoneDto: ApproveMilestoneDto,
     userId: number,
   ): Promise<{ success: boolean; message: string; milestone: MilestoneDto }> {
-    const { milestoneId, approved, notes } = approveMilestoneDto;
+    const { milestoneId, approved } = approveMilestoneDto;
 
     return this.dataSource.transaction(async (manager) => {
       const milestone = await manager.findOne(Milestone, {
@@ -301,10 +295,8 @@ export class EscrowService {
       releasedAt: milestone.releasedAt,
       createdAt: milestone.createdAt,
       updatedAt: milestone.updatedAt,
-    @InjectRepository(Escrow) private readonly escrowRepo: Repository<Escrow>,
-    @InjectRepository(EscrowFundingTx) private readonly txRepo: Repository<EscrowFundingTx>,
-    private readonly blockchain: BlockchainService,
-  ) {}
+    };
+  }
 
   async fundEscrow(id: string, dto: FundEscrowDto) {
     const escrow = await this.escrowRepo.findOne({ where: { id } });

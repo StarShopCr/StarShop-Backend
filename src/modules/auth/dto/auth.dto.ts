@@ -6,18 +6,17 @@ import {
   IsEmail, 
   IsObject, 
   IsEnum, 
-  Validate, 
   registerDecorator, 
   ValidationOptions, 
   ValidationArguments 
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { CountryCode } from '@/modules/users/enums/country-code.enum';
 
 // Custom validator to ensure role-specific data rules
 function IsRoleSpecificData(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: Record<string, unknown>, propertyName: string) {
     registerDecorator({
       name: 'isRoleSpecificData',
       target: object.constructor,

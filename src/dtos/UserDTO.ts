@@ -14,16 +14,16 @@ import {
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 // Custom validator to ensure role-specific data rules
-function IsRoleSpecificData(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+function IsRoleSpecificData(validationOptions?: ValidationOptions): PropertyDecorator {
+  return function (object: Record<string, unknown>, propertyName: string): void {
     registerDecorator({
       name: 'isRoleSpecificData',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
-          const obj = args.object as any;
+        validate(value: unknown, args: ValidationArguments): boolean {
+          const obj = args.object as Record<string, unknown>;
           const role = obj.role;
           
           if (propertyName === 'buyerData') {
@@ -89,7 +89,7 @@ export class CreateUserDto {
   @IsRoleSpecificData({ message: 'buyerData is only allowed for buyers' })
   @IsObject({ message: 'Buyer data must be an object' })
   @IsOptional()
-  buyerData?: any;
+  buyerData?: Record<string, unknown>;
 
   @ApiPropertyOptional({
     description: 'Seller-specific data (only allowed if role is seller)',
@@ -98,7 +98,7 @@ export class CreateUserDto {
   @IsRoleSpecificData({ message: 'sellerData is only allowed for sellers' })
   @IsObject({ message: 'Seller data must be an object' })
   @IsOptional()
-  sellerData?: any;
+  sellerData?: Record<string, unknown>;
 }
 
 export class UpdateUserDto {

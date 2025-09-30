@@ -117,7 +117,7 @@ export class AttributeService {
   }
 
   async addValue(attributeId: number, value: string): Promise<AttributeValue> {
-    const attribute = await this.findOne(attributeId)
+    await this.findOne(attributeId)
 
     // Check if value already exists for this attribute
     const existingValue = await this.attributeValueRepository.findOne({

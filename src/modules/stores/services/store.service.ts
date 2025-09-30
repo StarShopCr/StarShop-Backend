@@ -17,7 +17,7 @@ export class StoreService {
   /**
    * Create a default store for a seller
    */
-  async createDefaultStore(sellerId: number, sellerData: any): Promise<Store> {
+  async createDefaultStore(sellerId: number, sellerData: Record<string, unknown>): Promise<Store> {
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },
       relations: ['userRoles'],
@@ -210,7 +210,7 @@ export class StoreService {
   /**
    * Get store statistics
    */
-  async getStoreStats(storeId: number, sellerId: number): Promise<any> {
+  async getStoreStats(storeId: number, sellerId: number): Promise<Record<string, unknown>> {
     const store = await this.storeRepository.findOne({
       where: { id: storeId, sellerId },
     });

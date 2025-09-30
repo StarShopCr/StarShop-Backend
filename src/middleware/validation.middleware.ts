@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 
-export const validateRequest = (dtoClass: any) => {
+export const validateRequest = (dtoClass: new (...args: unknown[]) => unknown): (req: Request, res: Response, next: NextFunction) => Promise<void> => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const dtoObject = plainToClass(dtoClass, req.body);
     const errors = await validate(dtoObject);
@@ -28,7 +28,7 @@ export const validateRequest = (dtoClass: any) => {
 };
 
 export const paramValidators = {
-  id: (req: Request, res: Response, next: NextFunction) => {
+  id: (req: Request, res: Response, next: NextFunction): void => {
     const { id } = req.params;
     if (!id || isNaN(Number(id))) {
       return res.status(400).json({

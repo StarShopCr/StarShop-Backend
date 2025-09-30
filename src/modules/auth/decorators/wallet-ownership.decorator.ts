@@ -26,19 +26,19 @@ import { WALLET_OWNERSHIP_METADATA_KEY, WalletOwnershipConfig } from '../guards/
  * 
  * @param config Optional configuration for wallet validation
  */
-export const RequireWalletOwnership = (config: WalletOwnershipConfig = {}) =>
+export const RequireWalletOwnership = (config: WalletOwnershipConfig = {}): MethodDecorator & ClassDecorator =>
   SetMetadata(WALLET_OWNERSHIP_METADATA_KEY, config);
 
 /**
  * Shorthand decorator for common wallet ownership patterns.
  * Validates that the authenticated seller's wallet matches the sellerWallet field.
  */
-export const RequireSellerWallet = () =>
+export const RequireSellerWallet = (): MethodDecorator & ClassDecorator =>
   RequireWalletOwnership({ walletField: 'sellerWallet', source: 'body' });
 
 /**
  * Validates wallet ownership from URL parameters.
  * Useful for routes like /api/wallet/:walletAddress/offers
  */
-export const RequireWalletFromParams = (paramName = 'walletAddress') =>
+export const RequireWalletFromParams = (paramName = 'walletAddress'): MethodDecorator & ClassDecorator =>
   RequireWalletOwnership({ walletField: paramName, source: 'params' });

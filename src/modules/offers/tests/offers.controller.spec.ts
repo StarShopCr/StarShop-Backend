@@ -9,8 +9,6 @@ import { Express } from "express"
 
 describe("OffersController", () => {
   let controller: OffersController
-  let offersService: OffersService
-  let offerAttachmentService: OfferAttachmentService
 
   const mockOffersService = {
     create: jest.fn(),

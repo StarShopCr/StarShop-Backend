@@ -18,9 +18,6 @@ import {
 describe('EscrowService', () => {
   let service: EscrowService;
   let escrowRepository: jest.Mocked<Repository<EscrowAccount>>;
-  let milestoneRepository: jest.Mocked<Repository<Milestone>>;
-  let offerRepository: jest.Mocked<Repository<Offer>>;
-  let dataSource: jest.Mocked<DataSource>;
   let transactionManager: any;
 
   const mockBuyerId = 1;

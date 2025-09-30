@@ -9,7 +9,6 @@ import { SubmitRegisterDto } from '../dto/submit-register.dto';
 
 describe('SellerService', () => {
   let service: SellerService;
-  let userRepository: Repository<User>;
 
   const mockUser = {
     id: 1,

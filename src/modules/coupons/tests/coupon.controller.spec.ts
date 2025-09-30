@@ -81,7 +81,7 @@ describe('CouponController', () => {
         created_by: 'admin1',
       };
 
-      jest.spyOn(service, 'createCoupon').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(service, 'createCoupon').mockResolvedValue(mockCoupon as Record<string, unknown>);
 
       const result = await controller.createCoupon(createCouponDto);
 
@@ -115,7 +115,7 @@ describe('CouponController', () => {
       const code = 'TEST10';
       const cartValue = 100;
 
-      jest.spyOn(service, 'validateCoupon').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(service, 'validateCoupon').mockResolvedValue(mockCoupon as Record<string, unknown>);
 
       const result = await controller.validateCoupon(code, cartValue);
 

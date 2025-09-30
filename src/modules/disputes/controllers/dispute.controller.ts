@@ -13,7 +13,7 @@ export class DisputeController {
     @Body('orderItemId') orderItemId: string,
     @Body('reason') reason: string,
     @Req() req: AuthenticatedRequest
-  ) {
+  ): Promise<Record<string, unknown>> {
     const buyer = req.user;
     return this.disputeService.startDispute(orderItemId, buyer, reason);
   }
