@@ -9,7 +9,7 @@ export const authorizeRoles = (allowedRoles: Role[]) => {
         throw new UnauthorizedException('User not authenticated');
       }
 
-      const userRoles = req.user.role as Role[];
+      const userRoles = req.user.role;
       const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
 
       if (!hasAllowedRole) {

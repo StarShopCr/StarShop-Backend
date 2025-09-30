@@ -7,7 +7,7 @@ export class CreateReviewDTO {
 
 export class ReviewResponseDTO {
   id: string;
-  userId: string;
+  userId: number;
   productId: number;
   rating: number;
   comment?: string;

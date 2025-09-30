@@ -17,16 +17,6 @@ export enum OrderStatus {
   CANCELLED = 'CANCELLED',
 }
 
-export enum OnchainStatus {
-  PENDING = 'PENDING',
-  ESCROW_CREATED = 'ESCROW_CREATED',
-  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
-  DELIVERED = 'DELIVERED',
-  COMPLETED = 'COMPLETED',
-  DISPUTED = 'DISPUTED',
-  REFUNDED = 'REFUNDED',
-}
-
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('uuid')
@@ -44,19 +34,6 @@ export class Order {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_price: number;
-
-  @Column({ type: 'varchar', nullable: true })
-  escrow_contract_id?: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  payment_tx_hash?: string;
-
-  @Column({
-    type: 'enum',
-    enum: OnchainStatus,
-    nullable: true,
-  })
-  onchain_status?: OnchainStatus;
 
   @CreateDateColumn()
   created_at: Date;

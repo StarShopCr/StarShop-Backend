@@ -1,15 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
+import { validationResult, ValidationChain } from 'express-validator';
 
-export const validateRequest = (validations: any[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Wraps an array of express-validator chains and sends 400 with aggregated errors when validation fails.
+ * Uses explicit ValidationChain type instead of any[] for stronger typing.
+ */
+export const validateRequest = (validations: ValidationChain[]) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     await Promise.all(validations.map((validation) => validation.run(req)));
-
     const errors = validationResult(req);
     if (errors.isEmpty()) {
       return next();
     }
-
-    return res.status(400).json({ errors: errors.array() });
+    res.status(400).json({ errors: errors.array() });
   };
 };

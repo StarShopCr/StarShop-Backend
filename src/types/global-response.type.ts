@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GlobalSuccessResponse<T = any> {
+export class GlobalSuccessResponse<T = unknown> {
   @ApiProperty({
     description: 'Success status',
     example: true
@@ -48,7 +48,7 @@ export class GlobalErrorResponse {
   timestamp?: string;
 }
 
-export type GlobalResponse<T = any> = GlobalSuccessResponse<T> | GlobalErrorResponse;
+export type GlobalResponse<T = unknown> = GlobalSuccessResponse<T> | GlobalErrorResponse;
 
 // Helper types for common response patterns
 export interface PaginatedResponse<T> {

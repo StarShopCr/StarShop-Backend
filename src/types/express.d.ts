@@ -22,10 +22,6 @@ declare module 'express-serve-static-core' {
       name?: string;
       email?: string;
       role: Role[];
-      location?: string;
-      country?: string;
-      buyerData?: any;
-      sellerData?: any;
       createdAt?: Date;
       updatedAt?: Date;
     };
@@ -42,10 +38,6 @@ declare global {
       name?: string;
       email?: string;
       role: Role[];
-      location?: string;
-      country?: string;
-      buyerData?: any;
-      sellerData?: any;
       createdAt?: Date;
       updatedAt?: Date;
     }

@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { Role } from './role';
 
 export interface AppUser {
-  id: string; // UUID
+  id: string;
   walletAddress: string;
   name?: string;
   email?: string;
@@ -13,7 +13,7 @@ export interface AppUser {
 
 export interface AuthenticatedRequest extends Request {
   user: {
-    id: string; // UUID
+    id: string | number;
     walletAddress: string;
     name?: string;
     email?: string;
