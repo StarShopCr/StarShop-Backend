@@ -24,12 +24,12 @@ describe('ResponseInterceptor', () => {
           locals: {},
         }),
       }),
-    } as any;
+    } as ExecutionContext;
 
     // Mock CallHandler
     mockCallHandler = {
       handle: jest.fn(),
-    } as any;
+    } as CallHandler;
   });
 
   it('should be defined', () => {

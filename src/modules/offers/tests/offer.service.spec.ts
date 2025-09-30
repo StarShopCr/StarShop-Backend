@@ -34,18 +34,6 @@ describe('OffersService', () => {
     updatedAt: new Date(),
   } as BuyerRequest;
 
-  const mockClosedBuyerRequest = {
-    id: mockBuyerRequestId,
-    title: 'Test Request',
-    description: 'Test Description',
-    budgetMin: 100,
-    budgetMax: 200,
-    categoryId: 1,
-    userId: mockBuyerId,
-    status: BuyerRequestStatus.CLOSED,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as BuyerRequest;
 
   const createMockPendingOffer = () =>
     ({

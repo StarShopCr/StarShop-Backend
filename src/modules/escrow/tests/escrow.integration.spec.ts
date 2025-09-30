@@ -21,8 +21,6 @@ describe('EscrowController (e2e)', () => {
   const mockOfferId = 'offer-uuid-123';
 
   // Mock user data for different roles
-  const mockBuyer = { id: mockBuyerId, role: ['buyer'] };
-  const mockSeller = { id: mockSellerId, role: ['seller'] };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

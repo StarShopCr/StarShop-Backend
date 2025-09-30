@@ -21,7 +21,7 @@ export class CacheService {
   /**
    * Generate a cache key with proper naming convention
    */
-  private generateKey(entity: string, action: string, params?: Record<string, any>): string {
+  private generateKey(entity: string, action: string, params?: Record<string, unknown>): string {
     const baseKey = `${this.prefix}${entity}:${action}`;
     
     if (!params || Object.keys(params).length === 0) {
@@ -38,7 +38,7 @@ export class CacheService {
   /**
    * Get data from cache
    */
-  async get<T>(entity: string, action: string, params?: Record<string, any>): Promise<T | null> {
+  async get<T>(entity: string, action: string, params?: Record<string, unknown>): Promise<T | null> {
     const key = this.generateKey(entity, action, params);
     
     try {
@@ -67,7 +67,7 @@ export class CacheService {
     action: string, 
     data: T, 
     ttl?: number,
-    params?: Record<string, any>
+    params?: Record<string, unknown>
   ): Promise<void> {
     const key = this.generateKey(entity, action, params);
     
@@ -85,7 +85,7 @@ export class CacheService {
   /**
    * Delete specific cache entry
    */
-  async delete(entity: string, action: string, params?: Record<string, any>): Promise<void> {
+  async delete(entity: string, action: string, params?: Record<string, unknown>): Promise<void> {
     const key = this.generateKey(entity, action, params);
     
     try {
@@ -154,7 +154,7 @@ export class CacheService {
   /**
    * Get cache statistics (if available)
    */
-  async getStats(): Promise<Record<string, any>> {
+  async getStats(): Promise<Record<string, unknown>> {
     try {
       // This would return Redis INFO command results in production
       return {

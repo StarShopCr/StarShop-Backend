@@ -74,7 +74,7 @@ describe('Coupon Integration Tests', () => {
     }
   });
 
-  const createTestCoupon = async (code: string) => {
+  const createTestCoupon = async (code: string): Promise<Coupon> => {
     const createCouponDto = {
       code,
       type: CouponType.PERCENTAGE,

@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { Role } from '../../../types/role';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class RolesGuard implements CanActivate {
 
 // Express middleware version for non-NestJS routes
 export const requireRole = (requiredRole: Role) => {
-  return (req: Request, res: any, next: any) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const user = req.user;
 
     if (!user || !user.role) {

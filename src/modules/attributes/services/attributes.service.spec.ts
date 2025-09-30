@@ -10,8 +10,6 @@ import { AttributeService } from "./attributes.service"
 
 describe("AttributeService", () => {
   let service: AttributeService
-  let attributeRepository: Repository<Attribute>
-  let attributeValueRepository: Repository<AttributeValue>
 
   const mockAttributeRepository = {
     create: jest.fn(),
@@ -70,7 +68,7 @@ describe("AttributeService", () => {
       jest.spyOn(service, "findOne").mockResolvedValue({
         ...mockSavedAttribute,
         values: [],
-      } as any)
+      } as Attribute)
 
       const result = await service.create(createAttributeDto)
 

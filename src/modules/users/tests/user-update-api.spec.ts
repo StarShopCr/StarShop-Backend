@@ -8,8 +8,6 @@ import { UnauthorizedError } from '../../../utils/errors';
 
 describe('UserController - Update API Tests', () => {
   let controller: UserController;
-  let userService: UserService;
-  let authService: AuthService;
 
   const mockUserService = {
     updateUser: jest.fn(),

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { BuyerRequestSchedulerService } from '../services/buyer-request-scheduler.service';
 import { BuyerRequest, BuyerRequestStatus } from '../entities/buyer-request.entity';
 

@@ -5,8 +5,8 @@ import { CacheService } from '../cache.service';
 
 describe('CacheService', () => {
   let service: CacheService;
-  let mockCacheManager: any;
-  let mockConfigService: any;
+  let mockCacheManager: Record<string, unknown>;
+  let mockConfigService: Record<string, unknown>;
 
   beforeEach(async () => {
     mockCacheManager = {

@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
  * A validation middleware for validating request body data against a DTO class.
  * @param dtoClass The DTO class to validate against.
  */
-export function validationMiddleware(dtoClass: any) {
+export function validationMiddleware(dtoClass: new (...args: unknown[]) => unknown): (req: Request, res: Response, next: NextFunction) => Promise<void> {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const dtoInstance = plainToInstance(dtoClass, req.body);
     const errors: ValidationError[] = await validate(dtoInstance);

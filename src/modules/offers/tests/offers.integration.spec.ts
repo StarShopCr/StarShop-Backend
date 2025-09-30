@@ -10,7 +10,6 @@ import { BuyerRequestsModule } from "../../buyer-requests/buyer-requests.module"
 describe("Offers Integration Tests", () => {
   let app: INestApplication
   let authToken: string
-  let sellerId: string
   let offerId: string
 
   beforeAll(async () => {

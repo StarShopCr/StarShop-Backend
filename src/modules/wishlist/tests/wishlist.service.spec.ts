@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WishlistService } from '../services/wishlist.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Wishlist } from '../entities/wishlist.entity';
-import { Repository } from 'typeorm';
+import { Repository, DeleteResult } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 import { User } from '../../users/entities/user.entity';
 import { NotFoundException, ConflictException } from '@nestjs/common';
@@ -54,7 +54,7 @@ describe('WishlistService', () => {
       jest.spyOn(productRepository, 'findOne').mockResolvedValueOnce(product);
       jest.spyOn(wishlistRepository, 'findOne').mockResolvedValueOnce(null);
       jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(user);
-      jest.spyOn(wishlistRepository, 'create').mockImplementation((dto) => dto as any);
+      jest.spyOn(wishlistRepository, 'create').mockImplementation((dto) => dto as Wishlist);
       jest.spyOn(wishlistRepository, 'save').mockResolvedValueOnce(null);
 
       await expect(service.addToWishlist(userId, productId)).resolves.toBeUndefined();
@@ -114,7 +114,7 @@ describe('WishlistService', () => {
       const userId = '1';
       const productId = '123';
 
-      jest.spyOn(wishlistRepository, 'delete').mockResolvedValueOnce({ affected: 1 } as any);
+      jest.spyOn(wishlistRepository, 'delete').mockResolvedValueOnce({ affected: 1 } as DeleteResult);
 
       await expect(service.removeFromWishlist(userId, productId)).resolves.toBeUndefined();
     });
@@ -123,7 +123,7 @@ describe('WishlistService', () => {
       const userId = '1';
       const productId = '123';
 
-      jest.spyOn(wishlistRepository, 'delete').mockResolvedValueOnce({ affected: 0 } as any);
+      jest.spyOn(wishlistRepository, 'delete').mockResolvedValueOnce({ affected: 0 } as DeleteResult);
 
       await expect(service.removeFromWishlist(userId, productId)).rejects.toThrow(NotFoundException);
     });

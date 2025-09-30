@@ -90,8 +90,8 @@ describe('CouponService', () => {
         created_by: 'admin1',
       };
 
-      jest.spyOn(couponRepository, 'create').mockReturnValue(mockCoupon as any);
-      jest.spyOn(couponRepository, 'save').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(couponRepository, 'create').mockReturnValue(mockCoupon as Coupon);
+      jest.spyOn(couponRepository, 'save').mockResolvedValue(mockCoupon as Coupon);
 
       const result = await service.createCoupon(createCouponDto);
 
@@ -113,7 +113,7 @@ describe('CouponService', () => {
         created_by: 'admin1',
       };
 
-      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as Coupon);
 
       await expect(service.createCoupon(createCouponDto)).rejects.toThrow(ValidationError);
     });
@@ -124,7 +124,7 @@ describe('CouponService', () => {
       const code = 'TEST10';
       const cartValue = 100;
 
-      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as Coupon);
       jest.spyOn(usageRepository, 'count').mockResolvedValue(50);
 
       const result = await service.validateCoupon(code, cartValue);
@@ -148,7 +148,7 @@ describe('CouponService', () => {
       jest.spyOn(couponRepository, 'findOne').mockResolvedValue({
         ...mockCoupon,
         endDate: new Date(Date.now() - 86400000), // yesterday
-      } as any);
+      } as Coupon);
 
       await expect(service.validateCoupon(code, cartValue)).rejects.toThrow(ValidationError);
     });
@@ -160,10 +160,10 @@ describe('CouponService', () => {
       const code = 'TEST10';
       const userId = 'user1';
 
-      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as Coupon);
       jest.spyOn(usageRepository, 'count').mockResolvedValue(50);
-      jest.spyOn(usageRepository, 'create').mockReturnValue(mockUsage as any);
-      jest.spyOn(usageRepository, 'save').mockResolvedValue(mockUsage as any);
+      jest.spyOn(usageRepository, 'create').mockReturnValue(mockUsage as CouponUsage);
+      jest.spyOn(usageRepository, 'save').mockResolvedValue(mockUsage as CouponUsage);
 
       const result = await service.applyCouponToOrder(order, code, userId);
 
@@ -179,7 +179,7 @@ describe('CouponService', () => {
       const code = 'TEST10';
       const userId = 'user1';
 
-      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as any);
+      jest.spyOn(couponRepository, 'findOne').mockResolvedValue(mockCoupon as Coupon);
       jest.spyOn(usageRepository, 'count').mockResolvedValue(100);
 
       await expect(service.applyCouponToOrder(order, code, userId)).rejects.toThrow(

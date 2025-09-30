@@ -3,16 +3,15 @@ import { DisputeService } from '../services/dispute.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Dispute, DisputeStatus } from '../entities/dispute.entity';
 import { OrderItem, OrderItemStatus } from '../../orders/entities/order-item.entity';
-import { User } from '../../users/entities/user.entity';
 
-const mockOrderItemRepo = () => ({
+const mockOrderItemRepo = (): Record<string, unknown> => ({
   findOne: jest.fn(),
   save: jest.fn(),
   manager: {
     getRepository: jest.fn().mockReturnValue({ findOne: jest.fn() }),
   },
 });
-const mockDisputeRepo = () => ({
+const mockDisputeRepo = (): Record<string, unknown> => ({
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EscrowService } from './escrow.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Escrow } from '../entities/escrow.entity';
 import { Milestone, MilestoneStatus } from '../entities/milestone.entity';
-import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
 
 // Simple in-memory mocks
 class MockRepo<T extends { id?: any }> {

@@ -137,7 +137,7 @@ export class SellerService {
     return signedXdr && signedXdr.length > 10;
   }
 
-  private extractPayoutWalletFromXdr(signedXdr: string): string {
+  private extractPayoutWalletFromXdr(): string {
     // TODO: Extract actual payout wallet from XDR
     // For now, return a mock wallet
     return 'GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';

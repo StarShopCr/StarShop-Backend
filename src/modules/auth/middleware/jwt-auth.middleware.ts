@@ -6,7 +6,7 @@ import { AppDataSource } from '../../../config/database';
 import { User } from '../../users/entities/user.entity';
 import { Role } from '../../../types/role';
 
-export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     let token: string | undefined;
 
@@ -48,7 +48,7 @@ export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextF
       walletAddress: user.walletAddress,
       name: user.name,
       role: user.userRoles?.map((ur) => ur.role.name as Role) || [decoded.role as Role],
-    } as any;
+    } as Record<string, unknown>;
 
     next();
   } catch (error) {

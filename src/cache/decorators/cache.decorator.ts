@@ -13,8 +13,8 @@ export interface CacheOptions {
 /**
  * Decorator to mark a method for caching
  */
-export const Cacheable = (options: CacheOptions) => {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+export const Cacheable = (options: CacheOptions): MethodDecorator => {
+  return (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) => {
     SetMetadata(CACHE_KEY_METADATA, {
       key: options.key,
       entity: options.entity,
@@ -32,8 +32,8 @@ export const Cacheable = (options: CacheOptions) => {
 /**
  * Decorator to mark a method that should invalidate cache
  */
-export const CacheInvalidate = (entity: string, action?: string) => {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+export const CacheInvalidate = (entity: string, action?: string): MethodDecorator => {
+  return (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) => {
     SetMetadata('cache_invalidate', { entity, action })(target, propertyKey, descriptor);
     return descriptor;
   };
@@ -42,8 +42,8 @@ export const CacheInvalidate = (entity: string, action?: string) => {
 /**
  * Decorator to mark a method that should clear all cache
  */
-export const CacheClear = () => {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+export const CacheClear = (): MethodDecorator => {
+  return (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) => {
     SetMetadata('cache_clear', true)(target, propertyKey, descriptor);
     return descriptor;
   };

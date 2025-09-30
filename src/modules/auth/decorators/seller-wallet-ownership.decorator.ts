@@ -14,5 +14,5 @@ export const SELLER_WALLET_OWNERSHIP_KEY = 'sellerWalletOwnership';
  * @RequireSellerWalletOwnership()
  * createOffer(@Body() dto: CreateOfferDto, @Request() req: AuthRequest)
  */
-export const RequireSellerWalletOwnership = () => 
+export const RequireSellerWalletOwnership = (): MethodDecorator & ClassDecorator => 
   SetMetadata(SELLER_WALLET_OWNERSHIP_KEY, true);

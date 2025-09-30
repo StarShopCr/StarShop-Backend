@@ -4,5 +4,5 @@ export class ProductVariantDTO {
   sku: string;
   price: number;
   stock: number;
-  attributes?: any[];
+  attributes?: Record<string, unknown>[];
 }

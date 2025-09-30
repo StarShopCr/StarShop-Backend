@@ -47,7 +47,7 @@ export class ProductController {
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async getProductById(@Param('id') id: string) {
+  async getProductById(@Param('id') id: string): Promise<{ success: boolean; data: Product }> {
     const product = await this.productService.getProductById(parseInt(id));
     return { success: true, data: product };
   }
@@ -58,7 +58,7 @@ export class ProductController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({ status: 201, description: 'Product created successfully' })
-  async createProduct(@Body() createProductDto: any, @Request() req: any) {
+  async createProduct(@Body() createProductDto: Record<string, unknown>, @Request() req: Record<string, unknown>): Promise<{ success: boolean; data: Product }> {
     const userId = req.user?.id;
     if (!userId) {
       throw new BadRequestError('User not authenticated');
@@ -87,7 +87,7 @@ export class ProductController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a product' })
   @ApiResponse({ status: 200, description: 'Product updated successfully' })
-  async updateProduct(@Param('id') id: string, @Body() updateProductDto: any, @Request() req: any) {
+  async updateProduct(@Param('id') id: string, @Body() updateProductDto: Record<string, unknown>, @Request() req: Record<string, unknown>): Promise<{ success: boolean; data: Product }> {
     const userId = req.user?.id;
     if (!userId) {
       throw new BadRequestError('User not authenticated');
@@ -117,7 +117,7 @@ export class ProductController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a product' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
-  async deleteProduct(@Param('id') id: string, @Request() req: any) {
+  async deleteProduct(@Param('id') id: string, @Request() req: Record<string, unknown>): Promise<{ success: boolean; message: string }> {
     const userId = req.user?.id;
     if (!userId) {
       throw new BadRequestError('User not authenticated');

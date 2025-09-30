@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { UnauthorizedException } from '@nestjs/common';
 import { Role } from '../../../types/role';
 
-export const authorizeRoles = (allowedRoles: Role[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const authorizeRoles = (allowedRoles: Role[]): (req: Request, res: Response, next: NextFunction) => void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       if (!req.user) {
         throw new UnauthorizedException('User not authenticated');
