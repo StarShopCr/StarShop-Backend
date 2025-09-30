@@ -188,19 +188,8 @@ PORT=3000
 
 ```bash
 # Run migrations to create database tables
-# dist/data-source.js is your file data-source in dist directory
-npm run typeorm migration:run -d dist/data-source.js
-
-# or
-
-# dist/data-source.js is your file data-source in dist directory
-# The --fake flag tells TypeORM to mark the migration as executed without actually running it.
-npm run typeorm migration:run -d dist/data-source.js --fake
+npm run typeorm migration:run
 ```
-
-> [!WARNING]
-> Is important that you have dist file to use migrations
-
 
 ### 6. Start the Application
 
@@ -490,6 +479,27 @@ Examples:
 3. Run linting and tests
 4. Create PR with detailed description
 5. Wait for review and approval
+
+### Type Safety & Avoiding `any`
+
+Strict TypeScript options are enabled (`strict`, `noImplicitAny`, `strictNullChecks`). Do not introduce unchecked `any`.
+
+Guidelines:
+
+- Prefer `unknown` for opaque values instead of `any`.
+- Use generics in helpers (e.g. async handlers, validation middleware) to propagate types.
+- DTOs must define explicit field types. For collections of key/value attributes create a small interface (see `AttributeValueDTO`).
+- Dynamic JSON blobs: `Record<string, unknown>`.
+- If interoperating with untyped libraries, narrow as soon as possible and add runtime guards.
+- Only in tests you may coerce with `as unknown as T`; keep the cast local.
+
+Audit command:
+
+```bash
+grep -R "any" src | grep -v spec || true
+```
+
+If you intentionally keep an `any`, annotate with `// INTENTIONAL_ANY: reason`.
 
 ## 🚀 Deployment
 

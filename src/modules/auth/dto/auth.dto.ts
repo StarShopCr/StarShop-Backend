@@ -1,62 +1,5 @@
-import { 
-  IsString, 
-  IsOptional, 
-  Matches, 
-  IsNotEmpty, 
-  IsEmail, 
-  IsObject, 
-  IsEnum, 
-  Validate, 
-  registerDecorator, 
-  ValidationOptions, 
-  ValidationArguments 
-} from 'class-validator';
+import { IsString, IsOptional, Matches, IsNotEmpty, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
-import { CountryCode } from '@/modules/users/enums/country-code.enum';
-
-// Custom validator to ensure role-specific data rules
-function IsRoleSpecificData(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
-    registerDecorator({
-      name: 'isRoleSpecificData',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: any, args: ValidationArguments) {
-          const obj = args.object as any;
-          const role = obj.role;
-          
-          if (propertyName === 'buyerData') {
-            // buyerData is only allowed for buyers
-            if (role !== 'buyer' && value !== undefined) {
-              return false;
-            }
-          }
-          
-          if (propertyName === 'sellerData') {
-            // sellerData is only allowed for sellers
-            if (role !== 'seller' && value !== undefined) {
-              return false;
-            }
-          }
-          
-          return true;
-        },
-        defaultMessage(args: ValidationArguments) {
-          if (args.property === 'buyerData') {
-            return 'buyerData is only allowed for buyers';
-          }
-          if (args.property === 'sellerData') {
-            return 'sellerData is only allowed for sellers';
-          }
-          return 'Invalid role-specific data';
-        }
-      }
-    });
-  };
-}
 
 export class StellarWalletLoginDto {
   @ApiProperty({
@@ -106,44 +49,6 @@ export class RegisterUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
-
-  @ApiProperty({
-    description: "Country code of the buyer request",
-    example: "US",
-    enum: CountryCode,
-    enumName: 'CountryCode'
-  })
-  @Transform(({ value }) => value?.toUpperCase())
-  @IsOptional()
-  @IsString()
-  @IsEnum(CountryCode, { message: 'Country must be a valid ISO 3166-1 alpha-2 country code' })
-  country?: string;
-
-  @ApiPropertyOptional({
-    description: 'User location',
-    example: 'New York',
-  })
-  @IsString()
-  @IsOptional()
-  location?: string;
-
-  @ApiPropertyOptional({
-    description: 'Buyer-specific data (only allowed if role is buyer)',
-    example: { preferences: ['electronics', 'books'] },
-  })
-  @IsRoleSpecificData({ message: 'buyerData is only allowed for buyers' })
-  @IsObject()
-  @IsOptional()
-  buyerData?: any;
-
-  @ApiPropertyOptional({
-    description: 'Seller-specific data (only allowed if role is seller)',
-    example: { businessName: 'Tech Store', categories: ['electronics'], rating: 4.5 },
-  })
-  @IsRoleSpecificData({ message: 'sellerData is only allowed for sellers' })
-  @IsObject()
-  @IsOptional()
-  sellerData?: any;
 }
 
 export class UpdateUserDto {
@@ -162,44 +67,6 @@ export class UpdateUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
-
-  @ApiPropertyOptional({
-    description: 'User location',
-    example: 'New York',
-  })
-  @IsString()
-  @IsOptional()
-  location?: string;
-
-  @ApiPropertyOptional({
-    description: "Country code of the buyer request",
-    example: "US",
-    enum: CountryCode,
-    enumName: 'CountryCode'
-  })
-  @Transform(({ value }) => value?.toUpperCase())
-  @IsOptional()
-  @IsString()
-  @IsEnum(CountryCode, { message: 'Country must be a valid ISO 3166-1 alpha-2 country code' })
-  country?: string;
-
-  @ApiPropertyOptional({
-    description: 'Buyer-specific data (only allowed if role is buyer)',
-    example: { preferences: ['electronics', 'books'] },
-  })
-  @IsRoleSpecificData({ message: 'buyerData is only allowed for buyers' })
-  @IsObject()
-  @IsOptional()
-  buyerData?: any;
-
-  @ApiPropertyOptional({
-    description: 'Seller-specific data (only allowed if role is seller)',
-    example: { businessName: 'Tech Store', categories: ['electronics'], rating: 4.5 },
-  })
-  @IsRoleSpecificData({ message: 'sellerData is only allowed for sellers' })
-  @IsObject()
-  @IsOptional()
-  sellerData?: any;
 }
 
 export class ChallengeDto {

@@ -16,11 +16,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { OrdersModule } from './modules/orders/orders.module';
 import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.module';
 import { OffersModule } from './modules/offers/offers.module';
-import { EscrowModule } from './modules/escrow/escrow.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
-import { EscrowModule } from './modules/escrow/escrow.module';
-import { AppCacheModule } from './cache/cache.module';
-import { StoresModule } from './modules/stores/stores.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -40,20 +36,11 @@ import { CouponUsage } from './modules/coupons/entities/coupon-usage.entity';
 import { BuyerRequest } from './modules/buyer-requests/entities/buyer-request.entity';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OfferAttachment } from './modules/offers/entities/offer-attachment.entity';
-import { EscrowAccount } from './modules/escrow/entities/escrow-account.entity';
-import { Milestone } from './modules/escrow/entities/milestone.entity';
-import { Escrow } from './modules/escrow/entities/escrow.entity';
-import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.entity';
-import { Store } from './modules/stores/entities/store.entity';
-import { Escrow } from './modules/escrows/entities/escrow.entity';
-import { Milestone } from './modules/escrows/entities/milestone.entity';
-import { EscrowsModule } from './modules/escrows/escrows.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    AppCacheModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
@@ -76,16 +63,8 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         BuyerRequest,
         Offer,
         OfferAttachment,
-        EscrowAccount,
-        Milestone,
-
-  Escrow,
-  EscrowFundingTx,
-        Store,
-  Escrow,
-  Milestone,
       ],
-      synchronize: false,
+      synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
     }),
     SharedModule,
@@ -101,11 +80,7 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     OrdersModule,
     BuyerRequestsModule,
     OffersModule,
-    EscrowModule,
     SupabaseModule,
-  EscrowModule,
-    StoresModule,
-    EscrowsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

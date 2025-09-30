@@ -39,7 +39,7 @@ export const sessionMiddleware = async (req: Request, res: Response, next: NextF
       id: user.id,
       walletAddress: user.walletAddress,
       role: user.userRoles.map((ur) => ur.role.name as Role),
-    } as any;
+    };
 
     next();
   } catch (error) {

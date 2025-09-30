@@ -51,8 +51,8 @@ export class BuyerRequest {
   })
   status: BuyerRequestStatus;
 
-  @Column({ type: 'uuid' })
-  userId: string;
+  @Column()
+  userId: number;
 
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
