@@ -21,6 +21,8 @@ import { SupabaseModule } from './modules/supabase/supabase.module';
 import { EscrowModule } from './modules/escrow/escrow.module';
 import { AppCacheModule } from './cache/cache.module';
 import { StoresModule } from './modules/stores/stores.module';
+import { SecurityModule } from './security/security.module';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -103,9 +105,16 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     OffersModule,
     EscrowModule,
     SupabaseModule,
-  EscrowModule,
+    EscrowModule,
     StoresModule,
     EscrowsModule,
+    SecurityModule,
+  ],
+  providers: [
+    {
+      provide: 'APP_GUARD',
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule { }
