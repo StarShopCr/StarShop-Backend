@@ -6,12 +6,14 @@ import { BuyerRequest, BuyerRequestStatus } from '../entities/buyer-request.enti
 import type { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { BuyerRequestsController } from '../controllers/buyer-requests.controller';
+import { BuyerRequestsService } from '../services/buyer-requests.service';
 
 // Simple User entity for testing without complex relationships
 @Entity('users')
 class TestUser {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true, nullable: true })
   email?: string;
@@ -26,6 +28,7 @@ class TestUser {
 describe('BuyerRequestsController (e2e)', () => {
   let app: INestApplication;
   let repository: Repository<BuyerRequest>;
+  let userRepository: Repository<TestUser>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,14 +42,30 @@ describe('BuyerRequestsController (e2e)', () => {
         }),
         TypeOrmModule.forFeature([BuyerRequest, TestUser]),
       ],
-      controllers: [
-        (await import('../controllers/buyer-requests.controller')).BuyerRequestsController,
-      ],
-      providers: [(await import('../services/buyer-requests.service')).BuyerRequestsService],
+      controllers: [BuyerRequestsController],
+      providers: [BuyerRequestsService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     repository = moduleFixture.get<Repository<BuyerRequest>>(getRepositoryToken(BuyerRequest));
+    userRepository = moduleFixture.get<Repository<TestUser>>(getRepositoryToken(TestUser));
+    
+    // Create test users first
+    await userRepository.save([
+      {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        email: 'user1@test.com',
+        name: 'Test User 1',
+        walletAddress: '0x123456789abcdef1'
+      },
+      {
+        id: '550e8400-e29b-41d4-a716-446655440002',
+        email: 'user2@test.com',
+        name: 'Test User 2',
+        walletAddress: '0x123456789abcdef2'
+      }
+    ]);
+    
     await app.init();
   }, 30000); // Increased timeout to 30 seconds
 
@@ -76,7 +95,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 1000,
           budgetMax: 2000,
           categoryId: 1,
-          userId: 1,
+          userId: '550e8400-e29b-41d4-a716-446655440001',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
@@ -86,7 +105,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 500,
           budgetMax: 1000,
           categoryId: 2,
-          userId: 2,
+          userId: '550e8400-e29b-41d4-a716-446655440002',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
         },
@@ -108,7 +127,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 5000,
           budgetMax: 10000,
           categoryId: 1,
-          userId: 1,
+          userId: '550e8400-e29b-41d4-a716-446655440001',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
@@ -117,7 +136,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 100,
           budgetMax: 500,
           categoryId: 1,
-          userId: 2,
+          userId: '550e8400-e29b-41d4-a716-446655440002',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
@@ -139,7 +158,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 1000,
           budgetMax: 2000,
           categoryId: 1,
-          userId: 1,
+          userId: '550e8400-e29b-41d4-a716-446655440001',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
         },
@@ -148,7 +167,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 1000,
           budgetMax: 2000,
           categoryId: 1,
-          userId: 2,
+          userId: '550e8400-e29b-41d4-a716-446655440002',
           status: BuyerRequestStatus.OPEN,
           expiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days
         },
@@ -172,7 +191,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 1000,
           budgetMax: 2000,
           categoryId: 1,
-          userId: 1,
+          userId: '550e8400-e29b-41d4-a716-446655440001',
           status: BuyerRequestStatus.OPEN,
         },
         {
@@ -180,7 +199,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 500,
           budgetMax: 1000,
           categoryId: 1,
-          userId: 2,
+          userId: '550e8400-e29b-41d4-a716-446655440002',
           status: BuyerRequestStatus.OPEN,
         },
       ]);
@@ -203,7 +222,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 1000,
           budgetMax: 2000,
           categoryId: 1,
-          userId: 1,
+          userId: '550e8400-e29b-41d4-a716-446655440001',
           status: BuyerRequestStatus.OPEN,
         },
         {
@@ -211,7 +230,7 @@ describe('BuyerRequestsController (e2e)', () => {
           budgetMin: 500,
           budgetMax: 1000,
           categoryId: 1,
-          userId: 2,
+          userId: '550e8400-e29b-41d4-a716-446655440002',
           status: BuyerRequestStatus.OPEN,
         },
       ]);

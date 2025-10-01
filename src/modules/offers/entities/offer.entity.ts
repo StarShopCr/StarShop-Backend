@@ -33,8 +33,8 @@ export class Offer {
   @JoinColumn({ name: 'buyer_request_id' })
   buyerRequest: BuyerRequest;
 
-  @Column({ name: 'seller_id' })
-  sellerId: number;
+  @Column({ name: 'seller_id', type: 'uuid' })
+  sellerId: string;
 
   @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'seller_id' })

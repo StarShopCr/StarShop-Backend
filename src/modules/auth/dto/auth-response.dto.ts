@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ChallengeResponseDto {
   @ApiProperty({
     description: 'Success status',
-    example: true
+    example: true,
   })
   success: boolean;
 
@@ -12,8 +12,8 @@ export class ChallengeResponseDto {
     example: {
       challenge: 'Please sign this message to authenticate: 1234567890',
       walletAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890',
-      timestamp: 1640995200000
-    }
+      timestamp: 1640995200000,
+    },
   })
   data: {
     challenge: string;
@@ -24,32 +24,26 @@ export class ChallengeResponseDto {
 
 export class UserDto {
   @ApiProperty({
-    description: 'User ID',
-    example: 1
-  })
-  id: number;
-
-  @ApiProperty({
     description: 'Stellar wallet address',
-    example: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890'
+    example: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890',
   })
   walletAddress: string;
 
   @ApiProperty({
     description: 'User display name',
-    example: 'John Doe'
+    example: 'John Doe',
   })
   name: string;
 
   @ApiProperty({
     description: 'User email address',
-    example: 'john.doe@example.com'
+    example: 'john.doe@example.com',
   })
   email: string;
 
   @ApiProperty({
     description: 'User role',
-    example: 'buyer'
+    example: 'buyer',
   })
   role: string;
 }
@@ -57,7 +51,7 @@ export class UserDto {
 export class AuthResponseDto {
   @ApiProperty({
     description: 'Success status',
-    example: true
+    example: true,
   })
   success: boolean;
 
@@ -65,14 +59,13 @@ export class AuthResponseDto {
     description: 'Authentication data',
     example: {
       user: {
-        id: 1,
         walletAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890',
         name: 'John Doe',
         email: 'john.doe@example.com',
-        role: 'buyer'
+        role: 'buyer',
       },
-      expiresIn: 3600
-    }
+      expiresIn: 3600,
+    },
   })
   data: {
     user: UserDto;
@@ -83,28 +76,29 @@ export class AuthResponseDto {
 export class UserResponseDto {
   @ApiProperty({
     description: 'Success status',
-    example: true
+    example: true,
   })
   success: boolean;
 
   @ApiProperty({
     description: 'User data',
     example: {
-      id: 1,
       walletAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890123456789012345678901234567890',
       name: 'John Doe',
       email: 'john.doe@example.com',
       role: 'buyer',
+      // Optional fields
+      country: 'US',
       createdAt: '2024-01-01T00:00:00.000Z',
-      updatedAt: '2024-01-01T00:00:00.000Z'
-    }
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    },
   })
   data: {
-    id: number;
     walletAddress: string;
     name: string;
     email: string;
     role: string;
+    country?: string | null;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -113,13 +107,13 @@ export class UserResponseDto {
 export class LogoutResponseDto {
   @ApiProperty({
     description: 'Success status',
-    example: true
+    example: true,
   })
   success: boolean;
 
   @ApiProperty({
     description: 'Logout message',
-    example: 'Logged out successfully'
+    example: 'Logged out successfully',
   })
   message: string;
-} 
+}

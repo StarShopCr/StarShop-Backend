@@ -7,9 +7,10 @@ import { Offer } from "./entities/offer.entity"
 import { OfferAttachment } from "./entities/offer-attachment.entity"
 import { BuyerRequest } from "../buyer-requests/entities/buyer-request.entity"
 import { FilesModule } from "../files/files.module"
+import { User } from "../users/entities/user.entity"
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Offer, OfferAttachment, BuyerRequest]), FilesModule],
+  imports: [TypeOrmModule.forFeature([Offer, User,OfferAttachment, BuyerRequest]), FilesModule],
   controllers: [OffersController],
   providers: [OffersService, OfferAttachmentService],
   exports: [OffersService, OfferAttachmentService],

@@ -25,19 +25,18 @@ export class WishlistService {
   }
 
   async addToWishlist(userId: string, productId: string): Promise<void> {
-    const userIdNum = this.toNumber(userId);
     const productIdNum = this.toNumber(productId);
 
     const product = await this.productRepository.findOne({ where: { id: productIdNum } });
     if (!product) throw new NotFoundException('Product not found');
 
     const exists = await this.wishlistRepository.findOne({
-      where: { user: { id: userIdNum }, product: { id: productIdNum } },
+      where: { user: { id: userId }, product: { id: productIdNum } },
     });
 
     if (exists) throw new ConflictException('Product already in wishlist');
 
-    const user = await this.userRepository.findOne({ where: { id: userIdNum } });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const wishlistItem = this.wishlistRepository.create({ user, product });
@@ -45,11 +44,10 @@ export class WishlistService {
   }
 
   async removeFromWishlist(userId: string, productId: string): Promise<void> {
-    const userIdNum = this.toNumber(userId);
     const productIdNum = this.toNumber(productId);
 
     const result = await this.wishlistRepository.delete({
-      user: { id: userIdNum },
+      user: { id: userId },
       product: { id: productIdNum },
     });
 
@@ -57,10 +55,8 @@ export class WishlistService {
   }
 
   async getWishlist(userId: string): Promise<Wishlist[]> {
-    const userIdNum = this.toNumber(userId);
-
     return this.wishlistRepository.find({
-      where: { user: { id: userIdNum } },
+      where: { user: { id: userId } },
       relations: ['product'],
       order: { addedAt: 'DESC' },
     });

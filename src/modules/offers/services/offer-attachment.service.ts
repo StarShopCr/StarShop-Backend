@@ -41,7 +41,7 @@ export class OfferAttachmentService {
       throw new NotFoundException('Offer not found');
     }
 
-    if (offer.sellerId !== userId) {
+    if (offer.sellerId !== userId.toString()) {
       throw new ForbiddenException('You can only add attachments to your own offers');
     }
 
@@ -136,7 +136,7 @@ export class OfferAttachmentService {
       throw new NotFoundException('Attachment not found');
     }
 
-    if (attachment.offer.sellerId !== userId) {
+    if (attachment.offer.sellerId !== userId.toString()) {
       throw new ForbiddenException('You can only delete attachments from your own offers');
     }
 

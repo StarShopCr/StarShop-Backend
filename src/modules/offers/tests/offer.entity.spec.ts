@@ -9,7 +9,7 @@ describe('Offer Entity', () => {
     it('should create an offer with required fields', () => {
       const offer = new Offer();
       offer.buyerRequestId = 123;
-      offer.sellerId = 1;
+      offer.sellerId = "1";
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
       offer.price = 100.5;
@@ -25,7 +25,7 @@ describe('Offer Entity', () => {
     it('should create an offer with price validation', () => {
       const offer = new Offer();
       offer.buyerRequestId = 123;
-      offer.sellerId = 1;
+      offer.sellerId = "1";
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
       offer.price = -50; // Invalid in DB, but allowed in-memory
@@ -36,7 +36,7 @@ describe('Offer Entity', () => {
     it('should create an offer without product (null product_id)', () => {
       const offer = new Offer();
       offer.buyerRequestId = 123;
-      offer.sellerId = 1;
+      offer.sellerId = "1";
       offer.title = 'Test Offer';
       offer.description = 'Test offer description';
       offer.price = 100.5;
@@ -85,13 +85,13 @@ describe('Offer Entity', () => {
     it('should have relationship with User (seller)', () => {
       const offer = new Offer();
       const seller = new User();
-      seller.id = 1;
+      seller.id = "1";
 
       offer.seller = seller;
       offer.sellerId = seller.id;
 
       expect(offer.seller).toBe(seller);
-      expect(offer.sellerId).toBe(1);
+      expect(offer.sellerId).toBe("1");
     });
 
     it('should have optional relationship with Product', () => {
@@ -124,10 +124,10 @@ describe('Offer Entity', () => {
     it('should enforce foreign key constraints (simulated)', () => {
       const offer = new Offer();
       offer.buyerRequestId = 999;
-      offer.sellerId = 999;
+      offer.sellerId = "999";
 
       expect(offer.buyerRequestId).toBe(999);
-      expect(offer.sellerId).toBe(999);
+      expect(offer.sellerId).toBe("999");
     });
 
     it('should allow null product_id', () => {

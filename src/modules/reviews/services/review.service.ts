@@ -3,22 +3,22 @@ import { Review } from '../entities/review.entity';
 import AppDataSource from '../../../config/ormconfig';
 import { NotFoundError, BadRequestError } from '../../../utils/errors';
 import { ProductReviewsResponseDTO, ReviewResponseDTO } from '../dto/review.dto';
-import { ProductService } from '../../products/services/product.service';
 import { UserService } from '../../users/services/user.service';
+import { Product } from '../../products/entities/product.entity';
 
 export class ReviewService {
   private repository: Repository<Review>;
-  private productService: ProductService;
+  private productRepository = AppDataSource.getRepository(Product);
   private userService: UserService;
 
   constructor() {
     this.repository = AppDataSource.getRepository(Review);
-    this.productService = new ProductService();
+    // Directly use repositories instead of ProductService to avoid DI cache dependency
     this.userService = new UserService();
   }
 
   async createReview(
-    userId: number,
+    userId: string,
     productId: number,
     rating: number,
     comment?: string
@@ -27,13 +27,11 @@ export class ReviewService {
       throw new BadRequestError('Rating must be between 1 and 5');
     }
 
-    const product = await this.productService.getById(productId);
-    if (!product) {
-      throw new NotFoundError(`Product with ID ${productId} not found`);
-    }
+  const product = await this.productRepository.findOne({ where: { id: productId } });
+  if (!product) throw new NotFoundError(`Product with ID ${productId} not found`);
 
     try {
-      await this.userService.getUserById(String(userId));
+      await this.userService.getUserById(userId);
     } catch (error) {
       throw new NotFoundError(`User with ID ${userId} not found`);
     }
@@ -61,10 +59,8 @@ export class ReviewService {
   }
 
   async getProductReviews(productId: number): Promise<ProductReviewsResponseDTO> {
-    const product = await this.productService.getById(productId);
-    if (!product) {
-      throw new NotFoundError(`Product with ID ${productId} not found`);
-    }
+  const product = await this.productRepository.findOne({ where: { id: productId } });
+  if (!product) throw new NotFoundError(`Product with ID ${productId} not found`);
 
     const reviews = await this.repository.find({
       where: { productId },
@@ -92,7 +88,7 @@ export class ReviewService {
     };
   }
 
-  async deleteReview(userId: number, reviewId: string): Promise<boolean> {
+  async deleteReview(userId: string, reviewId: string): Promise<boolean> {
     const review = await this.repository.findOne({
       where: { id: reviewId },
     });
@@ -128,10 +124,8 @@ export class ReviewService {
     sortBy: 'rating' | 'date' = 'date',
     sortOrder: 'ASC' | 'DESC' = 'DESC'
   ): Promise<ProductReviewsResponseDTO> {
-    const product = await this.productService.getById(productId);
-    if (!product) {
-      throw new NotFoundError(`Product with ID ${productId} not found`);
-    }
+  const product = await this.productRepository.findOne({ where: { id: productId } });
+  if (!product) throw new NotFoundError(`Product with ID ${productId} not found`);
 
     const queryBuilder = this.repository
       .createQueryBuilder('review')

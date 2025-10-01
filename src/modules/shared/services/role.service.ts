@@ -46,28 +46,28 @@ export class RoleService {
     if (!role) {
       throw new Error(`Role ${roleName} not found`);
     }
-    await this.userRoleRepository.save({ userId: parseInt(userId), roleId: role.id });
+    await this.userRoleRepository.save({ userId, roleId: role.id });
   }
 
-  async removeRoleFromUser(userId: number, roleId: number): Promise<void> {
+  async removeRoleFromUser(userId: string, roleId: number): Promise<void> {
     await this.userRoleRepository.delete({ userId, roleId });
   }
 
   async getUserRoles(userId: string): Promise<Role[]> {
     const userRoles = await this.userRoleRepository.find({
-      where: { userId: parseInt(userId) },
+      where: { userId },
       relations: ['role'],
     });
     return userRoles.map((ur) => ur.role);
   }
 
-  async hasRole(userId: number, roleName: RoleName): Promise<boolean> {
-    const userRoles = await this.getUserRoles(userId.toString());
+  async hasRole(userId: string, roleName: RoleName): Promise<boolean> {
+    const userRoles = await this.getUserRoles(userId);
     return userRoles.some((role) => role.name === roleName);
   }
 
-  async hasAnyRole(userId: number, roleNames: RoleName[]): Promise<boolean> {
-    const userRoles = await this.getUserRoles(userId.toString());
+  async hasAnyRole(userId: string, roleNames: RoleName[]): Promise<boolean> {
+    const userRoles = await this.getUserRoles(userId);
     return userRoles.some((role) => roleNames.includes(role.name));
   }
 }

@@ -34,7 +34,7 @@ export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextF
 
     const userRepository = AppDataSource.getRepository(User);
     const user = await userRepository.findOne({
-      where: { id: parseInt(decoded.id) },
+      where: { id: decoded.id },
       relations: ['userRoles', 'userRoles.role'],
     });
 
@@ -48,7 +48,7 @@ export const jwtAuthMiddleware = async (req: Request, res: Response, next: NextF
       walletAddress: user.walletAddress,
       name: user.name,
       role: user.userRoles?.map((ur) => ur.role.name as Role) || [decoded.role as Role],
-    };
+    } as any;
 
     next();
   } catch (error) {

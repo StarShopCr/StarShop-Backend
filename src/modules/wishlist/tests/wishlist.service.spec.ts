@@ -49,7 +49,7 @@ describe('WishlistService', () => {
       const product = new Product();
       product.id = Number(productId);
       const user = new User();
-      user.id = Number(userId);
+      user.id = userId;
 
       jest.spyOn(productRepository, 'findOne').mockResolvedValueOnce(product);
       jest.spyOn(wishlistRepository, 'findOne').mockResolvedValueOnce(null);

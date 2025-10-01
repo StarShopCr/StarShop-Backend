@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Keypair } from 'stellar-sdk';
 import { BadRequestError, UnauthorizedError } from '../../../utils/errors';
 import { User } from '../../users/entities/user.entity';
+import { Role as UserRoleEnum } from '../../../types/role';
 
 // Mock dependencies
 jest.mock('../../users/services/user.service');
@@ -42,6 +43,7 @@ describe('AuthService', () => {
     const mockUserRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockRoleRepository = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() } as any;
     const mockUserRoleRepository = { create: jest.fn(), save: jest.fn() } as any;
+    const mockStoreService = { createDefaultStore: jest.fn() } as any;
 
     authService = new AuthService(
       mockUserRepository,
@@ -49,7 +51,8 @@ describe('AuthService', () => {
       mockUserRoleRepository,
       userService,
       jwtService,
-      roleService
+      roleService,
+      mockStoreService
     );
   });
 
@@ -112,10 +115,14 @@ describe('AuthService', () => {
 
   describe('loginWithWallet', () => {
     const mockUser: Partial<User> = {
-      id: 1,
+      id: "1",
       walletAddress: mockWalletAddress,
       name: 'Test User',
       email: 'test@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
     };
 
@@ -149,10 +156,14 @@ describe('AuthService', () => {
 
   describe('registerWithWallet', () => {
     const mockNewUser: Partial<User> = {
-      id: 1,
+      id: "1",
       walletAddress: mockWalletAddress,
       name: 'New User',
       email: 'new@example.com',
+      location: 'Test City',
+      country: 'Test Country',
+      buyerData: {},
+      sellerData: null,
       userRoles: [{ role: { name: 'buyer' } }] as any,
     };
 
@@ -168,13 +179,38 @@ describe('AuthService', () => {
         create: jest.fn().mockReturnValue(mockNewUser),
         save: jest.fn().mockResolvedValue(mockNewUser),
       };
+
+      const mockRoleRepository = {
+        findOne: jest.fn().mockResolvedValue({
+          id: 1,
+          name: 'buyer'
+        }),
+      };
+
+      // Add mock for userRoleRepository
+      const mockUserRoleRepository = {
+        create: jest.fn().mockReturnValue({
+          id: 1,
+          userId: 1,
+          roleId: 1
+        }),
+        save: jest.fn().mockResolvedValue({
+          id: 1,
+          userId: 1,
+          roleId: 1
+        }),
+      };
+
       (authService as any).userRepository = mockUserRepository;
+      (authService as any).roleRepository = mockRoleRepository;
+      (authService as any).userRoleRepository = mockUserRoleRepository;
 
       const result = await authService.registerWithWallet({
         walletAddress: mockWalletAddress,
-        role: 'buyer',
+        role: UserRoleEnum.BUYER,
         name: 'New User',
         email: 'new@example.com',
+        country: 'CR'
       });
 
       expect(result.user).toEqual(mockNewUser);
@@ -191,7 +227,7 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
+          role: UserRoleEnum.BUYER,
           name: 'New User',
         })
       ).rejects.toThrow(BadRequestError);
@@ -204,15 +240,16 @@ describe('AuthService', () => {
       await expect(
         authService.registerWithWallet({
           walletAddress: mockWalletAddress,
-          role: 'buyer',
+          country: 'CR',
+          role: UserRoleEnum.BUYER,
         })
-      ).rejects.toThrow(UnauthorizedError);
+      ).rejects.toThrow(BadRequestError);
     });
   });
 
   describe('getUserById', () => {
     it('should return user when found', async () => {
-      const mockUser: Partial<User> = { id: 1, walletAddress: mockWalletAddress };
+      const mockUser: Partial<User> = { id: "1", walletAddress: mockWalletAddress };
       const mockUserRepository = { findOne: jest.fn().mockResolvedValue(mockUser) };
       (authService as any).userRepository = mockUserRepository;
 
@@ -235,7 +272,7 @@ describe('AuthService', () => {
 
   describe('updateUser', () => {
     it('should successfully update user information', async () => {
-      const mockUser: Partial<User> = { id: 1, walletAddress: mockWalletAddress, name: 'Old Name' };
+      const mockUser: Partial<User> = { id: "1", walletAddress: mockWalletAddress, name: 'Old Name' };
       const mockUpdatedUser: Partial<User> = { ...mockUser, name: 'New Name' };
 
       const mockUserRepository = {
@@ -246,7 +283,7 @@ describe('AuthService', () => {
 
       userService.getUserById.mockResolvedValue(mockUpdatedUser as User);
 
-      const result = await authService.updateUser(1, { name: 'New Name' });
+      const result = await authService.updateUser("1", { name: 'New Name' });
 
       expect(result).toEqual(mockUpdatedUser);
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockUpdatedUser);
@@ -256,7 +293,7 @@ describe('AuthService', () => {
       const mockUserRepository = { findOne: jest.fn().mockResolvedValue(null) };
       (authService as any).userRepository = mockUserRepository;
 
-      await expect(authService.updateUser(1, { name: 'New Name' })).rejects.toThrow(
+      await expect(authService.updateUser("1", { name: 'New Name' })).rejects.toThrow(
         BadRequestError
       );
     });

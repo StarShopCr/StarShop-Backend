@@ -40,11 +40,11 @@ describe('BuyerRequestsService', () => {
     budgetMin: 100,
     budgetMax: 200,
     categoryId: 1,
-    userId: 1,
+    userId: "1",
     status: BuyerRequestStatus.OPEN,
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     user: {
-      id: 1,
+      id: "1",
       name: 'Test User',
       walletAddress: '0x123',
     } as any,
@@ -85,16 +85,16 @@ describe('BuyerRequestsService', () => {
         categoryId: 1,
       };
       const userId = 1;
-      const mockRequest = createMockBuyerRequest({ ...createDto, userId });
+      const mockRequest = createMockBuyerRequest({ ...createDto, userId: userId.toString() });
 
       mockRepository.create.mockReturnValue(mockRequest);
       mockRepository.save.mockResolvedValue(mockRequest);
 
-      const result = await service.create(createDto, userId);
+      const result = await service.create(createDto, userId.toString());
 
       expect(mockRepository.create).toHaveBeenCalledWith({
         ...createDto,
-        userId,
+        userId: userId.toString(),
         expiresAt: expect.any(Date),
         status: BuyerRequestStatus.OPEN,
       });
@@ -103,7 +103,7 @@ describe('BuyerRequestsService', () => {
 
     it('should throw BadRequestException if budgetMin > budgetMax', async () => {
       await expect(
-        service.create({ title: 'Invalid', budgetMin: 200, budgetMax: 100, categoryId: 1 }, 1)
+        service.create({ title: 'Invalid', budgetMin: 200, budgetMax: 100, categoryId: 1 }, "1")
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -118,7 +118,7 @@ describe('BuyerRequestsService', () => {
             categoryId: 1,
             expiresAt: pastDate,
           },
-          1
+          "1"
         )
       ).rejects.toThrow(BadRequestException);
     });
@@ -233,15 +233,15 @@ describe('BuyerRequestsService', () => {
       mockRepository.findOne.mockResolvedValue(mockRequest);
       mockRepository.save.mockResolvedValue({ ...mockRequest, title: 'Updated' });
 
-      const result = await service.update(1, { title: 'Updated' }, 1);
+      const result = await service.update(1, { title: 'Updated' }, "1");
 
       expect(result.title).toBe('Updated');
     });
 
     it('should validate ownership', async () => {
-      const mockRequest = createMockBuyerRequest({ userId: 1 });
+      const mockRequest = createMockBuyerRequest({ userId: "1" });
       mockRepository.findOne.mockResolvedValue(mockRequest);
-      await expect(service.update(1, {}, 2)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, {}, "2")).rejects.toThrow(ForbiddenException);
     });
 
     it('should reject update if closed', async () => {
@@ -249,7 +249,7 @@ describe('BuyerRequestsService', () => {
         status: BuyerRequestStatus.CLOSED,
       });
       mockRepository.findOne.mockResolvedValue(mockRequest);
-      await expect(service.update(1, {}, 1)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, {}, "1")).rejects.toThrow(ForbiddenException);
     });
 
     it('should reject update if expired', async () => {
@@ -257,13 +257,21 @@ describe('BuyerRequestsService', () => {
         expiresAt: new Date(Date.now() - 1000),
       });
       mockRepository.findOne.mockResolvedValue(mockRequest);
-      await expect(service.update(1, {}, 1)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, {}, "1")).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should reject update if expired', async () => {
+      const mockRequest = createMockBuyerRequest({
+        expiresAt: new Date(Date.now() - 1000),
+      });
+      mockRepository.findOne.mockResolvedValue(mockRequest);
+      await expect(service.update(1, {}, "1")).rejects.toThrow(ForbiddenException);
     });
 
     it('should reject invalid budget update', async () => {
       const mockRequest = createMockBuyerRequest();
       mockRepository.findOne.mockResolvedValue(mockRequest);
-      await expect(service.update(1, { budgetMin: 500, budgetMax: 100 }, 1)).rejects.toThrow(
+      await expect(service.update(1, { budgetMin: 500, budgetMax: 100 }, "1")).rejects.toThrow(
         BadRequestException
       );
     });
@@ -322,7 +330,7 @@ describe('BuyerRequestsService', () => {
       mockRepository.findOne.mockResolvedValue(mockOpenRequest);
       mockRepository.save.mockResolvedValue(mockClosedRequest);
 
-      const result = await service.closeRequest(1, 1);
+      const result = await service.closeRequest(1, "1");
 
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -338,13 +346,13 @@ describe('BuyerRequestsService', () => {
     it('should throw NotFoundException if request not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.closeRequest(999, 1)).rejects.toThrow('Buyer request not found');
+      await expect(service.closeRequest(999, "1")).rejects.toThrow('Buyer request not found');
     });
 
     it('should throw ForbiddenException if user is not the owner', async () => {
       mockRepository.findOne.mockResolvedValue(mockOpenRequest);
 
-      await expect(service.closeRequest(1, 999)).rejects.toThrow(
+      await expect(service.closeRequest(1, "999")).rejects.toThrow(
         'You can only close your own buyer requests'
       );
     });
@@ -352,7 +360,7 @@ describe('BuyerRequestsService', () => {
     it('should throw BadRequestException if request is already closed', async () => {
       mockRepository.findOne.mockResolvedValue(mockClosedRequest);
 
-      await expect(service.closeRequest(1, 1)).rejects.toThrow('Buyer request is already closed');
+      await expect(service.closeRequest(1, "1")).rejects.toThrow('Buyer request is already closed');
     });
   });
 });

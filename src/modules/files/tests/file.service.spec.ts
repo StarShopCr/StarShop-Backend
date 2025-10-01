@@ -4,6 +4,7 @@ import { File, FileType } from '../entities/file.entity';
 import AppDataSource from '../../../config/ormconfig';
 import { cloudinary } from '../config/cloudinary.config';
 import { s3Client } from '../config/s3.config';
+import { User } from '@/modules/users/entities/user.entity';
 // import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 interface ExtendedMulterFile extends Express.Multer.File {
@@ -46,16 +47,21 @@ describe('FileService', () => {
 
   describe('uploadFile', () => {
     it('should upload a file to Cloudinary and save its metadata', async () => {
-      const mockUser = {
-        id: 1,
+      const mockUser: User = {
+        id: "1",
         walletAddress: '0x123',
         name: 'Test User',
         email: 'test@example.com',
-        password: 'hashed_password',
+        sellerOnchainRegistered: false,
+        location: 'Test City',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -68,18 +74,21 @@ describe('FileService', () => {
         filename: 'images/1683045624-test',
       } as ExtendedMulterFile;
 
-      const createdFile = {
+      const createdFile: File = {
         id: 'uuid',
-        url: mockFile.path,
-        type: FileType.IMAGE,
         filename: mockFile.originalname,
         mimetype: mockFile.mimetype,
         size: mockFile.size,
+        type: FileType.IMAGE,
+        url: mockFile.path,
         providerType: 'cloudinary',
         providerPublicId: mockFile.filename,
-        uploadedById: '1',
         uploadedAt: new Date(),
+        uploadedById: '1',
         uploadedBy: mockUser,
+        // uploadedById: mockUser.id.toString(),
+        // uploadedAt: new Date(),
+        // uploadedBy: mockUser,
       } as File;
 
       fileRepository.create.mockReturnValue(createdFile);
@@ -102,16 +111,22 @@ describe('FileService', () => {
     });
 
     it('should upload a file to S3 and save its metadata', async () => {
-      const mockUser = {
-        id: 1,
+      const mockUser: User = {
+        id: "1",
         walletAddress: '0x123',
         name: 'Test User',
         email: 'test@example.com',
-        password: 'hashed_password',
+        sellerOnchainRegistered: false,
+        location: 'Test City',
+        payoutWallet: '0x456',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -165,11 +180,15 @@ describe('FileService', () => {
         walletAddress: '0x123',
         name: 'Test User',
         email: 'test@example.com',
-        password: 'hashed_password',
+        location: 'Test City',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -211,25 +230,31 @@ describe('FileService', () => {
 
   describe('getUserFiles', () => {
     it("should return user's files", async () => {
-      const mockUser = {
-        id: 1,
+      const mockUser: User = {
+        id: "1",
         walletAddress: '0x123',
         name: 'Test User',
         email: 'test@example.com',
-        password: 'hashed_password',
+        sellerOnchainRegistered: false,
+        location: 'Test City',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],
         wishlist: [],
+        stores: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const mockFiles = [
+      const mockFiles: File[] = [
         {
           id: 'f1',
           uploadedById: '1',
           uploadedBy: mockUser,
+
           url: 'https://example.com/test.jpg',
           type: FileType.IMAGE,
           filename: 'test.jpg',
@@ -239,19 +264,19 @@ describe('FileService', () => {
           providerPublicId: 'public-id',
           uploadedAt: new Date(),
         },
-        {
-          id: 'f2',
-          uploadedById: '1',
-          uploadedBy: mockUser,
-          url: 'https://example.com/test.pdf',
-          type: FileType.DOCUMENT,
-          filename: 'test.pdf',
-          mimetype: 'application/pdf',
-          size: 2048,
-          providerType: 's3',
-          providerPublicId: 'public-id',
-          uploadedAt: new Date(),
-        },
+        // {
+        //   id: 'f2',
+        //   uploadedById: '1',
+        //   uploadedBy: mockUser,
+        //   url: 'https://example.com/test.pdf',
+        //   type: FileType.DOCUMENT,
+        //   filename: 'test.pdf',
+        //   mimetype: 'application/pdf',
+        //   size: 2048,
+        //   providerType: 's3',
+        //   providerPublicId: 'public-id',
+        //   uploadedAt: new Date(),
+        // },
       ] as File[];
 
       fileRepository.find.mockResolvedValue(mockFiles);
@@ -283,6 +308,10 @@ describe('FileService', () => {
         name: 'Test User',
         email: 'test@example.com',
         password: 'hashed_password',
+        location: 'Test City',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],
@@ -323,6 +352,10 @@ describe('FileService', () => {
         name: 'Test User',
         email: 'test@example.com',
         password: 'hashed_password',
+        location: 'Test City',
+        country: 'Test Country',
+        buyerData: {},
+        sellerData: null,
         orders: [],
         userRoles: [],
         notifications: [],

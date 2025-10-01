@@ -21,33 +21,31 @@ describe('OffersService', () => {
   const mockBuyerRequestId = 123;
   const mockOfferId = 'offer-uuid-1';
 
-  const mockOpenBuyerRequest = {
-    id: mockBuyerRequestId,
-    title: 'Test Request',
-    description: 'Test Description',
-    budgetMin: 100,
-    budgetMax: 200,
-    categoryId: 1,
-    userId: mockBuyerId,
-    status: BuyerRequestStatus.OPEN,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as BuyerRequest;
+  const buildBuyerRequest = (
+    status: BuyerRequestStatus = BuyerRequestStatus.OPEN,
+    overrides: Partial<BuyerRequest> = {}
+  ): BuyerRequest =>
+    ({
+      id: mockBuyerRequestId,
+      title: 'Test Request',
+      description: 'Test Description',
+      budgetMin: 100,
+      budgetMax: 200,
+      categoryId: 1,
+      userId: mockBuyerId,
+      status,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    } as BuyerRequest);
 
-  const mockClosedBuyerRequest = {
-    id: mockBuyerRequestId,
-    title: 'Test Request',
-    description: 'Test Description',
-    budgetMin: 100,
-    budgetMax: 200,
-    categoryId: 1,
-    userId: mockBuyerId,
-    status: BuyerRequestStatus.CLOSED,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as BuyerRequest;
+  const mockOpenBuyerRequest = buildBuyerRequest(BuyerRequestStatus.OPEN);
+  const mockClosedBuyerRequest = buildBuyerRequest(BuyerRequestStatus.CLOSED);
 
-  const createMockPendingOffer = () =>
+  const buildOffer = (
+    status: OfferStatus = OfferStatus.PENDING,
+    overrides: Partial<Offer> = {}
+  ): Offer =>
     ({
       id: mockOfferId,
       title: 'Test Offer',
@@ -55,15 +53,16 @@ describe('OffersService', () => {
       price: 150,
       deliveryDays: 7,
       sellerId: mockSellerId,
-      status: OfferStatus.PENDING,
+      status,
       buyerRequestId: mockBuyerRequestId,
       buyerRequest: mockOpenBuyerRequest,
       isBlocked: false,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }) as Offer;
+      ...overrides,
+    } as Offer);
 
-  const mockPendingOffer = createMockPendingOffer();
+  const mockPendingOffer = buildOffer();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
