@@ -547,3 +547,36 @@ For technical support or questions:
 - [TypeORM Documentation](https://typeorm.io/)
 - [Stellar SDK](https://stellar.github.io/js-stellar-sdk/)
 - [OpenAPI Specification](https://swagger.io/specification/)
+
+## 🔒 Security
+
+StarShop Backend enforces robust security policies by default. These can be customized via environment variables:
+
+- **HTTP Security Headers**: All responses include standard headers (HSTS, X-Frame-Options, XSS Protection, NoSniff, CSP) via Helmet.
+- **CORS Policy**: Origins are restricted using an allowlist from `ALLOWED_ORIGINS`.
+- **Rate Limiting**: Requests are throttled globally using `@nestjs/throttler`. Configure limits with `RATE_LIMIT_POINTS` and `RATE_LIMIT_DURATION`.
+- **Validation**: All payloads are validated and sanitized globally. Unknown fields are stripped and invalid payloads are rejected.
+- **Body Size Limits**: Request payload size is limited via `BODY_LIMIT` (default: 1mb). Oversized requests return HTTP 413.
+- **Trust Proxy**: Enable with `TRUST_PROXY=true` if running behind a load balancer or reverse proxy.
+- **Content Security Policy (CSP)**: Defaults to `'self'`, configurable via `CSP_DEFAULT_SRC`.
+
+### Example Security Environment Variables
+
+```env
+ALLOWED_ORIGINS=http://localhost:3000,https://yourapp.com
+RATE_LIMIT_POINTS=100
+RATE_LIMIT_DURATION=60
+BODY_LIMIT=1mb
+TRUST_PROXY=true
+CSP_DEFAULT_SRC='self'
+```
+
+### Acceptance Criteria
+- All responses include Helmet headers (HSTS in production)
+- CORS allowlist enforced from env; requests from disallowed origins are rejected
+- Global validation strips unknown fields and rejects invalid payloads
+- Rate limiting returns 429 when limits are exceeded; limits configurable by env
+- Body size limits enforced; oversized payloads return 413
+- CI passes and app boots with `npm run start:dev` and in production mode with security enabled
+
+See `src/security/` for implementation details and further customization.
