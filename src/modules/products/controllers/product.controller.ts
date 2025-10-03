@@ -10,7 +10,8 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../../common/decorators/api-response.decorator';
 import { ProductService } from '../services/product.service';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
@@ -24,7 +25,7 @@ export class ProductController {
 
   @Get()
   @ApiOperation({ summary: 'Get all products' })
-  @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
+  @ApiSuccessResponse(200, 'Products retrieved successfully')
   async getAllProducts(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -45,8 +46,8 @@ export class ProductController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get product by ID' })
-  @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiSuccessResponse(200, 'Product retrieved successfully')
+  @ApiErrorResponse(404, 'Product not found')
   async getProductById(@Param('id') id: string) {
     const product = await this.productService.getProductById(parseInt(id));
     return { success: true, data: product };
@@ -57,7 +58,7 @@ export class ProductController {
   @Roles('seller', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new product' })
-  @ApiResponse({ status: 201, description: 'Product created successfully' })
+  @ApiSuccessResponse(201, 'Product created successfully')
   async createProduct(@Body() createProductDto: any, @Request() req: any) {
     const userId = req.user?.id;
     if (!userId) {
@@ -86,7 +87,7 @@ export class ProductController {
   @Roles('seller', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a product' })
-  @ApiResponse({ status: 200, description: 'Product updated successfully' })
+  @ApiSuccessResponse(200, 'Product updated successfully')
   async updateProduct(@Param('id') id: string, @Body() updateProductDto: any, @Request() req: any) {
     const userId = req.user?.id;
     if (!userId) {
@@ -116,7 +117,7 @@ export class ProductController {
   @Roles('seller', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a product' })
-  @ApiResponse({ status: 200, description: 'Product deleted successfully' })
+  @ApiSuccessResponse(200, 'Product deleted successfully')
   async deleteProduct(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id;
     if (!userId) {

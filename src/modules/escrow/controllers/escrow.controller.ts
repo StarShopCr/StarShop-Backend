@@ -9,14 +9,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../../common/decorators/api-response.decorator';
 import { EscrowService } from '../services/escrow.service';
 import { ReleaseFundsDto } from '../dto/release-funds.dto';
 import { ApproveMilestoneDto } from '../dto/approve-milestone.dto';
@@ -38,23 +32,10 @@ export class EscrowController {
     description: 'Release funds to seller after buyer approval. Only sellers can release funds for their milestones.',
   })
   @ApiBody({ type: ReleaseFundsDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Funds released successfully',
-    type: ReleaseFundsResponseDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - milestone not approved, already released, or other validation error',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - only seller can release funds',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Milestone not found',
-  })
+  @ApiSuccessResponse(200, 'Funds released successfully', ReleaseFundsResponseDto)
+  @ApiErrorResponse(400, 'Bad request - milestone not approved, already released, or other validation error')
+  @ApiErrorResponse(403, 'Forbidden - only seller can release funds')
+  @ApiErrorResponse(404, 'Milestone not found')
   async releaseFunds(
     @Body() releaseFundsDto: ReleaseFundsDto,
     @Request() req: AuthenticatedRequest,
@@ -69,22 +50,10 @@ export class EscrowController {
     description: 'Buyer approves or rejects a milestone. Required before funds can be released.',
   })
   @ApiBody({ type: ApproveMilestoneDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Milestone approval status updated successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request - milestone cannot be approved in current state',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - only buyer can approve milestones',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Milestone not found',
-  })
+  @ApiSuccessResponse(200, 'Milestone approval status updated successfully')
+  @ApiErrorResponse(400, 'Bad request - milestone cannot be approved in current state')
+  @ApiErrorResponse(403, 'Forbidden - only buyer can approve milestones')
+  @ApiErrorResponse(404, 'Milestone not found')
   async approveMilestone(
     @Body() approveMilestoneDto: ApproveMilestoneDto,
     @Request() req: AuthenticatedRequest,
@@ -103,19 +72,9 @@ export class EscrowController {
     type: 'string',
     format: 'uuid',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Escrow account retrieved successfully',
-    type: EscrowAccountDto,
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - only buyer or seller can view escrow account',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Escrow account not found',
-  })
+  @ApiSuccessResponse(200, 'Escrow account retrieved successfully', EscrowAccountDto)
+  @ApiErrorResponse(403, 'Forbidden - only buyer or seller can view escrow account')
+  @ApiErrorResponse(404, 'Escrow account not found')
   async getEscrowByOfferId(
     @Param('offerId') offerId: string,
     @Request() req: AuthenticatedRequest,
@@ -134,19 +93,9 @@ export class EscrowController {
     type: 'string',
     format: 'uuid',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Milestone retrieved successfully',
-    type: MilestoneDto,
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - only buyer or seller can view milestone',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Milestone not found',
-  })
+  @ApiSuccessResponse(200, 'Milestone retrieved successfully', MilestoneDto)
+  @ApiErrorResponse(403, 'Forbidden - only buyer or seller can view milestone')
+  @ApiErrorResponse(404, 'Milestone not found')
   async getMilestoneById(
     @Param('milestoneId') milestoneId: string,
     @Request() req: AuthenticatedRequest,

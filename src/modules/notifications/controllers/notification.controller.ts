@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Request, UseGuards, ForbiddenException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiSuccessResponse } from '../../../common/decorators/api-response.decorator';
 import { NotificationService } from '../services/notification.service';
 import { NotificationDto, UserNotificationDto } from '../dto/notification.dto';
 import { Role } from '../../../types/role';
@@ -27,7 +28,7 @@ export class NotificationController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send notification to a user' })
-  @ApiResponse({ status: 200, description: 'Notification sent successfully' })
+  @ApiSuccessResponse(200, 'Notification sent successfully')
   async sendToUser(@Body() data: UserNotificationDto, @Request() req: AuthenticatedRequest) {
     if (!this.isAdmin(req)) {
       throw new ForbiddenException('Only admins can send notifications');
@@ -44,7 +45,7 @@ export class NotificationController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Broadcast notification to all users' })
-  @ApiResponse({ status: 200, description: 'Notification broadcasted successfully' })
+  @ApiSuccessResponse(200, 'Notification broadcasted successfully')
   async broadcast(@Body() data: NotificationDto, @Request() req: AuthenticatedRequest) {
     if (!this.isAdmin(req)) {
       throw new ForbiddenException('Only admins can broadcast notifications');

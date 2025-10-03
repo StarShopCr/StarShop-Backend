@@ -13,7 +13,8 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../../common/decorators/api-response.decorator';
 import { StoreService } from '../services/store.service';
 import { CreateStoreDto, UpdateStoreDto, StoreResponseDto } from '../dto/store.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -32,11 +33,7 @@ export class StoreController {
   @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new store' })
-  @ApiResponse({
-    status: 201,
-    description: 'Store created successfully',
-    type: StoreResponseDto,
-  })
+  @ApiSuccessResponse(201, 'Store created successfully', StoreResponseDto)
   @HttpCode(HttpStatus.CREATED)
   async createStore(
     @Body() createStoreDto: CreateStoreDto,
@@ -56,11 +53,7 @@ export class StoreController {
   @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all stores for the authenticated seller' })
-  @ApiResponse({
-    status: 200,
-    description: 'Stores retrieved successfully',
-    type: [StoreResponseDto],
-  })
+  @ApiSuccessResponse(200, 'Stores retrieved successfully', StoreResponseDto, true)
   async getMyStores(
     @Req() req: AuthenticatedRequest,
   ): Promise<{ success: boolean; data: StoreResponseDto[] }> {
@@ -75,11 +68,7 @@ export class StoreController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific store by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Store retrieved successfully',
-    type: StoreResponseDto,
-  })
+  @ApiSuccessResponse(200, 'Store retrieved successfully', StoreResponseDto)
   async getStoreById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ success: boolean; data: StoreResponseDto }> {
@@ -96,11 +85,7 @@ export class StoreController {
   @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a store' })
-  @ApiResponse({
-    status: 200,
-    description: 'Store updated successfully',
-    type: StoreResponseDto,
-  })
+  @ApiSuccessResponse(200, 'Store updated successfully', StoreResponseDto)
   async updateStore(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStoreDto: UpdateStoreDto,
@@ -120,10 +105,7 @@ export class StoreController {
   @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a store' })
-  @ApiResponse({
-    status: 200,
-    description: 'Store deleted successfully',
-  })
+  @ApiSuccessResponse(200, 'Store deleted successfully')
   @HttpCode(HttpStatus.OK)
   async deleteStore(
     @Param('id', ParseIntPipe) id: number,
@@ -140,11 +122,7 @@ export class StoreController {
 
   @Get()
   @ApiOperation({ summary: 'Get all active stores' })
-  @ApiResponse({
-    status: 200,
-    description: 'Stores retrieved successfully',
-    type: [StoreResponseDto],
-  })
+  @ApiSuccessResponse(200, 'Stores retrieved successfully', StoreResponseDto, true)
   async getActiveStores(): Promise<{ success: boolean; data: StoreResponseDto[] }> {
     const stores = await this.storeService.getActiveStores();
 
@@ -156,11 +134,7 @@ export class StoreController {
 
   @Get('search')
   @ApiOperation({ summary: 'Search stores' })
-  @ApiResponse({
-    status: 200,
-    description: 'Stores retrieved successfully',
-    type: [StoreResponseDto],
-  })
+  @ApiSuccessResponse(200, 'Stores retrieved successfully', StoreResponseDto, true)
   async searchStores(
     @Query('q') query?: string,
     @Query('category') category?: string,
@@ -179,10 +153,7 @@ export class StoreController {
   @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get store statistics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Store statistics retrieved successfully',
-  })
+  @ApiSuccessResponse(200, 'Store statistics retrieved successfully')
   async getStoreStats(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
@@ -202,11 +173,7 @@ export class StoreController {
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update store status (admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Store status updated successfully',
-    type: StoreResponseDto,
-  })
+  @ApiSuccessResponse(200, 'Store status updated successfully', StoreResponseDto)
   async updateStoreStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: string,

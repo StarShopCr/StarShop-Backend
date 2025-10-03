@@ -20,6 +20,9 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../../types/role';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse, ApiAuthResponse } from '../../../common/decorators/api-response.decorator';
+import { setToken } from '../../../common/utils/response.utils';
 
 interface UserResponse {
   walletAddress: string;
@@ -49,6 +52,7 @@ interface UsersListResponse {
   data: UserResponse[];
 }
 
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(
@@ -62,6 +66,8 @@ export class UserController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new user with wallet' })
+  @ApiAuthResponse(HttpStatus.CREATED, 'User registered successfully', Object as any)
   
   async createUser(
     @Body() registerDto: RegisterUserDto,
@@ -78,13 +84,8 @@ export class UserController {
       sellerData: registerDto.sellerData,
     });
 
-    // Set JWT token in HttpOnly cookie
-    res.cookie('token', result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: result.expiresIn * 1000,
-    });
+    // Set JWT token using helper to align with ResponseInterceptor
+    setToken(res, result.token, { maxAge: result.expiresIn * 1000 });
 
     return {
       success: true,
@@ -111,6 +112,11 @@ export class UserController {
   @Put('update/:walletAddress')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Update user information' })
+  @ApiSuccessResponse(HttpStatus.OK, 'User updated successfully', Object as any)
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, 'You can only update your own profile')
   async updateUser(
     @Param('walletAddress') walletAddress: string,
     @Body() updateDto: UpdateUserDto,
@@ -149,6 +155,12 @@ export class UserController {
   @Get(':walletAddress')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get user by wallet address' })
+  @ApiSuccessResponse(HttpStatus.OK, 'User retrieved successfully', Object as any)
+  @ApiErrorResponse(HttpStatus.UNAUTHORIZED, 'Access denied')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, 'User not found')
   async getUserByWalletAddress(
     @Param('walletAddress') walletAddress: string,
     @Req() req: Request
@@ -188,6 +200,11 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get all users (admin only)' })
+  @ApiSuccessResponse(HttpStatus.OK, 'Users retrieved successfully', Object as any, true)
+  @ApiErrorResponse(HttpStatus.FORBIDDEN, 'Forbidden - Admin access required')
   async getAllUsers(): Promise<UsersListResponse> {
     const users = await this.userService.getUsers();
 

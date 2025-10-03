@@ -10,7 +10,8 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../../common/decorators/api-response.decorator';
 import { CouponService } from '../services/coupon.service';
 import { CreateCouponDto, ApplyCouponDto } from '../dto/coupon.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
@@ -28,7 +29,7 @@ export class CouponController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Create a new coupon' })
-  @ApiResponse({ status: 201, description: 'Coupon created successfully', type: Coupon })
+  @ApiSuccessResponse(201, 'Coupon created successfully', Coupon)
   async createCoupon(@Body() createCouponDto: CreateCouponDto): Promise<Coupon> {
     try {
       const coupon = await this.couponService.createCoupon(createCouponDto);
@@ -62,8 +63,8 @@ export class CouponController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Validate a coupon' })
-  @ApiResponse({ status: 200, description: 'Coupon is valid', type: Coupon })
-  @ApiResponse({ status: 404, description: 'Coupon not found' })
+  @ApiSuccessResponse(200, 'Coupon is valid', Coupon)
+  @ApiErrorResponse(404, 'Coupon not found')
   async validateCoupon(
     @Param('code') code: string,
     @Body('cartValue') cartValue: number
@@ -83,8 +84,8 @@ export class CouponController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Apply a coupon to an order' })
-  @ApiResponse({ status: 200, description: 'Coupon applied successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid coupon' })
+  @ApiSuccessResponse(200, 'Coupon applied successfully')
+  @ApiErrorResponse(400, 'Invalid coupon')
   async applyCouponToOrder(
     @Param('code') code: string,
     @Body() applyCouponDto: ApplyCouponDto

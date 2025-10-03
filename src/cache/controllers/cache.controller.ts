@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Delete, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiSuccessResponse, ApiErrorResponse } from '../../common/decorators/api-response.decorator';
 import { CacheService } from '../cache.service';
 import { AuthGuard } from '../../modules/shared/guards/auth.guard';
 import { RolesGuard } from '../../modules/shared/guards/roles.guard';
@@ -15,8 +16,8 @@ export class CacheController {
   @Get('stats')
   @Roles('admin')
   @ApiOperation({ summary: 'Get cache statistics' })
-  @ApiResponse({ status: 200, description: 'Cache statistics retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiSuccessResponse(200, 'Cache statistics retrieved successfully')
+  @ApiErrorResponse(403, 'Forbidden - Admin access required')
   async getStats() {
     return await this.cacheService.getStats();
   }
@@ -25,8 +26,8 @@ export class CacheController {
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Clear entire cache' })
-  @ApiResponse({ status: 200, description: 'Cache cleared successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiSuccessResponse(200, 'Cache cleared successfully')
+  @ApiErrorResponse(403, 'Forbidden - Admin access required')
   async resetCache() {
     await this.cacheService.reset();
     return { message: 'Cache cleared successfully' };
@@ -36,8 +37,8 @@ export class CacheController {
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Invalidate cache for specific entity' })
-  @ApiResponse({ status: 200, description: 'Entity cache invalidated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiSuccessResponse(200, 'Entity cache invalidated successfully')
+  @ApiErrorResponse(403, 'Forbidden - Admin access required')
   async invalidateEntity(entity: string) {
     await this.cacheService.invalidateEntity(entity);
     return { message: `Cache invalidated for entity: ${entity}` };
@@ -47,8 +48,8 @@ export class CacheController {
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Invalidate cache for specific entity action' })
-  @ApiResponse({ status: 200, description: 'Entity action cache invalidated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiSuccessResponse(200, 'Entity action cache invalidated successfully')
+  @ApiErrorResponse(403, 'Forbidden - Admin access required')
   async invalidateAction(entity: string, action: string) {
     await this.cacheService.invalidateAction(entity, action);
     return { message: `Cache invalidated for entity: ${entity}, action: ${action}` };
