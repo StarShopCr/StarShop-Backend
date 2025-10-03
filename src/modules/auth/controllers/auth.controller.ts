@@ -85,16 +85,19 @@ export class AuthController {
       maxAge: result.expiresIn * 1000, // Convert to milliseconds
     });
 
-    // Return plain data; ResponseInterceptor will wrap and include token
+    // Return standardized data; ResponseInterceptor will include token
     return {
-      user: {
-        walletAddress: result.user.walletAddress,
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.userRoles?.[0]?.role?.name || 'buyer',
+      success: true,
+      data: {
+        user: {
+          walletAddress: result.user.walletAddress,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.userRoles?.[0]?.role?.name || 'buyer',
+        },
+        expiresIn: result.expiresIn,
       },
-      expiresIn: result.expiresIn,
-    } as any;
+    };
   }
 
   /**
@@ -129,16 +132,19 @@ export class AuthController {
       maxAge: result.expiresIn * 1000, // Convert to milliseconds
     });
 
-    // Return plain data; ResponseInterceptor will wrap and include token
+    // Return standardized data; ResponseInterceptor will include token
     return {
-      user: {
-        walletAddress: result.user.walletAddress,
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.userRoles?.[0]?.role?.name || 'buyer',
+      success: true,
+      data: {
+        user: {
+          walletAddress: result.user.walletAddress,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.userRoles?.[0]?.role?.name || 'buyer',
+        },
+        expiresIn: result.expiresIn,
       },
-      expiresIn: result.expiresIn,
-    } as any;
+    };
   }
 
   /**

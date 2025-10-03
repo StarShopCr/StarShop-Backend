@@ -56,6 +56,13 @@ export class AuthResponseDto {
   success: boolean;
 
   @ApiProperty({
+    description: 'JWT token for authentication',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    required: false,
+  })
+  token?: string;
+
+  @ApiProperty({
     description: 'Authentication data',
     example: {
       user: {
