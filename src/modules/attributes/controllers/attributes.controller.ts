@@ -11,7 +11,8 @@ import {
   HttpStatus,
   UseGuards,
 } from "@nestjs/common"
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from "@nestjs/swagger"
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from "@nestjs/swagger"
+import { ApiSuccessResponse, ApiErrorResponse } from "../../../common/decorators/api-response.decorator"
 import { CreateAttributeDto } from "../dto/create-attribute.dto"
 import { UpdateAttributeDto } from "../dto/update-attribute.dto"
 import { GetAttributesQueryDto } from "../dto/get-attributes-query.dto"
@@ -33,30 +34,16 @@ export class AttributeController {
   @UseGuards(RolesGuard)
   // @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Create a new attribute' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Attribute created successfully',
-    type: AttributeResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: 'Attribute with this name already exists',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data',
-  })
+  @ApiSuccessResponse(HttpStatus.CREATED, 'Attribute created successfully', AttributeResponseDto)
+  @ApiErrorResponse(HttpStatus.CONFLICT, 'Attribute with this name already exists')
+  @ApiErrorResponse(HttpStatus.BAD_REQUEST, 'Invalid input data')
   async create(@Body() createAttributeDto: CreateAttributeDto) {
     return this.attributeService.create(createAttributeDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all attributes with pagination' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Attributes retrieved successfully',
-    type: PaginatedAttributesResponseDto,
-  })
+  @ApiSuccessResponse(HttpStatus.OK, 'Attributes retrieved successfully', PaginatedAttributesResponseDto)
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -67,15 +54,8 @@ export class AttributeController {
   @Get(':id')
   @ApiOperation({ summary: 'Get an attribute by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'Attribute ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Attribute retrieved successfully',
-    type: AttributeResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Attribute not found',
-  })
+  @ApiSuccessResponse(HttpStatus.OK, 'Attribute retrieved successfully', AttributeResponseDto)
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, 'Attribute not found')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.attributeService.findOne(id);
   }
@@ -85,19 +65,9 @@ export class AttributeController {
   // @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: "Update an attribute" })
   @ApiParam({ name: "id", type: Number, description: "Attribute ID" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "Attribute updated successfully",
-    type: AttributeResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "Attribute not found",
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: "Attribute with this name already exists",
-  })
+  @ApiSuccessResponse(HttpStatus.OK, "Attribute updated successfully", AttributeResponseDto)
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, "Attribute not found")
+  @ApiErrorResponse(HttpStatus.CONFLICT, "Attribute with this name already exists")
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateAttributeDto: UpdateAttributeDto) {
     return this.attributeService.update(id, updateAttributeDto)
   }
@@ -107,14 +77,8 @@ export class AttributeController {
   // @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete an attribute' })
   @ApiParam({ name: 'id', type: Number, description: 'Attribute ID' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Attribute deleted successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Attribute not found',
-  })
+  @ApiSuccessResponse(HttpStatus.NO_CONTENT, 'Attribute deleted successfully')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, 'Attribute not found')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.attributeService.remove(id);
   }
@@ -124,18 +88,9 @@ export class AttributeController {
   // @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: "Add a value to an attribute" })
   @ApiParam({ name: "id", type: Number, description: "Attribute ID" })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: "Attribute value added successfully",
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "Attribute not found",
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: "Value already exists for this attribute",
-  })
+  @ApiSuccessResponse(HttpStatus.CREATED, "Attribute value added successfully")
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, "Attribute not found")
+  @ApiErrorResponse(HttpStatus.CONFLICT, "Value already exists for this attribute")
   async addValue(@Param('id', ParseIntPipe) id: number, @Body('value') value: string) {
     return this.attributeService.addValue(id, value)
   }
@@ -143,14 +98,8 @@ export class AttributeController {
   @Get(':id/values')
   @ApiOperation({ summary: 'Get all values for an attribute' })
   @ApiParam({ name: 'id', type: Number, description: 'Attribute ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Attribute values retrieved successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Attribute not found',
-  })
+  @ApiSuccessResponse(HttpStatus.OK, 'Attribute values retrieved successfully')
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, 'Attribute not found')
   async getValues(@Param('id', ParseIntPipe) id: number) {
     return this.attributeService.getAttributeValues(id);
   }
@@ -161,14 +110,8 @@ export class AttributeController {
   @ApiOperation({ summary: "Remove a value from an attribute" })
   @ApiParam({ name: "id", type: Number, description: "Attribute ID" })
   @ApiParam({ name: "valueId", type: Number, description: "Attribute Value ID" })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: "Attribute value removed successfully",
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: "Attribute or value not found",
-  })
+  @ApiSuccessResponse(HttpStatus.NO_CONTENT, "Attribute value removed successfully")
+  @ApiErrorResponse(HttpStatus.NOT_FOUND, "Attribute or value not found")
   async removeValue(@Param('id', ParseIntPipe) id: number, @Param('valueId', ParseIntPipe) valueId: number) {
     await this.attributeService.removeValue(id, valueId)
   }

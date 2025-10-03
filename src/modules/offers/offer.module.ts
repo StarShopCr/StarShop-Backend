@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Offer } from './entities/offer.entity';
 import { OfferService } from './services/offer.service';
-import { OfferController } from './offfer.controller';
+import { OfferController } from './offer.controller';
 import { BuyerRequest } from '../buyer-requests/entities/buyer-request.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Product } from '../products/entities/product.entity';

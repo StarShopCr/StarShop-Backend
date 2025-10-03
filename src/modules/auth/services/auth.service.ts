@@ -310,7 +310,7 @@ export class AuthService {
     return user;
   }
 
-  async authenticateUser(walletAddress: string): Promise<{ access_token: string }> {
+  async authenticateUser(walletAddress: string): Promise<{ token: string }> {
     // Try to find an existing user with this wallet address
     let user = await this.userRepository.findOne({
       where: { walletAddress },
@@ -350,7 +350,7 @@ export class AuthService {
     // Create a JWT token containing user information
     const payload = { sub: user.id, walletAddress: user.walletAddress, role: primaryRole };
 
-    return { access_token: this.jwtService.sign(payload) };
+    return { token: this.jwtService.sign(payload) };
   }
 
   async assignRole(walletAddress: string, roleName: RoleName): Promise<User> {

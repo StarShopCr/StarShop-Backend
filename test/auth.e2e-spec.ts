@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { Keypair } from 'stellar-sdk';
 import { AppModule } from '../src/app.module';
+import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor';
 
 describe('Auth Endpoints (e2e)', () => {
   let app: INestApplication;
@@ -16,6 +17,9 @@ describe('Auth Endpoints (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    // Apply same global settings as production
+    app.setGlobalPrefix('api/v1');
+    app.useGlobalInterceptors(new ResponseInterceptor());
     await app.init();
 
     // Generate a mock signature for testing
