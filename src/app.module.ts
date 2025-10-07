@@ -18,9 +18,10 @@ import { BuyerRequestsModule } from './modules/buyer-requests/buyer-requests.mod
 import { OffersModule } from './modules/offers/offers.module';
 import { EscrowModule } from './modules/escrow/escrow.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
-import { EscrowModule } from './modules/escrow/escrow.module';
 import { AppCacheModule } from './cache/cache.module';
 import { StoresModule } from './modules/stores/stores.module';
+import { TrustlessWorkModule } from './modules/trustlessWork/trustless-work.module';
+import { EscrowsModule } from './modules/escrows/escrows.module';
 
 // Entities
 import { User } from './modules/users/entities/user.entity';
@@ -45,13 +46,15 @@ import { Milestone } from './modules/escrow/entities/milestone.entity';
 import { Escrow } from './modules/escrow/entities/escrow.entity';
 import { EscrowFundingTx } from './modules/escrow/entities/escrow-funding-tx.entity';
 import { Store } from './modules/stores/entities/store.entity';
-import { Escrow } from './modules/escrows/entities/escrow.entity';
-import { Milestone } from './modules/escrows/entities/milestone.entity';
-import { EscrowsModule } from './modules/escrows/escrows.module';
+import { Escrow as EscrowV2 } from './modules/escrows/entities/escrow.entity';
+import { Milestone as MilestoneV2 } from './modules/escrows/entities/milestone.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env'],
+    }),
     ScheduleModule.forRoot(),
     AppCacheModule,
     TypeOrmModule.forRoot({
@@ -78,12 +81,11 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
         OfferAttachment,
         EscrowAccount,
         Milestone,
-
-  Escrow,
-  EscrowFundingTx,
+        Escrow,
+        EscrowFundingTx,
         Store,
-  Escrow,
-  Milestone,
+        EscrowV2,
+        MilestoneV2,
       ],
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',
@@ -103,7 +105,7 @@ import { EscrowsModule } from './modules/escrows/escrows.module';
     OffersModule,
     EscrowModule,
     SupabaseModule,
-  EscrowModule,
+    TrustlessWorkModule,
     StoresModule,
     EscrowsModule,
   ],
